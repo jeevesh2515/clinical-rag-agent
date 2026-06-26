@@ -1,0 +1,47 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python/runtime artifacts
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# Local OS/editor files
+.DS_Store
+
+# Local app/runtime outputs
+clinical_demo.db
+*.db
+*.sqlite
+*.sqlite3
+data/pdfs/*.pdf
+data/eval/results*.json
+
+# Local downloaded source documents and generated ingestion outputs
+data/source_documents/raw/*
+data/source_documents/processed/*
+data/source_documents/manifests/*
+!data/source_documents/raw/.gitkeep
+!data/source_documents/processed/.gitkeep
+!data/source_documents/manifests/.gitkeep
+
+# Local planning/private scratch artifacts
+.planning/
+PR.md
+PRIVATE_LEARNING_PLAN.md
+.vercel
+.gstack/
+test-results
+node_modules/

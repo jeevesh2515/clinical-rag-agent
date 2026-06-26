@@ -1,0 +1,37 @@
+# Git and local metadata
+.git
+.gitignore
+.DS_Store
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python/runtime artifacts
+.venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.ipynb_checkpoints
+.coverage
+coverage.xml
+htmlcov
+dist
+build
+
+# Local/private project artifacts
+.planning
+PR.md
+PRIVATE_LEARNING_PLAN.md
+clinical_demo.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Large downloaded/generated data
+data/pdfs/*.pdf
+data/eval/results*.json

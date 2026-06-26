@@ -1,0 +1,30 @@
+{"question":"When should drug treatment be considered for stage 1 hypertension?","ground_truth":"Drug treatment depends on age, target organ damage, CVD, renal disease, diabetes, or cardiovascular risk according to indexed guidance."}
+{"question":"What is the purpose of ambulatory blood pressure monitoring in hypertension diagnosis?","ground_truth":"ABPM helps confirm clinic blood pressure readings and diagnose hypertension."}
+{"question":"What lifestyle advice is commonly discussed for hypertension management?","ground_truth":"Lifestyle advice can include diet, physical activity, weight, sodium, alcohol, and smoking-related support."}
+{"question":"When should someone with severe hypertension be referred for same-day specialist review?","ground_truth":"Same-day review is recommended when severe blood pressure is accompanied by signs suggesting acute target-organ damage."}
+{"question":"How should blood pressure targets differ for adults under and over 80?","ground_truth":"Guidance distinguishes targets by age, including adults under 80 and adults aged 80 and over."}
+{"question":"What does community-clinical linkage mean?","ground_truth":"It refers to connections between community and clinical sectors to improve population health."}
+{"question":"Why are citations important in clinical RAG?","ground_truth":"Citations show which source passages support the generated clinical workflow answer."}
+{"question":"Calculate BMI for 82 kg and 1.75 m.","ground_truth":"BMI is 26.8 kg/m^2."}
+{"question":"What workflow follow up should be booked after medication changes?","ground_truth":"The demo workflow reference says to book a review within 4 weeks."}
+{"question":"What indexed evidence supports community referral for lifestyle support?","ground_truth":"Community-clinical linkage guidance supports connecting clinical care to community support."}
+{"question":"What does the WHO hypertension guideline focus on?","ground_truth":"It focuses on pharmacological treatment of hypertension in adults."}
+{"question":"Should this agent diagnose a patient with hypertension?","ground_truth":"No. It should provide educational workflow support and cite sources, not diagnose patients."}
+{"question":"What should the agent do when indexed evidence is insufficient?","ground_truth":"It should state that it could not find enough evidence in the indexed sources."}
+{"question":"How does hybrid search improve clinical document retrieval?","ground_truth":"Hybrid search combines dense semantic matching and sparse keyword matching."}
+{"question":"What is reranking used for in this project?","ground_truth":"Reranking reorders retrieved chunks by relevance before answer generation."}
+{"question":"What metadata should a citation include?","ground_truth":"Source id, title, page, chunk id, and a short quote."}
+{"question":"What is BM25 used for?","ground_truth":"BM25 supplies sparse lexical retrieval signals."}
+{"question":"What is Pinecone used for?","ground_truth":"Pinecone stores and searches vectors and sparse values for retrieval."}
+{"question":"What is RAGAS used to measure?","ground_truth":"RAGAS evaluates faithfulness, answer relevancy, context precision, and context recall."}
+{"question":"What safety disclaimer should be included?","ground_truth":"The answer is educational workflow support and not medical advice."}
+{"question":"What happens if a user asks about emergency symptoms?","ground_truth":"The agent should avoid emergency instructions beyond advising professional or emergency care."}
+{"question":"What is the role of LangGraph in this project?","ground_truth":"LangGraph orchestrates validation, retrieval, tool use, reranking, generation, and formatting."}
+{"question":"Can web search replace indexed clinical citations?","ground_truth":"No. Web search may supplement public lookup but must not replace indexed clinical citations."}
+{"question":"Which Cohere model is used for reranking?","ground_truth":"The planned reranker is rerank-v3.5."}
+{"question":"Which Cohere embedding model is used?","ground_truth":"The planned embedding model is embed-v4.0."}
+{"question":"What is the default hybrid alpha?","ground_truth":"The default alpha is 0.55."}
+{"question":"What is the default rerank top n?","ground_truth":"The default rerank top n is 6."}
+{"question":"Why preserve PDF page numbers?","ground_truth":"Page numbers make citations auditable and useful."}
+{"question":"What should be stored with each chunk?","ground_truth":"Text, source id, title, URL, page, section, chunk index, and deterministic chunk id."}
+{"question":"What disease corpus is used by default?","ground_truth":"The default corpus focuses on hypertension and chronic-care workflow guidance."}

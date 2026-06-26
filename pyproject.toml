@@ -1,0 +1,48 @@
+[project]
+name = "clinical-rag-agent"
+version = "0.1.0"
+description = "Production-grade clinical evidence RAG agent with hybrid search, reranking, citations, tools, and RAGAS evaluation."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "cohere>=5.20.0",
+  "fastapi>=0.115.0",
+  "httpx>=0.27.0",
+  "jupyter>=1.1.0",
+  "langchain>=0.3.0",
+  "langchain-community>=0.3.0",
+  "langgraph>=0.2.0",
+  "pandas>=2.2.0",
+  "pinecone>=5.0.0",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "pypdf>=5.0.0",
+  "ragas>=0.2.0",
+  "scikit-learn>=1.5.0",
+  "sqlalchemy>=2.0.0",
+  "tiktoken>=0.7.0",
+  "uvicorn[standard]>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "respx>=0.21.0",
+  "ruff>=0.6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["data*", "notebooks*", "tests*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.vercel]
+entrypoint = "app.main:app"

@@ -1,0 +1,14 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "extraPaths": [".", ".venv/lib/python3.12/site-packages"],
+  "include": ["app", "tests", "api"],
+  "exclude": [
+    "**/__pycache__",
+    ".venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "clinical_rag_agent.egg-info"
+  ]
+}

@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Request
 
 from app.agents.clinical_rag_agent import ClinicalRAGAgent
-from app.api.dependencies import get_agent, get_store
+from app.api.dependencies import get_agent, get_knowledge_interface, get_store
 from app.core.config import get_settings
 from app.evaluation.run import run_evaluation
 from app.ingestion.manifest import IngestionManifest, build_manifest_id, save_manifest
@@ -12,6 +12,7 @@ from app.ingestion.pdf_loader import ingest_sources
 from app.ingestion.source_registry import build_source_registry
 from app.ingestion.sources import DEFAULT_SOURCES
 from app.models import ApiErrorResponse, IngestRequest, IngestResponse, QueryRequest, QueryResponse, SourcesResponse
+from app.okf.interface import KnowledgeInterface
 from app.retrieval.store import HybridStore
 
 router = APIRouter()
@@ -22,11 +23,22 @@ def request_id_from(request: Request) -> str | None:
 
 
 @router.get("/health", tags=["system"])
-def health(request: Request, store: HybridStore = Depends(get_store)) -> dict:
+def health(
+    request: Request,
+    store: HybridStore = Depends(get_store),
+    knowledge: KnowledgeInterface | None = Depends(get_knowledge_interface),
+) -> dict:
+    okf_info = None
+    if knowledge:
+        okf_info = {
+            "available": True,
+            "concepts": len(knowledge._okf.get_concept_map()),
+        }
     return {
         "status": "ok",
         "documents": store.document_count,
         "chunks": store.chunk_count,
+        "okf": okf_info or {"available": False},
         "request_id": request_id_from(request),
     }
 

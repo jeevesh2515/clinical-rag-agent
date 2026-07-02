@@ -73,6 +73,21 @@ export interface QueryRequest {
   rerank_top_n?: number | null
 }
 
+export interface OKFConceptRef {
+  source_path: string
+  title: string
+  confidence: number
+  citation_url: string
+  source_type: 'okf' | 'rag'
+}
+
+export interface KnowledgePathInfo {
+  path: string
+  reason: string
+  okf_concepts: OKFConceptRef[]
+  rag_sources: string[]
+}
+
 export interface QueryResponse {
   answer: string
   citations: Citation[]
@@ -90,6 +105,7 @@ export interface QueryResponse {
   claim_support: ClaimSupport[]
   confidence: ConfidenceLabel
   tool_trace: ToolTrace[]
+  knowledge_path: KnowledgePathInfo | null
   request_id: string | null
   graph_route: string | null
 }

@@ -1,39 +1,85 @@
-import ast
-import operator
 import re
 
+_MIN_KG = 1.0
+_MAX_KG = 500.0
+_MIN_M = 0.3
+_MAX_M = 2.5
+_MIN_BP = 30
+_MAX_BP = 350
+_MIN_AGE = 1
+_MAX_AGE = 130
+_MIN_CREAT = 5
+_MAX_CREAT = 2000
 
-ALLOWED_OPERATORS = {
-    ast.Add: operator.add,
-    ast.Sub: operator.sub,
-    ast.Mult: operator.mul,
-    ast.Div: operator.truediv,
-    ast.Pow: operator.pow,
-    ast.USub: operator.neg,
-}
 
-
-def calculate_expression(expression: str) -> float:
-    tree = ast.parse(expression, mode="eval")
-    return float(_eval(tree.body))
+def _try_float(value: str, min_v: float, max_v: float) -> float | None:
+    try:
+        v = float(value)
+    except ValueError:
+        return None
+    if v < min_v or v > max_v:
+        return None
+    return v
 
 
 def calculate_bmi(question: str) -> str | None:
-    kg = re.search(r"(\d+(?:\.\d+)?)\s*kg", question, flags=re.I)
-    metres = re.search(r"(\d+(?:\.\d+)?)\s*m(?:etre|eter)?s?\b", question, flags=re.I)
-    if kg and metres:
-        weight = float(kg.group(1))
-        height = float(metres.group(1))
-        bmi = weight / (height * height)
-        return f"BMI = {bmi:.1f} kg/m^2"
-    return None
+    kg_m = re.search(r"(\d+(?:\.\d+)?)\s*kg", question, flags=re.I)
+    metres_m = re.search(r"(\d+(?:\.\d+)?)\s*m(?:etre|eter)?s?\b", question, flags=re.I)
+    if not kg_m or not metres_m:
+        return None
+    weight = _try_float(kg_m.group(1), _MIN_KG, _MAX_KG)
+    height = _try_float(metres_m.group(1), _MIN_M, _MAX_M)
+    if weight is None or height is None:
+        return None
+    bmi = weight / (height * height)
+    return f"BMI = {bmi:.1f} kg/m²"
 
 
-def _eval(node: ast.AST) -> float:
-    if isinstance(node, ast.Constant) and isinstance(node.value, int | float):
-        return float(node.value)
-    if isinstance(node, ast.BinOp) and type(node.op) in ALLOWED_OPERATORS:
-        return ALLOWED_OPERATORS[type(node.op)](_eval(node.left), _eval(node.right))
-    if isinstance(node, ast.UnaryOp) and type(node.op) in ALLOWED_OPERATORS:
-        return ALLOWED_OPERATORS[type(node.op)](_eval(node.operand))
-    raise ValueError("Unsupported calculation")
+def calculate_map(question: str) -> str | None:
+    bp_pair = re.search(r"(?:bp|blood\s*pressure)?\s*(\d+)\s*(?:/|over)\s*(\d+)", question, flags=re.I)
+    if not bp_pair:
+        return None
+    sys_val = _try_float(bp_pair.group(1), _MIN_BP, _MAX_BP)
+    dia_val = _try_float(bp_pair.group(2), _MIN_BP, _MAX_BP)
+    if sys_val is None or dia_val is None:
+        return None
+    map_v = dia_val + (sys_val - dia_val) / 3.0
+    return f"MAP = {map_v:.0f} mmHg"
+
+
+def calculate_pulse_pressure(question: str) -> str | None:
+    bp_pair = re.search(r"(?:bp|blood\s*pressure)?\s*(\d+)\s*(?:/|over)\s*(\d+)", question, flags=re.I)
+    if not bp_pair:
+        return None
+    sys_val = _try_float(bp_pair.group(1), _MIN_BP, _MAX_BP)
+    dia_val = _try_float(bp_pair.group(2), _MIN_BP, _MAX_BP)
+    if sys_val is None or dia_val is None:
+        return None
+    pp = sys_val - dia_val
+    return f"Pulse Pressure = {pp:.0f} mmHg"
+
+
+def calculate_egfr(question: str) -> str | None:
+    creat_m = re.search(
+        r"(\d+(?:\.\d+)?)\s*(mg/dL|mg/dl|umol/L|umol/l|µmol/L)",
+        question,
+        flags=re.I,
+    )
+    if not creat_m:
+        return None
+    raw = float(creat_m.group(1))
+    unit = creat_m.group(2)
+    if "mg" in unit:
+        if raw < 0.2 or raw > 50:
+            return None
+    else:
+        if raw < 18 or raw > 4420:
+            return None
+    age_m = re.search(r"(\d+)\s*(?:years?|yrs?|yo|year-old)", question, flags=re.I)
+    age_val = _try_float(age_m.group(1), _MIN_AGE, _MAX_AGE) if age_m else None
+    is_female = bool(re.search(r"\bfemale\b|\bwoman\b|\b[Ff]\b", question, flags=re.I))
+    parts = [f"Creatinine = {raw:.1f} {unit}"]
+    if age_val is not None:
+        parts.append(f"Age = {age_val:.0f}y")
+    parts.append("Sex = " + ("Female" if is_female else "Male/Unknown"))
+    return f"eGFR (CKD-EPI, estimated): {' | '.join(parts)}"

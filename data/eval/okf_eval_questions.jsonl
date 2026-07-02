@@ -1,0 +1,30 @@
+{"id": "okf-001", "category": "canonical", "question": "What is the first-line drug for a black patient with stage 1 hypertension?", "expected_path": "okf", "expected_concept": "pharmacology/first-line-drug-classes"}
+{"id": "okf-002", "category": "canonical", "question": "What is the dose range for chlorthalidone?", "expected_path": "okf", "expected_concept": "pharmacology/thiazide-diuretics"}
+{"id": "okf-003", "category": "canonical", "question": "Is ACEi contraindicated in pregnancy?", "expected_path": "okf", "expected_concept": "pharmacology/contraindications"}
+{"id": "okf-004", "category": "canonical", "question": "What BP threshold defines hypertensive crisis?", "expected_path": "okf", "expected_concept": "diagnosis/bp-categories"}
+{"id": "okf-005", "category": "canonical", "question": "What is the target BP for a patient with CKD and albuminuria?", "expected_path": "okf", "expected_concept": "comorbidities/htn-and-ckd"}
+{"id": "okf-006", "category": "canonical", "question": "Name three safe antihypertensives in pregnancy", "expected_path": "okf", "expected_concept": "comorbidities/htn-and-pregnancy"}
+{"id": "okf-007", "category": "canonical", "question": "When should spironolactone be added as step 4 therapy?", "expected_path": "okf", "expected_concept": "protocols/step-care-treatment"}
+{"id": "okf-008", "category": "canonical", "question": "What is the NICE BP target for patients under 80?", "expected_path": "okf", "expected_concept": "guidelines/nice-ng136-summary"}
+{"id": "okf-009", "category": "canonical", "question": "What labs should be checked at baseline for hypertension?", "expected_path": "okf", "expected_concept": "monitoring/baseline-and-follow-up-labs"}
+{"id": "okf-010", "category": "canonical", "question": "What is the difference between hypertensive urgency and emergency?", "expected_path": "okf", "expected_concept": "emergencies/urgency-vs-emergency"}
+{"id": "rag-001", "category": "open_ended", "question": "Has any case reported rebound hypertension after clonidine withdrawal?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-002", "category": "open_ended", "question": "What does the literature say about resistant hypertension prevalence?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-003", "category": "open_ended", "question": "Find similar patient profiles in the clinical archive", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-004", "category": "open_ended", "question": "Are there studies on salt sensitivity in African American populations?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-005", "category": "open_ended", "question": "What are recent research findings on renal denervation?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-006", "category": "open_ended", "question": "Has anyone reported baroreflex activation therapy outcomes?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-007", "category": "open_ended", "question": "What are case reports on hypertensive encephalopathy presentation?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-008", "category": "open_ended", "question": "What does the literature say about ambulatory BP monitoring compliance?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-009", "category": "open_ended", "question": "Are there studies comparing chlorthalidone vs HCTZ outcomes?", "expected_path": "rag", "expected_concept": ""}
+{"id": "rag-010", "category": "open_ended", "question": "What case reports exist on ACEi-induced angioedema?", "expected_path": "rag", "expected_concept": ""}
+{"id": "hybrid-001", "category": "hybrid", "question": "Summarize the ACC/AHA target BP for elderly patients and show supporting trial evidence", "expected_path": "okf_then_rag", "expected_concept": "comorbidities/htn-and-elderly"}
+{"id": "hybrid-002", "category": "hybrid", "question": "What is the thiazide dose for CKD patients and what studies support its use?", "expected_path": "okf_then_rag", "expected_concept": "pharmacology/thiazide-diuretics"}
+{"id": "hybrid-003", "category": "hybrid", "question": "Explain ACEi contraindications in bilateral RAS with supporting literature", "expected_path": "okf_then_rag", "expected_concept": "pharmacology/contraindications"}
+{"id": "hybrid-004", "category": "hybrid", "question": "What are step-care treatment guidelines and how was the step-care approach validated?", "expected_path": "okf_then_rag", "expected_concept": "protocols/step-care-treatment"}
+{"id": "hybrid-005", "category": "hybrid", "question": "Describe home BP monitoring protocol and research on HBPM outcomes", "expected_path": "okf_then_rag", "expected_concept": "monitoring/home-bp-monitoring"}
+{"id": "hybrid-006", "category": "hybrid", "question": "What is the diagnostic threshold for stage 1 HTN and how was the SPRINT trial relevant?", "expected_path": "okf_then_rag", "expected_concept": "diagnosis/diagnostic-thresholds"}
+{"id": "hybrid-007", "category": "hybrid", "question": "What drugs are contraindicated in pregnancy and what evidence supports the alternatives?", "expected_path": "okf_then_rag", "expected_concept": "comorbidities/htn-and-pregnancy"}
+{"id": "hybrid-008", "category": "hybrid", "question": "What is the JNC8 algorithm for resistant hypertension and what studies informed it?", "expected_path": "okf_then_rag", "expected_concept": "guidelines/jnc8-summary"}
+{"id": "hybrid-009", "category": "hybrid", "question": "Which drug interactions matter with ACEi and what is the evidence for monitoring?", "expected_path": "okf_then_rag", "expected_concept": "pharmacology/drug-drug-interactions"}
+{"id": "hybrid-010", "category": "hybrid", "question": "What are the secondary HTN screening criteria and what diagnostic studies support them?", "expected_path": "okf_then_rag", "expected_concept": "diagnosis/secondary-htn-red-flags"}

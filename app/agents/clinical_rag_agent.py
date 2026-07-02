@@ -10,6 +10,8 @@ from app.models import (
     Citation,
     ClaimSupport,
     ConfidenceLabel,
+    KnowledgePathInfo,
+    OKFConceptRef,
     QueryMode,
     QueryResponse,
     RetrievalResultModel,
@@ -17,6 +19,7 @@ from app.models import (
     SafetyFlags,
     ToolTrace,
 )
+from app.okf.interface import KnowledgeInterface
 from app.retrieval.reranker import Reranker
 from app.retrieval.store import HybridStore
 from app.safety.classifier import QueryIntent, RefusalReason, classify_query, refusal_message
@@ -56,12 +59,19 @@ class AgentState(TypedDict, total=False):
     response: NotRequired[QueryResponse]
     graph_route: NotRequired[GraphRoute]
     unsupported_claims: NotRequired[bool]
+    knowledge_result: NotRequired[Any]
 
 
 class ClinicalRAGAgent:
-    def __init__(self, settings: Settings, store: HybridStore) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        store: HybridStore,
+        knowledge: KnowledgeInterface | None = None,
+    ) -> None:
         self.settings = settings
         self.store = store
+        self.knowledge = knowledge
         self.reranker = Reranker(settings)
         self._cohere: Any | None = None
         if settings.cohere_api_key:
@@ -197,11 +207,54 @@ class ClinicalRAGAgent:
         }
 
     def _retrieve(self, state: AgentState) -> dict[str, Any]:
+        if self.knowledge:
+            result = self.knowledge.search(
+                state["question"],
+                alpha=state["alpha"],
+                top_k=state["top_k"],
+            )
+            candidates = [
+                {
+                    "chunk_id": chunk.source_path,
+                    "text": chunk.content,
+                    "metadata": {
+                        "source_url": chunk.citation_url,
+                        "source_type": "okf",
+                    },
+                    "dense_score": chunk.confidence,
+                    "sparse_score": 0.0,
+                    "hybrid_score": chunk.confidence,
+                }
+                for chunk in result.okf_docs
+            ]
+            for chunk in result.rag_chunks:
+                candidates.append(
+                    {
+                        "chunk_id": chunk.source_path,
+                        "text": chunk.content,
+                        "metadata": {
+                            "source_url": chunk.citation_url,
+                            "source_type": "rag",
+                        },
+                        "dense_score": chunk.score,
+                        "sparse_score": 0.0,
+                        "hybrid_score": chunk.score,
+                    }
+                )
+            candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
+            logger.info(
+                "knowledge_retrieved request_id=%s path=%s okf=%d rag=%d",
+                state.get("request_id"),
+                result.decision.path if result.decision else "unknown",
+                len(result.okf_docs),
+                len(result.rag_chunks),
+            )
+            return {"candidates": candidates, "knowledge_result": result}
         candidates = cast(
             list[dict[str, Any]],
             self.store.query(state["question"], alpha=state["alpha"], top_k=state["top_k"]),
         )
-        logger.info("retrieved_chunks=%s", [candidate["chunk_id"] for candidate in candidates])
+        logger.info("retrieved_chunks=%s", [c["chunk_id"] for c in candidates])
         return {"candidates": candidates}
 
     def _tools(self, state: AgentState) -> dict[str, Any]:
@@ -246,13 +299,31 @@ class ClinicalRAGAgent:
         return {"tools_used": tools_used, "tool_notes": tool_notes, "tool_trace": tool_trace}
 
     def _rerank(self, state: AgentState) -> dict[str, Any]:
-        reranked = self.reranker.rerank(
-            state["question"],
-            state.get("candidates", []),
-            top_n=state["rerank_top_n"],
+        candidates = state.get("candidates", [])
+        if not candidates:
+            return {"reranked": []}
+
+        rag_only = [c for c in candidates if c.get("metadata", {}).get("source_type") != "okf"]
+        okf_only = [c for c in candidates if c.get("metadata", {}).get("source_type") == "okf"]
+
+        if rag_only:
+            reranked = self.reranker.rerank(
+                state["question"],
+                rag_only,
+                top_n=state["rerank_top_n"],
+            )
+        else:
+            reranked = []
+
+        okf_only.sort(key=lambda x: x["hybrid_score"], reverse=True)
+
+        merged = okf_only + reranked
+        logger.info(
+            "reranked_chunks okf=%d rag=%d",
+            len(okf_only),
+            len(reranked),
         )
-        logger.info("reranked_chunks=%s", [candidate["chunk_id"] for candidate in reranked])
-        return {"reranked": reranked}
+        return {"reranked": merged}
 
     def _generate(self, state: AgentState) -> dict[str, Any]:
         if self._cohere and state.get("reranked"):
@@ -262,16 +333,31 @@ class ClinicalRAGAgent:
         return {"answer": self._with_required_notice(answer, state.get("mode", "patient"))}
 
     def _generate_with_cohere(self, state: AgentState) -> str:
-        context = "\n\n".join(
-            f'<chunk id="{item["chunk_id"]}">{item["text"]}</chunk>'
-            for item in state.get("reranked", [])
-        )
+        reranked = state.get("reranked", [])
+        context_parts = []
+        for item in reranked:
+            source_type = item.get("metadata", {}).get("source_type", "rag")
+            tag = f'<chunk id="{item["chunk_id"]}" source_type="{source_type}">{item["text"]}</chunk>'
+            context_parts.append(tag)
+
+        context = "\n\n".join(context_parts)
         tool_notes = "\n".join(state.get("tool_notes", []))
         mode_instruction = (
             "Use plain language for a patient preparing to talk with a clinician."
             if state.get("mode") == "patient"
             else "Use concise care-team language for clinician or care-coordinator review."
         )
+
+        has_okf = any(
+            item.get("metadata", {}).get("source_type") == "okf" for item in reranked
+        )
+        okf_rule = ""
+        if has_okf:
+            okf_rule = (
+                "Canonical knowledge sources tagged source_type='okf' are curated, "
+                "high-trust guidelines. Trust OKF content over other sources if there is a conflict."
+            )
+
         prompt = f"""
 You are a clinical evidence assistant for education and workflow support.
 {mode_instruction}
@@ -281,6 +367,7 @@ Every clinical recommendation must cite chunk ids in square brackets.
 If evidence is insufficient, say: I could not find enough evidence in the indexed sources.
 Do not diagnose, prescribe, recommend medication doses, handle emergency triage, or replace clinician judgment.
 Include a reminder to consult a licensed clinician.
+{okf_rule}
 
 <user_question>
 {state["question"]}
@@ -352,6 +439,29 @@ Include a reminder to consult a licensed clinician.
         refusal_triggered = bool(state.get("refusal_reason"))
         unsupported = state.get("unsupported_claims", False) if not refusal_triggered else False
         tool_notes = state.get("tool_notes", [])
+
+        knowledge_result = state.get("knowledge_result")
+        knowledge_path = None
+        if knowledge_result and knowledge_result.decision:
+            decision = knowledge_result.decision
+            knowledge_path = KnowledgePathInfo(
+                path=decision.path,
+                reason=decision.reason,
+                okf_concepts=[
+                    OKFConceptRef(
+                        source_path=doc.source_path,
+                        title=doc.title,
+                        confidence=doc.confidence,
+                        citation_url=doc.citation_url,
+                    )
+                    for doc in knowledge_result.okf_docs
+                ],
+                rag_sources=[
+                    chunk.source_path
+                    for chunk in knowledge_result.rag_chunks
+                ],
+            )
+
         response = QueryResponse(
             answer=answer,
             citations=citations,
@@ -382,6 +492,7 @@ Include a reminder to consult a licensed clinician.
             ),
             confidence=self._confidence(citations, tool_notes, unsupported, refusal_triggered),
             tool_trace=[ToolTrace(**item) for item in state.get("tool_trace", [])],
+            knowledge_path=knowledge_path,
             request_id=state.get("request_id"),
             graph_route=state.get("graph_route"),
         )

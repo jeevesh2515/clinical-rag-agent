@@ -41,12 +41,12 @@ def _validate_download_url(url: str) -> None:
         raise ValueError("Download URL must not point to localhost or loopback address")
     try:
         addr = ipaddress.ip_address(hostname)
-        if addr.is_private or addr.is_loopback or addr.is_link_local:
-            raise ValueError(
-                "Download URL must not point to a private or reserved IP address"
-            )
     except ValueError:
-        pass
+        return
+    if addr.is_private or addr.is_loopback or addr.is_link_local:
+        raise ValueError(
+            "Download URL must not point to a private or reserved IP address"
+        )
 
 
 def download_pdf(

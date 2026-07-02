@@ -17,6 +17,7 @@ QUERY_CONTRACT_KEYS = {
     "claim_support",
     "confidence",
     "tool_trace",
+    "knowledge_path",
     "request_id",
     "graph_route",
 }

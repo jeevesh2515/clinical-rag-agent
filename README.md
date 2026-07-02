@@ -4,16 +4,48 @@ A production-style HealthTech RAG backend that ingests real clinical guideline P
 
 This is a portfolio project. It does not provide medical advice and must not be used as a clinical decision-support system with real patients.
 
-## Stack
+## Architecture
 
-- FastAPI API service
-- LangGraph agent workflow
-- LangChain-compatible document processing
-- Pinecone hybrid retrieval
-- BM25 sparse retrieval
-- Cohere `embed-v4.0`, `rerank-v3.5`, and Command model generation
-- RAGAS evaluation harness and notebook
-- Tool layer: web search, calculator, and demo clinical workflow DB lookup
+```mermaid
+flowchart TB
+    Client["Client / Frontend"] --> API["FastAPI /query"]
+    API --> LG["LangGraph Agent"]
+
+    subgraph LG["LangGraph Agent"]
+        V["validate"] --> C["classify"]
+        C -->|"unsafe"| REFUSE["refuse → format"]
+        C -->|"calculator"| CF["calculator_fast_path → tools → rerank"]
+        C -->|"guideline/workflow"| R["retrieve"]
+        R --> KI{"KnowledgeInterface"}
+        KI -->|"OKF match"| OKF["OKF Retriever<br/>deterministic"]
+        KI -->|"OKF+hybrid"| OKF
+        KI -->|"RAG fallback"| HYBRID["Hybrid Retrieval<br/>dense+sparse"]
+        HYBRID --> RR["Reranker"]
+        CF --> GEN["generate"]
+        RR --> GEN
+        GEN --> VC["validate_claims"]
+        VC --> FMT["format"]
+    end
+
+    API --> RESP["Structured Response<br/>citations + trace + safety"]
+```
+
+### Stack
+
+| Layer | Technology |
+|---|---|
+| API | FastAPI |
+| Workflow | LangGraph |
+| Embeddings | Cohere `embed-v4.0` + local fallback |
+| Sparse retrieval | BM25 |
+| Hybrid fusion | Weighted alpha (default 0.55) |
+| Reranking | Cohere `rerank-v3.5` + lexical fallback |
+| Generation | Cohere Command + extractive fallback |
+| Curated knowledge | OKF (27 concept files, tag-based) |
+| Tools | Clinical calculators, DB lookup, web search |
+| Evaluation | RAGAS-compatible harness + deterministic proxies |
+| Frontend | React + Vite + TypeScript + Tailwind |
+| CI | pytest, ruff, pyright, make okf-check |
 
 ## Quick Start
 
@@ -140,6 +172,71 @@ Citation validation flags:
 - clinical language without citations
 - recommendation language without `[chunk_id]` references in the answer text
 
+## Open Knowledge Format (OKF)
+
+A curated, git-versioned knowledge spine for canonical clinical facts — no embeddings, no vector search.
+
+```mermaid
+flowchart LR
+    Q["Query"] --> QR["QueryRouter"]
+    QR -->|"tag/class match"| OKF["OKF path"]
+    QR -->|"no tag match"| RAG["RAG path"]
+    QR -->|"partial match"| BOTH["OKF + RAG"]
+    OKF --> IFACE["Unified KnowledgeInterface"]
+    RAG --> IFACE
+    BOTH --> IFACE
+    IFACE --> AGENT["Agent + Generation<br/>(OKF trust rule)"]
+```
+
+The OKF module sits **in front of** the RAG pipeline. A `QueryRouter` classifies each query as one of:
+
+- `okf` — canonical knowledge (guidelines, protocols, drug classes, contraindications)
+- `rag` — open-ended or exploratory queries (recent studies, case reports)
+- `okf_then_rag` — hybrid: canonical first, then supplementary evidence
+
+**Key design**: 27 deterministic concept files in `hypertension-okf/` with YAML frontmatter, `[[wikilinks]]` knowledge graph, and tag-based retrieval. The generation prompt includes an OKF trust rule: curated sources override vector-retrieved content.
+
+The routing decision is exposed in the API response as `knowledge_path`:
+
+```json
+"knowledge_path": {
+  "path": "okf",
+  "reason": "OKF has concepts matching topic tags: bp, classification",
+  "okf_concepts": [
+    {"source_path": "diagnosis/bp-categories.md", "title": "BP Categories", "confidence": 1.0}
+  ],
+  "rag_sources": []
+}
+```
+
+The system falls back to pure RAG if the `hypertension-okf/` directory is missing.
+
+### OKF knowledge graph
+
+The 27 concept files form a wikilink cross-reference graph. Each file's YAML frontmatter declares `related` wikilinks, and the retriever follows them to surface connected concepts:
+
+```mermaid
+flowchart LR
+    BP["BP Categories"] --> TH["Diagnostic Thresholds"]
+    BP --> S1["Stage 1 Protocol"]
+    S1 --> ST["Step-Care Treatment"]
+    ST --> ACE["ACE Inhibitors"]
+    ST --> CCB["Calcium Channel Blockers"]
+    ST --> THIA["Thiazide Diuretics"]
+    ST --> RESIST["Resistant HTN"]
+    MON["Home BP Monitoring"] --> BP
+    FU["Follow-Up Cadence"] --> MON
+    LAB["Baseline Labs"] --> FU
+    ESC["ESC/ESH Summary"] --> BP
+    NICE["NICE Summary"] --> S1
+```
+
+CI validation: `make okf-check` validates frontmatter and wikilink integrity across all 27 files.
+
+### Shared normalization
+
+The retriever and router share a single `normalize_query()` utility in `app/okf/normalize.py`. Both modules clean query and tag strings identically — NFKD Unicode normalization, case folding, punctuation stripping, whitespace collapse — so routing decisions and retrieval matches always agree.
+
 ## Source Registry
 
 `GET /sources` returns auditable metadata for all registered clinical guideline sources:
@@ -183,6 +280,21 @@ Supported modes are `patient` and `clinician`. The agent classifies each query b
 ## Safety-First Behavior
 
 The agent refuses unsafe medical-advice requests before retrieval or generation, including requests to diagnose, prescribe, recommend medication doses, provide emergency triage, ignore symptoms, or bypass safety guardrails.
+
+```mermaid
+flowchart LR
+    Q["User Query"] --> CL["classify_intent"]
+    CL -->|"diagnosis/prescribe/dose/<br/>emergency/injection"| REF["refuse ❌"]
+    CL -->|"calculator"| CF["calculator_fast_path"]
+    CL -->|"guideline/workflow"| RET["retrieve"]
+    CF --> GEN["generate"]
+    RET --> GEN
+    GEN --> VC["validate_claims"]
+    VC --> FMT["format → response"]
+    REF --> FMT
+```
+
+Every unsafe request is refused before any retrieval or LLM call — no evidence fetched, no tokens wasted.
 
 Example refusal demo:
 
@@ -247,21 +359,40 @@ Make sure the backend CORS allows `http://localhost:5173` (default in `.env.exam
 - **Source registry panel** with indexing status and provenance metadata
 - **Evaluation dashboard** for RAGAS quality metrics
 
-## Tests
+## Test Suite
 
-Recommended local validation:
+Current validation: **106 tests passing**, Ruff clean.
 
 ```bash
 .venv/bin/python -m pytest
 .venv/bin/python -m ruff check .
-uvx pyright
 ```
 
-If you are not using `uv`, install the project with dev extras first:
+Test coverage includes:
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-```
+| Area | Tests | What it covers |
+|------|-------|---------------|
+| Safety classifier | 8 | Diagnosis, prescribing, emergency triage, prompt-injection refusals |
+| API contracts | 5 | Response shape, request validation, tracing |
+| Agent routing | 14 | LangGraph node execution, calculator fast path, tool trace cap |
+| Retrieval | 9 | Hybrid scoring, BM25 refit, reranker, determinism |
+| Chunking | 2 | Deterministic IDs, text normalization |
+| Generation | 4 | Unsupported claim detection |
+| Calculators | 17 | BMI, MAP, pulse pressure, eGFR with range validation |
+| OKF retriever | 8 | Index loading, tag/title/punctuation retrieval, wikilinks |
+| OKF router | 8 | All routing paths: okf, rag, okf_then_rag |
+| OKF interface | 4 | Unified search, merged content, RAG invocation |
+| PDF loader | 2 | Page preservation, cache path |
+| Source registry | 3 | Default sources, index status, ID lookup |
+| Manifest | 5 | ID generation, save/load, empty fields |
+| Evaluation | 1 | Score writing |
+
+### Tool Layer
+
+Built-in clinical calculators:
+
+- **BMI**: weight (kg) and height (m) extraction
+- **MAP**: mean arterial pressure from BP pairs (e.g., "120/80")
+- **Pulse pressure**: systolic minus diastolic
+- **eGFR**: creatinine (mg/dL or µmol/L) with age and sex detection
+- All inputs validated against physiologically plausible ranges

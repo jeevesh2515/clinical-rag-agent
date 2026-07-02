@@ -11,6 +11,7 @@ QueryIntentLabel = Literal[
     "insufficient_evidence",
     "out_of_domain",
 ]
+OKFSourceType = Literal["okf", "rag"]
 ClaimSupportType = Literal[
     "direct_guideline_support", "inferred_workflow_suggestion", "unsupported_claim"
 ]
@@ -169,6 +170,21 @@ class QueryRequest(BaseModel):
         return self
 
 
+class OKFConceptRef(BaseModel):
+    source_path: str = Field(description="OKF concept file path")
+    title: str = Field(default="", description="Concept title")
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    citation_url: str = Field(default="", description="Canonical source URL")
+    source_type: OKFSourceType = Field(default="okf")
+
+
+class KnowledgePathInfo(BaseModel):
+    path: str = Field(description="Routing path: okf, rag, or okf_then_rag")
+    reason: str = Field(default="", description="Routing rationale")
+    okf_concepts: list[OKFConceptRef] = Field(default_factory=list)
+    rag_sources: list[str] = Field(default_factory=list)
+
+
 class QueryResponse(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
@@ -251,6 +267,10 @@ class QueryResponse(BaseModel):
     tool_trace: list[ToolTrace] = Field(
         default_factory=list,
         description="Visible deterministic tool trace for debugging and auditability.",
+    )
+    knowledge_path: KnowledgePathInfo | None = Field(
+        default=None,
+        description="OKF vs RAG knowledge routing info.",
     )
     request_id: str | None = Field(
         default=None,

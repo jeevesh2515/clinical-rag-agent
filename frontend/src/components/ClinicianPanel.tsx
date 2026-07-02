@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Wrench, Shield, Search, FileText, ListChecks, Target, ClipboardList } from 'lucide-react'
+import { BookOpen, Wrench, Shield, Search, FileText, ListChecks, Target, ClipboardList, GitBranch, BookMarked } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { StatusBadge } from './StatusBadge'
 import { CitationsPanel } from './CitationsPanel'
@@ -67,6 +67,49 @@ export const ClinicianPanel: React.FC<ClinicianPanelProps> = ({ response }) => {
         )}
         {activeTab === 'retrieval' && <RetrievalPanel retrieval={response.retrieval} />}
       </div>
+
+      {/* Knowledge Path (OKF vs RAG) */}
+      {response.knowledge_path && (
+        <div className="glass-panel p-4">
+          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <GitBranch className="w-3 h-3 text-purple-400" />
+            Knowledge Route
+          </h4>
+          <div className="flex items-center gap-2 mb-2">
+            <span className={cn(
+              'text-[10px] font-medium px-2 py-0.5 rounded-full border',
+              response.knowledge_path.path === 'okf'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                : response.knowledge_path.path === 'okf_then_rag'
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  : 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+            )}>
+              {response.knowledge_path.path}
+            </span>
+            <span className="text-[10px] text-slate-500">{response.knowledge_path.reason}</span>
+          </div>
+          {response.knowledge_path.okf_concepts.length > 0 && (
+            <div className="mt-2 space-y-1">
+              <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                <BookMarked className="w-2.5 h-2.5" />
+                OKF Concepts
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {response.knowledge_path.okf_concepts.map((concept, i) => (
+                  <span key={i} className="text-[9px] font-mono text-purple-400/80 bg-purple-500/8 px-1.5 py-0.5 rounded border border-purple-500/15">
+                    {concept.source_path}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {response.knowledge_path.rag_sources.length > 0 && (
+            <div className="mt-2">
+              <span className="text-[10px] text-slate-500">RAG Sources: {response.knowledge_path.rag_sources.length}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Clinical metadata */}
       <div className="glass-panel p-4 space-y-4">

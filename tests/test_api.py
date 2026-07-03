@@ -215,3 +215,60 @@ def test_query_refuses_emergency_triage_request(client):
     assert payload["refusal_reason"] == "emergency_triage_request"
     assert payload["safety"]["refusal_triggered"] is True
     assert "emergency triage" in payload["answer"].lower()
+
+
+def test_cases_endpoint_returns_synthetic_cases(client):
+    response = client.get("/cases")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 5
+    assert len(payload["cases"]) == 5
+    case_ids = {c["case_id"] for c in payload["cases"]}
+    assert "htn-001" in case_ids
+    assert "htn-005" in case_ids
+    for case in payload["cases"]:
+        assert "case_id" in case
+        assert "age" in case
+        assert "sex" in case
+        assert "summary" in case
+        assert "conditions" in case
+
+
+def test_query_with_case_id_returns_care_gaps(client):
+    response = client.post(
+        "/query",
+        json={
+            "question": "What are the care gaps for this patient?",
+            "case_id": "htn-001",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["care_gaps"] is not None
+    assert isinstance(payload["care_gaps"], list)
+    assert len(payload["care_gaps"]) >= 1
+
+
+def test_query_with_case_id_returns_follow_up_plan(client):
+    response = client.post(
+        "/query",
+        json={
+            "question": "Review this patient's hypertension management.",
+            "case_id": "htn-004",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert isinstance(payload["follow_up_plan"], list)
+    assert len(payload["follow_up_plan"]) >= 1
+
+
+def test_query_without_case_id_returns_empty_gaps(client):
+    response = client.post(
+        "/query",
+        json={"question": "When should drug treatment be considered for stage 1 hypertension?"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["care_gaps"] == []
+    assert payload["follow_up_plan"] == []

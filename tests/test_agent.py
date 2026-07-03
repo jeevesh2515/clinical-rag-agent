@@ -194,3 +194,69 @@ def test_agent_validate_claims_node_skipped_for_refusal(store, settings):
     )
     assert response.safety.unsupported_claims_detected is False
     assert response.safety.refusal_triggered is True
+
+
+def test_agent_with_case_id_loads_case_and_returns_care_gaps(store, settings):
+    from app.agents.clinical_rag_agent import ClinicalRAGAgent
+
+    agent = ClinicalRAGAgent(settings, store)
+    response = agent.invoke(
+        "What are the care gaps for this patient?",
+        alpha=0.55, top_k=5, rerank_top_n=2,
+        case_id="htn-001",
+    )
+    assert response.care_gaps is not None
+    assert len(response.care_gaps) >= 1
+    first_gap = response.care_gaps[0]
+    assert isinstance(first_gap, str)
+    assert len(first_gap) > 0
+
+
+def test_agent_with_case_id_htn002_returns_ckd_gaps(store, settings):
+    from app.agents.clinical_rag_agent import ClinicalRAGAgent
+
+    agent = ClinicalRAGAgent(settings, store)
+    response = agent.invoke(
+        "Review this patient's hypertension management.",
+        alpha=0.55, top_k=5, rerank_top_n=2,
+        case_id="htn-002",
+    )
+    assert len(response.care_gaps) >= 1
+    assert len(response.follow_up_plan) >= 3
+
+
+def test_agent_with_case_id_htn005_returns_resistant_screening(store, settings):
+    from app.agents.clinical_rag_agent import ClinicalRAGAgent
+
+    agent = ClinicalRAGAgent(settings, store)
+    response = agent.invoke(
+        "What should be done for this resistant hypertension patient?",
+        alpha=0.55, top_k=5, rerank_top_n=2,
+        case_id="htn-005",
+    )
+    assert any("resistant" in g.lower() or "bp" in g.lower() for g in response.care_gaps)
+
+
+def test_agent_without_case_id_returns_empty_gaps(store, settings):
+    from app.agents.clinical_rag_agent import ClinicalRAGAgent
+
+    agent = ClinicalRAGAgent(settings, store)
+    response = agent.invoke(
+        "When should drug treatment be considered for stage 1 hypertension?",
+        alpha=0.55, top_k=5, rerank_top_n=2,
+    )
+    assert response.care_gaps == []
+    assert response.follow_up_plan == []
+
+
+def test_agent_with_invalid_case_id_graceful(store, settings):
+    from app.agents.clinical_rag_agent import ClinicalRAGAgent
+
+    agent = ClinicalRAGAgent(settings, store)
+    response = agent.invoke(
+        "Review this patient.",
+        alpha=0.55, top_k=5, rerank_top_n=2,
+        case_id="nonexistent",
+    )
+    assert response.care_gaps == []
+    assert response.follow_up_plan == []

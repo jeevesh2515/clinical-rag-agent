@@ -155,3 +155,16 @@ export interface EvalResult {
   status: string
   results: unknown
 }
+
+export interface CaseInfo {
+  case_id: string
+  age: number
+  sex: string
+  summary: string
+  conditions: string[]
+}
+
+export interface CasesResponse {
+  cases: CaseInfo[]
+  total: number
+}

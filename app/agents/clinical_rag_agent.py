@@ -23,7 +23,10 @@ from app.okf.interface import KnowledgeInterface
 from app.retrieval.reranker import Reranker
 from app.retrieval.store import HybridStore
 from app.safety.classifier import QueryIntent, RefusalReason, classify_query, refusal_message
+from app.cases.models import SyntheticCase
+from app.cases.repository import CaseRepository
 from app.tools.calculator import calculate_bmi
+from app.tools.care_gap_checker import check_care_gaps, generate_follow_up_plan
 from app.tools.db_lookup import lookup_workflow_reference
 from app.tools.web_search import web_search
 
@@ -60,6 +63,9 @@ class AgentState(TypedDict, total=False):
     graph_route: NotRequired[GraphRoute]
     unsupported_claims: NotRequired[bool]
     knowledge_result: NotRequired[Any]
+    current_case: NotRequired[SyntheticCase | None]
+    care_gaps: NotRequired[list[dict]]
+    follow_up_plan: NotRequired[list[str]]
 
 
 class ClinicalRAGAgent:
@@ -121,6 +127,7 @@ class ClinicalRAGAgent:
     def _build_graph(self) -> Any:
         graph = StateGraph(AgentState)
         graph.add_node("validate", self._validate)
+        graph.add_node("load_case", self._load_case)
         graph.add_node("classify", self._classify)
         graph.add_node("refuse", self._refuse)
         graph.add_node("insufficient", self._insufficient)
@@ -129,9 +136,11 @@ class ClinicalRAGAgent:
         graph.add_node("rerank", self._rerank)
         graph.add_node("generate", self._generate)
         graph.add_node("validate_claims", self._validate_claims)
+        graph.add_node("check_gaps", self._check_gaps)
         graph.add_node("format", self._format)
         graph.set_entry_point("validate")
-        graph.add_edge("validate", "classify")
+        graph.add_edge("validate", "load_case")
+        graph.add_edge("load_case", "classify")
         graph.add_conditional_edges(
             "classify",
             self._route_after_classification,
@@ -148,7 +157,8 @@ class ClinicalRAGAgent:
         graph.add_edge("tools", "rerank")
         graph.add_edge("rerank", "generate")
         graph.add_edge("generate", "validate_claims")
-        graph.add_edge("validate_claims", "format")
+        graph.add_edge("validate_claims", "check_gaps")
+        graph.add_edge("check_gaps", "format")
         graph.add_edge("format", END)
         return graph.compile()
 
@@ -158,6 +168,46 @@ class ClinicalRAGAgent:
         if state.get("mode") not in {"patient", "clinician"}:
             raise ValueError("Mode must be either 'patient' or 'clinician'")
         return state
+
+    def _load_case(self, state: AgentState) -> dict[str, Any]:
+        case_id = state.get("case_id")
+        if not case_id:
+            return {"current_case": None, "care_gaps": [], "follow_up_plan": []}
+        case = CaseRepository.load(case_id)
+        if case is None:
+            logger.warning("Case not found: %s", case_id)
+            return {"current_case": None}
+        logger.info(
+            "case_loaded request_id=%s case_id=%s age=%d conditions=%s",
+            state.get("request_id"),
+            case_id,
+            case.age,
+            [c.name for c in case.conditions],
+        )
+        return {"current_case": case}
+
+    def _check_gaps(self, state: AgentState) -> dict[str, Any]:
+        case = state.get("current_case")
+        if not case:
+            return {"care_gaps": [], "follow_up_plan": []}
+        gaps = check_care_gaps(case)
+        plan = generate_follow_up_plan(case, gaps)
+        gap_dicts = [
+            {
+                "gap_type": g.gap_type,
+                "description": g.description,
+                "severity": g.severity,
+                "recommendation": g.recommendation,
+            }
+            for g in gaps
+        ]
+        logger.info(
+            "care_gaps_checked request_id=%s case_id=%s gaps=%d",
+            state.get("request_id"),
+            case.case_id,
+            len(gaps),
+        )
+        return {"care_gaps": gap_dicts, "follow_up_plan": plan}
 
     def _classify(self, state: AgentState) -> dict[str, Any]:
         classification = classify_query(state["question"])
@@ -358,6 +408,23 @@ class ClinicalRAGAgent:
                 "high-trust guidelines. Trust OKF content over other sources if there is a conflict."
             )
 
+        case_context = ""
+        case = state.get("current_case")
+        if case:
+            case_lines = [
+                f"Patient: {case.age}{case.sex}",
+                f"Conditions: {', '.join(c.name for c in case.conditions)}",
+                f"Medications: {', '.join(f'{m.name} {m.dose}' for m in case.medications)}",
+            ]
+            if case.bp_readings:
+                latest_bp = max(case.bp_readings, key=lambda r: r.date)
+                case_lines.append(f"Latest BP: {latest_bp.systolic}/{latest_bp.diastolic}")
+            if case.lab_results:
+                recent_labs = sorted(case.lab_results, key=lambda r: r.date, reverse=True)[:4]
+                case_lines.extend(f"Lab {r.test}: {r.value}" for r in recent_labs)
+            case_lines.append(f"Last visit: {case.last_visit_date}")
+            case_context = "\n".join(case_lines)
+
         prompt = f"""
 You are a clinical evidence assistant for education and workflow support.
 {mode_instruction}
@@ -380,7 +447,7 @@ Include a reminder to consult a licensed clinician.
 <tool_notes>
 {tool_notes}
 </tool_notes>
-"""
+""" + (f"\n<patient_context>\n{case_context}\n</patient_context>\n" if case_context else "")
         cohere_client = self._cohere
         if cohere_client is None:
             raise RuntimeError("Cohere client is not configured")
@@ -462,6 +529,13 @@ Include a reminder to consult a licensed clinician.
                 ],
             )
 
+        care_gaps = state.get("care_gaps", [])
+        follow_up_plan = state.get("follow_up_plan", [])
+
+        care_gap_strings = [
+            g.get("description", g.get("gap_type", str(g))) for g in care_gaps
+        ] if care_gaps else []
+
         response = QueryResponse(
             answer=answer,
             citations=citations,
@@ -486,6 +560,8 @@ Include a reminder to consult a licensed clinician.
             refusal_reason=state.get("refusal_reason"),
             evidence_summary=self._build_evidence_summary(citations),
             workflow_considerations=self._build_workflow_considerations(state, tool_notes),
+            care_gaps=care_gap_strings,
+            follow_up_plan=follow_up_plan,
             patient_education_draft=self._build_patient_education_draft(state, citations),
             claim_support=self._build_claim_support(
                 citations, tool_notes, unsupported, refusal_triggered

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import type { QueryRequest, QueryResponse, HealthResponse, DocumentsResponse, SourcesResponse, EvalResult } from '../types/api'
+import type { QueryRequest, QueryResponse, HealthResponse, DocumentsResponse, SourcesResponse, EvalResult, CasesResponse } from '../types/api'
 
 const API_BASE = '' // Uses Vite proxy to /api -> backend
 
@@ -94,6 +94,16 @@ export function useApi() {
     }
   }, [])
 
+  const listCases = useCallback(async (): Promise<CasesResponse | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/api/cases`)
+      if (!res.ok) return null
+      return await res.json()
+    } catch {
+      return null
+    }
+  }, [])
+
   const ingest = useCallback(async (): Promise<{ documents: number; chunks: number; source_ids: string[]; manifest_id: string | null } | null> => {
     setLoading(true)
     setError(null)
@@ -116,5 +126,5 @@ export function useApi() {
     }
   }, [handleError])
 
-  return { query, health, documents, sources, runEval, getEvalResults, ingest, loading, error }
+  return { query, health, documents, sources, runEval, getEvalResults, listCases, ingest, loading, error }
 }

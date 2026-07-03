@@ -37,6 +37,7 @@ Canonical, git-versioned, hallucination-proof knowledge for the Clinical Hyperte
 | [Step-Care Treatment](protocols/step-care-treatment.md) | Step-up and step-down treatment ladder |
 | [Stage 1 HTN Protocol](protocols/stage-1-htn-protocol.md) | Initial management of Stage 1 hypertension |
 | [Stage 2 HTN Protocol](protocols/stage-2-htn-protocol.md) | Dual-therapy and escalation for Stage 2 |
+| [Resistant HTN Workup](protocols/resistant-htn-workup.md) | Definition, workup, and management of resistant hypertension |
 
 ## Emergencies
 

@@ -8,11 +8,11 @@ interface CaseSelectorProps {
 }
 
 const SYNTHETIC_CASES = [
-  { id: 'htn-001', name: 'Hypertension — Newly Diagnosed', age: 52, bp: '152/94', status: 'New diagnosis, no target organ damage' },
-  { id: 'htn-002', name: 'Hypertension — On Treatment', age: 64, bp: '138/86', status: 'On ACE-I, needs medication review' },
-  { id: 'htn-003', name: 'Hypertension — Resistant', age: 58, bp: '164/98', status: 'On 3 medications, poor control' },
-  { id: 'htn-004', name: 'Hypertension + Diabetes', age: 47, bp: '146/92', status: 'Type 2 DM, CKD stage 2' },
-  { id: 'htn-005', name: 'Hypertension — Elderly', age: 78, bp: '158/82', status: 'Isolated systolic, frailty considerations' },
+  { id: 'htn-001', name: 'Stage 1 HTN — On Amlodipine', age: 55, bp: '142/88', status: 'Male, BP not at target, no ACEi/ARB' },
+  { id: 'htn-002', name: 'HTN + CKD — On Lisinopril', age: 68, bp: '150/90', status: 'Female, eGFR 45, BP above CKD target' },
+  { id: 'htn-003', name: 'HTN + Pregnancy — On Labetalol', age: 32, bp: '135/85', status: 'Female, 28wk pregnant, closer monitoring needed' },
+  { id: 'htn-004', name: 'HTN + Diabetes — On Metformin', age: 72, bp: '138/86', status: 'Male, A1c 8.2%, BP not at DM target' },
+  { id: 'htn-005', name: 'Resistant HTN — On 3 Agents', age: 48, bp: '152/94', status: 'Male, resistant, needs secondary workup' },
 ]
 
 export const CaseSelector: React.FC<CaseSelectorProps> = ({ value, onChange }) => {

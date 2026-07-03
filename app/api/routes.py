@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Request
 
 from app.agents.clinical_rag_agent import ClinicalRAGAgent
 from app.api.dependencies import get_agent, get_knowledge_interface, get_store
+from app.cases.synthetic_cases import list_cases
 from app.core.config import get_settings
 from app.evaluation.run import run_evaluation
 from app.ingestion.manifest import IngestionManifest, build_manifest_id, save_manifest
@@ -128,3 +129,8 @@ def eval_results() -> dict:
     if not path.exists():
         return {"status": "missing", "results": None}
     return {"status": "ok", "results": json.loads(path.read_text())}
+
+
+@router.get("/cases", tags=["cases"])
+def list_all_cases() -> dict:
+    return {"cases": list_cases(), "total": len(list_cases())}

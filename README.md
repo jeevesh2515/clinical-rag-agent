@@ -12,7 +12,8 @@ flowchart TB
     API --> LG["LangGraph Agent"]
 
     subgraph LG["LangGraph Agent"]
-        V["validate"] --> C["classify"]
+        V["validate"] --> LC["load_case"]
+        LC --> C["classify"]
         C -->|"unsafe"| REFUSE["refuse → format"]
         C -->|"calculator"| CF["calculator_fast_path → tools → rerank"]
         C -->|"guideline/workflow"| R["retrieve"]
@@ -24,10 +25,11 @@ flowchart TB
         CF --> GEN["generate"]
         RR --> GEN
         GEN --> VC["validate_claims"]
-        VC --> FMT["format"]
+        VC --> CG["check_gaps"]
+        CG --> FMT["format"]
     end
 
-    API --> RESP["Structured Response<br/>citations + trace + safety"]
+    API --> RESP["Structured Response<br/>citations + trace + safety + care_gaps"]
 ```
 
 ### Stack
@@ -41,7 +43,7 @@ flowchart TB
 | Hybrid fusion | Weighted alpha (default 0.55) |
 | Reranking | Cohere `rerank-v3.5` + lexical fallback |
 | Generation | Cohere Command + extractive fallback |
-| Curated knowledge | OKF (27 concept files, tag-based) |
+| Curated knowledge | OKF (28 concept files, tag-based) |
 | Tools | Clinical calculators, DB lookup, web search |
 | Evaluation | RAGAS-compatible harness + deterministic proxies |
 | Frontend | React + Vite + TypeScript + Tailwind |
@@ -361,11 +363,12 @@ Make sure the backend CORS allows `http://localhost:5173` (default in `.env.exam
 
 ## Test Suite
 
-Current validation: **106 tests passing**, Ruff clean.
+Current validation: **153 tests passing**, Ruff clean, 28 OKF files validated.
 
 ```bash
 .venv/bin/python -m pytest
 .venv/bin/python -m ruff check .
+make okf-check
 ```
 
 Test coverage includes:
@@ -374,7 +377,7 @@ Test coverage includes:
 |------|-------|---------------|
 | Safety classifier | 8 | Diagnosis, prescribing, emergency triage, prompt-injection refusals |
 | API contracts | 5 | Response shape, request validation, tracing |
-| Agent routing | 14 | LangGraph node execution, calculator fast path, tool trace cap |
+| Agent routing | 19 | LangGraph nodes, calculator fast path, case context, care gap population |
 | Retrieval | 9 | Hybrid scoring, BM25 refit, reranker, determinism |
 | Chunking | 2 | Deterministic IDs, text normalization |
 | Generation | 4 | Unsupported claim detection |
@@ -386,6 +389,8 @@ Test coverage includes:
 | Source registry | 3 | Default sources, index status, ID lookup |
 | Manifest | 5 | ID generation, save/load, empty fields |
 | Evaluation | 1 | Score writing |
+| Cases | 15 | Case model, repository, fixture integrity, API format |
+| Care gap checker | 14 | BP target, drug class, labs, follow-up, screening rules |
 
 ### Tool Layer
 

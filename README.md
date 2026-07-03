@@ -45,7 +45,7 @@ flowchart TB
 | Generation | Cohere Command + extractive fallback |
 | Curated knowledge | OKF (28 concept files, tag-based) |
 | Tools | Clinical calculators, DB lookup, web search |
-| Evaluation | RAGAS-compatible harness + deterministic proxies |
+| Evaluation | Deterministic proxy metrics + CI threshold gates |
 | Frontend | React + Vite + TypeScript + Tailwind |
 | CI | pytest, ruff, pyright, make okf-check |
 
@@ -54,7 +54,7 @@ flowchart TB
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements.txt
 cp .env.example .env
 uvicorn app.main:app --reload
 ```
@@ -255,29 +255,67 @@ curl http://127.0.0.1:8000/sources
 
 ## Demo Flow
 
-```bash
-# Ingest returns manifest_id for audit trail lookup
-curl -X POST http://127.0.0.1:8000/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"use_default_sources": true}'
+### Basic query
 
+```bash
 curl -X POST http://127.0.0.1:8000/query \
   -H "Content-Type: application/json" \
   -d '{"question": "When should drug treatment be considered for stage 1 hypertension?", "mode": "patient"}'
 ```
 
-`/query` now supports a safety-first structured request:
+### Case-aware query (with care gap detection)
 
-```json
-{
-  "question": "What follow up workflow should be prepared after a BP review?",
-  "mode": "patient",
-  "case_id": null,
-  "include_patient_education": false
-}
+```bash
+curl -X POST http://127.0.0.1:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What should I do about my BP?", "mode": "clinician", "case_id": "htn-002"}'
 ```
 
-Supported modes are `patient` and `clinician`. The agent classifies each query before retrieval/generation as one of: `guideline_question`, `workflow_question`, `calculator_question`, `unsafe_medical_advice_request`, `insufficient_evidence`, or `out_of_domain`.
+### List available synthetic cases
+
+```bash
+curl http://127.0.0.1:8000/cases
+```
+
+### Ingest default sources
+
+```bash
+curl -X POST http://127.0.0.1:8000/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"use_default_sources": true}'
+```
+
+### Query schema
+
+Supported modes are `patient` and `clinician`. The optional `case_id` field enables case-aware care gap detection and follow-up planning. The agent classifies each query as: `guideline_question`, `workflow_question`, `calculator_question`, `unsafe_medical_advice_request`, `insufficient_evidence`, or `out_of_domain`.
+
+## Synthetic Patient Cases
+
+The system includes 5 synthetic hypertension cases for demo and evaluation. Each case has realistic vitals, labs, medications, and comorbidities — used for care gap detection and follow-up planning.
+
+| ID | Demographics | Key Features | Care Gaps Detected |
+|----|-------------|--------------|-------------------|
+| htn-001 | 55M, Stage 1 HTN | Amlodipine 5mg, BP 144/86 | BP above target, missing ACEi/ARB |
+| htn-002 | 68F, HTN + CKD Stage 3a | Lisinopril 20mg, BP 152/88, eGFR 45 | BP above CKD target |
+| htn-003 | 32F, HTN + Pregnancy | Labetalol 200mg BID, BP 136/84 | Closer monitoring needed |
+| htn-004 | 72M, HTN + Diabetes | Metformin + Lisinopril, A1c 8.2%, BP 140/84 | BP above DM target, A1c above target |
+| htn-005 | 48M, Resistant HTN | 3 agents (max doses), BP 154/92 | Resistant HTN workup needed, OSA screening |
+
+Care gaps are computed by deterministic rules (not ML) — BP targets, drug class requirements (ACEi/ARB for CKD/DM), lab schedules, follow-up cadence, and screening protocols. All rules reference OKF-curated guideline thresholds.
+
+## Deployment
+
+The project deploys on Vercel as a Python serverless function:
+
+```
+https://clinical-workflows.vercel.app
+```
+
+```bash
+vercel deploy --prod
+```
+
+**Dependencies**: Vercel reads `requirements.txt` (not `uv.lock` or `pyproject.toml`) to keep the bundle under the 500 MB function size limit. Only production dependencies are listed — no dev/test packages.
 
 ## Safety-First Behavior
 
@@ -353,8 +391,11 @@ Make sure the backend CORS allows `http://localhost:5173` (default in `.env.exam
 
 - **Dark-mode first** medical-grade UI with glassmorphism panels
 - **Patient / Clinician mode** toggle with tailored responses
-- **Synthetic case selector** for demo workflows
+- **Synthetic case selector** for demo workflows (5 cases: Stage 1 HTN, CKD, Pregnancy, Diabetes, Resistant)
+- **Care gap display** with BP target, drug class, labs, follow-up, and screening gaps
+- **Follow-up plan generator** with structured recommendations per case
 - **Rich citations panel** with expandable source quotes and provenance
+- **Knowledge route display** showing OKF vs RAG path selection
 - **Tool trace visualization** showing agent reasoning steps
 - **Safety flags dashboard** with real-time refusal detection
 - **Retrieval telemetry** showing dense, sparse, hybrid, and rerank scores
@@ -363,7 +404,7 @@ Make sure the backend CORS allows `http://localhost:5173` (default in `.env.exam
 
 ## Test Suite
 
-Current validation: **153 tests passing**, Ruff clean, 28 OKF files validated.
+Current validation: **153 tests passing**, Ruff clean, 28 OKF files validated, Vercel deployment live.
 
 ```bash
 .venv/bin/python -m pytest

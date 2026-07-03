@@ -25,7 +25,7 @@ QUERY_CONTRACT_KEYS = {
 
 def test_query_response_matches_public_contract(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={"question": "When should drug treatment be considered for stage 1 hypertension?"},
     )
 
@@ -44,7 +44,7 @@ def test_query_accepts_caller_request_id(client):
     request_id = "contract-test-request-id"
 
     response = client.post(
-        "/query",
+        "/api/query",
         headers={"X-Request-ID": request_id},
         json={"question": "When should drug treatment be considered for stage 1 hypertension?"},
     )
@@ -55,7 +55,7 @@ def test_query_accepts_caller_request_id(client):
 
 
 def test_query_validation_errors_are_structured_and_traceable(client):
-    response = client.post("/query", json={"question": ""})
+    response = client.post("/api/query", json={"question": ""})
 
     assert response.status_code == 422
     payload = response.json()
@@ -69,7 +69,7 @@ def test_query_validation_errors_are_structured_and_traceable(client):
 
 def test_query_rejects_unknown_request_fields(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "When should drug treatment be considered for stage 1 hypertension?",
             "unknown_frontend_field": True,
@@ -84,7 +84,7 @@ def test_query_rejects_unknown_request_fields(client):
 
 def test_query_rejects_rerank_top_n_greater_than_top_k(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "When should drug treatment be considered for stage 1 hypertension?",
             "top_k": 3,

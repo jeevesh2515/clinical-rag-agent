@@ -1,9 +1,11 @@
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.routes import router
@@ -93,9 +95,23 @@ async def validation_exception_handler(
     )
 
 
-app.include_router(router)
+app.include_router(router, prefix="/api")
 
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
-@app.get("/", include_in_schema=False)
-def root() -> RedirectResponse:
-    return RedirectResponse(url="/docs")
+if FRONTEND_DIST.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="frontend_assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_frontend(full_path: str):
+        file_path = FRONTEND_DIST / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        index_path = FRONTEND_DIST / "index.html"
+        if index_path.is_file():
+            return FileResponse(str(index_path), media_type="text/html")
+        return JSONResponse({"error": "not_found"}, status_code=404)
+else:
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse(url="/docs")

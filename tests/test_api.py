@@ -45,7 +45,7 @@ def test_ingest_endpoint_returns_manifest_and_indexes_chunks(client, monkeypatch
     monkeypatch.setattr("app.api.routes.save_manifest", capture_manifest)
 
     response = client.post(
-        "/ingest",
+        "/api/ingest",
         json={
             "use_default_sources": False,
             "sources": [
@@ -73,7 +73,7 @@ def test_ingest_endpoint_returns_manifest_and_indexes_chunks(client, monkeypatch
 
 def test_query_citations_trace_to_retrieval_results(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={"question": "When should drug treatment be considered for stage 1 hypertension?"},
     )
     assert response.status_code == 200
@@ -89,19 +89,19 @@ def test_query_citations_trace_to_retrieval_results(client):
 
 
 def test_health_endpoint(client):
-    response = client.get("/health")
+    response = client.get("/api/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
 def test_documents_endpoint(client):
-    response = client.get("/documents")
+    response = client.get("/api/documents")
     assert response.status_code == 200
     assert response.json()["documents"]
 
 
 def test_sources_endpoint(client):
-    response = client.get("/sources")
+    response = client.get("/api/sources")
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] >= 3
@@ -117,7 +117,7 @@ def test_sources_endpoint(client):
 
 def test_query_rerank_scores_populated(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "When should drug treatment be considered for stage 1 hypertension?",
             "top_k": 5,
@@ -135,7 +135,7 @@ def test_query_rerank_scores_populated(client):
 
 def test_query_endpoint_contract(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={"question": "When should drug treatment be considered for stage 1 hypertension?"},
     )
     assert response.status_code == 200
@@ -147,7 +147,7 @@ def test_query_endpoint_contract(client):
 
 
 def test_calculator_tool(client):
-    response = client.post("/query", json={"question": "Calculate BMI for 82 kg and 1.75 m."})
+    response = client.post("/api/query", json={"question": "Calculate BMI for 82 kg and 1.75 m."})
     assert response.status_code == 200
     payload = response.json()
     assert "calculator" in payload["tools_used"]
@@ -158,7 +158,7 @@ def test_calculator_tool(client):
 
 def test_query_endpoint_includes_structured_sprint_one_fields(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "When should drug treatment be considered for stage 1 hypertension?",
             "mode": "clinician",
@@ -175,7 +175,7 @@ def test_query_endpoint_includes_structured_sprint_one_fields(client):
 
 
 def test_query_refuses_prescribing_request(client):
-    response = client.post("/query", json={"question": "What drug should I take for hypertension?"})
+    response = client.post("/api/query", json={"question": "What drug should I take for hypertension?"})
     assert response.status_code == 200
     payload = response.json()
     assert payload["intent"] == "unsafe_medical_advice_request"
@@ -189,7 +189,7 @@ def test_query_refuses_prescribing_request(client):
 
 def test_query_retrieval_trace_includes_hybrid_scores(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "When should drug treatment be considered for stage 1 hypertension?",
             "alpha": 0.55,
@@ -209,7 +209,7 @@ def test_query_retrieval_trace_includes_hybrid_scores(client):
 
 
 def test_query_refuses_emergency_triage_request(client):
-    response = client.post("/query", json={"question": "Should this patient go to the ER?"})
+    response = client.post("/api/query", json={"question": "Should this patient go to the ER?"})
     assert response.status_code == 200
     payload = response.json()
     assert payload["refusal_reason"] == "emergency_triage_request"
@@ -218,7 +218,7 @@ def test_query_refuses_emergency_triage_request(client):
 
 
 def test_cases_endpoint_returns_synthetic_cases(client):
-    response = client.get("/cases")
+    response = client.get("/api/cases")
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] == 5
@@ -236,7 +236,7 @@ def test_cases_endpoint_returns_synthetic_cases(client):
 
 def test_query_with_case_id_returns_care_gaps(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "What are the care gaps for this patient?",
             "case_id": "htn-001",
@@ -251,7 +251,7 @@ def test_query_with_case_id_returns_care_gaps(client):
 
 def test_query_with_case_id_returns_follow_up_plan(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={
             "question": "Review this patient's hypertension management.",
             "case_id": "htn-004",
@@ -265,7 +265,7 @@ def test_query_with_case_id_returns_follow_up_plan(client):
 
 def test_query_without_case_id_returns_empty_gaps(client):
     response = client.post(
-        "/query",
+        "/api/query",
         json={"question": "When should drug treatment be considered for stage 1 hypertension?"},
     )
     assert response.status_code == 200

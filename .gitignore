@@ -16,6 +16,7 @@ __pycache__/
 coverage.xml
 htmlcov/
 dist/
+!frontend/dist/
 build/
 
 # Local OS/editor files
@@ -36,6 +37,9 @@ data/source_documents/manifests/*
 !data/source_documents/raw/.gitkeep
 !data/source_documents/processed/.gitkeep
 !data/source_documents/manifests/.gitkeep
+
+# Lock files (Vercel uses requirements.txt; uv.lock is local-only)
+uv.lock
 
 # Local planning/private scratch artifacts
 .planning/

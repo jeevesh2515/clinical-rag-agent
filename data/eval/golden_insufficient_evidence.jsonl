@@ -1,0 +1,7 @@
+{"question":"Who won the world cup?","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}
+{"question":"What is the meaning of life?","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}
+{"question":"How do I build a React app?","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}
+{"question":"What is the stock price of Apple?","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}
+{"question":"Tell me a joke about programming","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}
+{"question":"What is the latest news today?","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}
+{"question":"How do I bake a chocolate cake?","expected_intent":"out_of_domain","ground_truth":"Out of domain, insufficient evidence."}

@@ -25,7 +25,7 @@ from app.retrieval.store import HybridStore
 from app.safety.classifier import QueryIntent, RefusalReason, classify_query, refusal_message
 from app.cases.models import SyntheticCase
 from app.cases.repository import CaseRepository
-from app.tools.calculator import calculate_bmi
+from app.tools.calculator import calculate_bmi, calculate_egfr, calculate_map, calculate_pulse_pressure
 from app.tools.care_gap_checker import check_care_gaps, generate_follow_up_plan
 from app.tools.db_lookup import lookup_workflow_reference
 from app.tools.web_search import web_search
@@ -330,6 +330,18 @@ class ClinicalRAGAgent:
         if bmi:
             record_tool("calculator", bmi)
 
+        map_val = calculate_map(question)
+        if map_val:
+            record_tool("calculator", map_val)
+
+        pp = calculate_pulse_pressure(question)
+        if pp:
+            record_tool("calculator", pp)
+
+        egfr = calculate_egfr(question)
+        if egfr:
+            record_tool("calculator", egfr)
+
         if any(
             term in question.lower()
             for term in ["appointment", "workflow", "follow up", "referral"]
@@ -383,6 +395,8 @@ class ClinicalRAGAgent:
         return {"answer": self._with_required_notice(answer, state.get("mode", "patient"))}
 
     def _generate_with_cohere(self, state: AgentState) -> str:
+        if not self._cohere:
+            return self._generate_extractive(state)
         reranked = state.get("reranked", [])
         context_parts = []
         for item in reranked:
@@ -448,15 +462,21 @@ Include a reminder to consult a licensed clinician.
 {tool_notes}
 </tool_notes>
 """ + (f"\n<patient_context>\n{case_context}\n</patient_context>\n" if case_context else "")
+        if not self._cohere:
+            return self._generate_extractive(state)
         cohere_client = self._cohere
-        if cohere_client is None:
-            raise RuntimeError("Cohere client is not configured")
-        response = cohere_client.chat(
-            model=self.settings.generation_model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-        )
-        return response.message.content[0].text
+        try:
+            response = cohere_client.chat(
+                model=self.settings.generation_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                request_options={"timeout_in_seconds": 5},
+            )
+            return response.message.content[0].text
+        except Exception as exc:
+            logger.warning("Cohere generation failed, falling back to extractive: %s", exc)
+            self._cohere = None
+            return self._generate_extractive(state)
 
     def _validate_claims(self, state: AgentState) -> dict[str, Any]:
         if state.get("refusal_reason"):
@@ -533,7 +553,7 @@ Include a reminder to consult a licensed clinician.
         follow_up_plan = state.get("follow_up_plan", [])
 
         care_gap_strings = [
-            g.get("description", g.get("gap_type", str(g))) for g in care_gaps
+            g.get("gap_type", g.get("description", str(g))) for g in care_gaps
         ] if care_gaps else []
 
         response = QueryResponse(

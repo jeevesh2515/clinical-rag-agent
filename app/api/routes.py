@@ -7,7 +7,7 @@ from app.agents.clinical_rag_agent import ClinicalRAGAgent
 from app.api.dependencies import get_agent, get_knowledge_interface, get_store
 from app.cases.synthetic_cases import list_cases
 from app.core.config import get_settings
-from app.evaluation.run import run_evaluation
+from app.evaluation.run import run_full_evaluation
 from app.ingestion.manifest import IngestionManifest, build_manifest_id, save_manifest
 from app.ingestion.pdf_loader import ingest_sources
 from app.ingestion.source_registry import build_source_registry
@@ -119,7 +119,7 @@ def sources(store: HybridStore = Depends(get_store)) -> SourcesResponse:
 @router.post("/eval/run", tags=["evaluation"])
 def eval_run() -> dict:
     output_path = Path("data/eval/results.json")
-    result = run_evaluation(Path("data/eval/golden_questions.jsonl"), output_path)
+    result = run_full_evaluation(output_path, ingest_defaults=False)
     return result
 
 

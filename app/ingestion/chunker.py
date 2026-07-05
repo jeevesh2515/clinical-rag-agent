@@ -14,6 +14,12 @@ class TextChunk:
     chunk_index: int
     organization: str = ""
     publication_year: int | None = None
+    source_type: str = "clinical_guideline"
+    source_version: str | None = None
+    review_date: str | None = None
+    effective_date: str | None = None
+    license_notes: str | None = None
+    ingested_at: str | None = None
 
 
 def normalize_text(text: str) -> str:
@@ -51,6 +57,12 @@ def chunk_page(
     overlap_tokens: int = 120,
     organization: str = "",
     publication_year: int | None = None,
+    source_type: str = "clinical_guideline",
+    source_version: str | None = None,
+    review_date: str | None = None,
+    effective_date: str | None = None,
+    license_notes: str | None = None,
+    ingested_at: str | None = None,
 ) -> list[TextChunk]:
     text = normalize_text(text)
     if not text:
@@ -88,6 +100,12 @@ def chunk_page(
                     chunk_index=chunk_index,
                     organization=organization,
                     publication_year=publication_year,
+                    source_type=source_type,
+                    source_version=source_version,
+                    review_date=review_date,
+                    effective_date=effective_date,
+                    license_notes=license_notes,
+                    ingested_at=ingested_at,
                 )
             )
         overlap: list[str] = []

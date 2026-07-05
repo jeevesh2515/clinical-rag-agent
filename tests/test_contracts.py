@@ -1,4 +1,14 @@
-from app.models import QueryResponse
+from app.models import Citation, QueryResponse
+
+CITATION_PROVENANCE_FIELDS = {
+    "source_url",
+    "source_type",
+    "source_version",
+    "retrieved_at",
+    "review_date",
+    "effective_date",
+    "license_notes",
+}
 
 QUERY_CONTRACT_KEYS = {
     "answer",
@@ -38,6 +48,31 @@ def test_query_response_matches_public_contract(client):
     assert validated.answer
     assert validated.request_id
     assert validated.safety.consult_licensed_clinician is True
+
+    if validated.citations:
+        for citation in validated.citations:
+            citation_dict = citation.model_dump()
+            for field in CITATION_PROVENANCE_FIELDS:
+                assert field in citation_dict, f"Citation missing provenance field: {field}"
+
+    # Verify Citation model serializes all provenance fields
+    citation = Citation(
+        source_id="test",
+        title="Test",
+        source_url="https://example.com",
+        page=1,
+        chunk_id="chunk-1",
+        quote="test quote",
+        source_type="clinical_guideline",
+        source_version="v1",
+        retrieved_at="2026-07-05T00:00:00Z",
+        review_date="2026-01-01",
+        effective_date="2026-01-01",
+        license_notes="CC-BY",
+    )
+    citation_dict = citation.model_dump()
+    for field in CITATION_PROVENANCE_FIELDS:
+        assert field in citation_dict and citation_dict[field], f"Citation provenance field not set: {field}"
 
 
 def test_query_accepts_caller_request_id(client):

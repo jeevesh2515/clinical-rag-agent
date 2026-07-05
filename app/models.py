@@ -22,6 +22,10 @@ ApiErrorCode = Literal["validation_error"]
 class Citation(BaseModel):
     source_id: str = Field(description="Stable source identifier for the cited document.")
     title: str = Field(description="Human-readable source title.")
+    source_url: str = Field(
+        default="",
+        description="Canonical URL for the cited source document.",
+    )
     page: int = Field(description="Page number where the cited quote appears.")
     chunk_id: str = Field(description="Stable retrieval chunk identifier backing the citation.")
     quote: str = Field(description="Exact source quote used to support the answer.")
@@ -32,6 +36,30 @@ class Citation(BaseModel):
     organization: str = Field(
         default="",
         description="Publishing organization name (for provenance tracking).",
+    )
+    source_type: str = Field(
+        default="clinical_guideline",
+        description="Category of the source: clinical_guideline, okf, synthetic_note, etc.",
+    )
+    source_version: str | None = Field(
+        default=None,
+        description="Document version or edition identifier.",
+    )
+    retrieved_at: str | None = Field(
+        default=None,
+        description="ISO-8601 timestamp when the chunk was retrieved during query.",
+    )
+    review_date: str | None = Field(
+        default=None,
+        description="ISO-8601 date when the source document is due for clinical review.",
+    )
+    effective_date: str | None = Field(
+        default=None,
+        description="ISO-8601 date when the guideline recommendation takes effect.",
+    )
+    license_notes: str | None = Field(
+        default=None,
+        description="License or redistribution notes for auditability.",
     )
 
 
@@ -315,6 +343,22 @@ class IngestSource(BaseModel):
         default=None,
         description="Document version or edition identifier.",
     )
+    source_type: str = Field(
+        default="clinical_guideline",
+        description="Category of the source.",
+    )
+    review_date: str | None = Field(
+        default=None,
+        description="ISO-8601 date when the source is due for review.",
+    )
+    effective_date: str | None = Field(
+        default=None,
+        description="ISO-8601 date when the guideline recommendation takes effect.",
+    )
+    license_notes: str | None = Field(
+        default=None,
+        description="License or redistribution notes.",
+    )
 
 
 class IngestRequest(BaseModel):
@@ -364,6 +408,14 @@ class SourceMetadata(BaseModel):
     last_manifest_id: str | None = Field(
         default=None,
         description="Manifest identifier for the most recent ingest of this source.",
+    )
+    review_date: str | None = Field(
+        default=None,
+        description="ISO-8601 date when the source document is due for clinical review.",
+    )
+    effective_date: str | None = Field(
+        default=None,
+        description="ISO-8601 date when the guideline recommendation takes effect.",
     )
     license_notes: str | None = Field(
         default=None,

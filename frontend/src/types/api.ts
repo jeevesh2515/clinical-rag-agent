@@ -18,11 +18,18 @@ export type ConfidenceLabel = 'high' | 'medium' | 'low' | 'none'
 export interface Citation {
   source_id: string
   title: string
+  source_url: string
   page: number
   chunk_id: string
   quote: string
   publication_year: number | null
   organization: string
+  source_type: string
+  source_version: string | null
+  retrieved_at: string | null
+  review_date: string | null
+  effective_date: string | null
+  license_notes: string | null
 }
 
 export interface RetrievalResultModel {
@@ -142,6 +149,8 @@ export interface SourceMetadata {
   content_hash: string | null
   last_ingested_at: string | null
   last_manifest_id: string | null
+  review_date: string | null
+  effective_date: string | null
   license_notes: string | null
 }
 
@@ -149,6 +158,28 @@ export interface SourcesResponse {
   sources: SourceMetadata[]
   total: number
   indexed_count: number
+}
+
+export interface EvalMetric {
+  [key: string]: number
+}
+
+export interface EvalDatasetResult {
+  dataset_size: number
+  latency_seconds: number
+  avg_latency_per_query: number
+  metrics: EvalMetric
+  ragas_scores: EvalMetric
+  thresholds: EvalMetric
+  passed_thresholds: Record<string, boolean>
+  rows: unknown[]
+}
+
+export interface EvalAggregate {
+  metrics: EvalMetric
+  thresholds: EvalMetric
+  passed_thresholds: Record<string, boolean>
+  all_passed: boolean
 }
 
 export interface EvalResult {

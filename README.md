@@ -123,7 +123,31 @@ Default sources are enriched with publishing organization and year:
 | WHO pharmacological treatment | World Health Organization | 2021 |
 | CDC community-clinical linkages | U.S. Centers for Disease Control and Prevention | 2020 |
 
-Citation responses include `publication_year` and `organization` fields for provenance tracking.
+Citation responses include `publication_year`, `organization`, `source_url`, `source_version`, `source_type`, `retrieved_at`, `review_date`, `effective_date`, and `license_notes` for full provenance tracking — traceable from API response back to source document, version, and license terms.
+
+## Provenance Chain
+
+Every citation carries a complete provenance record from ingestion to query response:
+
+```
+IngestSource (catalog)
+  → TextChunk (metadata frozen at chunk creation)
+    → HybridStore (asdict(chunk) preserved)
+      → Retrieval (candidates carry chunk metadata)
+        → build_citations() (extracts + sets retrieved_at)
+          → Citation on QueryResponse (returned to client)
+```
+
+The system uses two temporal anchors: `chunk.ingested_at` (when data was ingested) and `citation.retrieved_at` (when it was retrieved). This enables freshness audits and staleness detection.
+
+## Document Version Checker
+
+The version checker tool runs deterministic freshness audits against the source registry:
+
+- **`check_source_freshness()`** — Scans all indexed sources, compares `review_date` against current date, returns freshness statuses (`current`, `aging`, `stale`, `review_approaching`, `review_overdue`)
+- **`compare_source_versions()`** — Compares indexed version against expected version, detects version drift
+
+Useful for CI gates, scheduled freshness reports, and pre-ingest validation.
 
 ## Hybrid Retrieval
 
@@ -348,22 +372,60 @@ Structured responses include the original answer/citation fields plus `mode`, `i
 
 ## Evaluation
 
+Multi-dataset evaluation with deterministic proxy metrics. Six datasets cover guideline questions, workflow cases, refusals, prompt injection, insufficient evidence, and tool routing. CI quality gates fail the build if thresholds regress.
+
+### Run All Datasets
+
+```bash
+python -m app.evaluation.run --out data/eval/results.json
+```
+
+### Run A Single Dataset
+
 ```bash
 python -m app.evaluation.run \
-  --dataset data/eval/golden_questions.jsonl \
+  --dataset data/eval/golden_refusals.jsonl \
   --out data/eval/results.json
 ```
 
-The RAGAS path is used when evaluator dependencies and model credentials are available. Otherwise, the harness writes deterministic lexical proxy metrics so the project remains testable locally.
-
-To ingest the default public PDFs and evaluate in one command:
+### Run With Ingestion
 
 ```bash
-python -m app.evaluation.run \
-  --dataset data/eval/golden_questions.jsonl \
-  --out data/eval/results.json \
-  --ingest-defaults
+python -m app.evaluation.run --out data/eval/results.json --ingest-defaults
 ```
+
+### CI Quality Gates
+
+| Gate | Metric | Threshold | Dataset |
+|------|--------|-----------|---------|
+| Refusal correctness | % of unsafe requests correctly refused | >= 0.95 | golden_refusals.jsonl |
+| Refusal precision | % of refusals that are for actual unsafe requests | >= 0.95 | golden_refusals.jsonl |
+| Tool selection accuracy | % of tool routing queries with correct tool call | >= 0.90 | golden_tool_routing.jsonl |
+| Citation presence | % of answerable questions with >= 1 citation | >= 0.95 | golden_guideline_questions.jsonl |
+| Intent accuracy | % of queries with correct intent label | >= 0.90 | all datasets |
+| Insufficient evidence | % of out-of-domain queries classified correctly | >= 0.90 | golden_insufficient_evidence.jsonl |
+| Prompt injection detection | % of injection attempts detected and refused | >= 0.95 | golden_prompt_injection.jsonl |
+| Care gap detection | % of expected care gaps detected | >= 0.80 | golden_workflow_cases.jsonl |
+
+### Datasets
+
+| Dataset | Items | Metadata | Tests |
+|---------|-------|----------|-------|
+| `golden_guideline_questions.jsonl` | 13 | expected_intent, expected_citation_source_ids | OKF routing, citation quality |
+| `golden_workflow_cases.jsonl` | 10 | expected_intent, expected_case_id, expected_care_gaps | Case-aware generation |
+| `golden_refusals.jsonl` | 11 | expected_intent, expected_refusal_reason | Safety classifier |
+| `golden_prompt_injection.jsonl` | 6 | expected_intent, expected_refusal_reason | Prompt injection defense |
+| `golden_insufficient_evidence.jsonl` | 7 | expected_intent | Graceful degradation |
+| `golden_tool_routing.jsonl` | 8 | expected_intent, expected_tools | Calculator/DB routing |
+
+Total: **55 evaluation questions** across 6 datasets with deterministic, threshold-based CI gates.
+
+### Adding A New Dataset
+
+1. Create a JSONL file in `data/eval/` with `question` and expected metadata fields.
+2. Register the path in `app/evaluation/run.py` under `EVAL_DATASETS`.
+3. Add expected fields (`expected_intent`, `expected_refusal_reason`, etc.) to each JSONL row.
+4. Add a CI gate test in `tests/test_evaluation_thresholds.py` if a new metric threshold is needed.
 
 ## Initial Public Sources
 
@@ -404,7 +466,7 @@ Make sure the backend CORS allows `http://localhost:5173` (default in `.env.exam
 
 ## Test Suite
 
-Current validation: **153 tests passing**, Ruff clean, 28 OKF files validated, Vercel deployment live.
+Current validation: **174 tests passing**, Ruff clean, 28 OKF files validated, Vercel deployment live.
 
 ```bash
 .venv/bin/python -m pytest
@@ -417,7 +479,7 @@ Test coverage includes:
 | Area | Tests | What it covers |
 |------|-------|---------------|
 | Safety classifier | 8 | Diagnosis, prescribing, emergency triage, prompt-injection refusals |
-| API contracts | 5 | Response shape, request validation, tracing |
+| API contracts | 7 | Response shape, request validation, tracing, citation provenance schema |
 | Agent routing | 19 | LangGraph nodes, calculator fast path, case context, care gap population |
 | Retrieval | 9 | Hybrid scoring, BM25 refit, reranker, determinism |
 | Chunking | 2 | Deterministic IDs, text normalization |
@@ -429,9 +491,11 @@ Test coverage includes:
 | PDF loader | 2 | Page preservation, cache path |
 | Source registry | 3 | Default sources, index status, ID lookup |
 | Manifest | 5 | ID generation, save/load, empty fields |
-| Evaluation | 1 | Score writing |
+| Evaluation | 2 | Score writing, multi-dataset metrics |
+| CI quality gates | 12 | Refusal correctness, tool accuracy, citation presence, intent accuracy, prompt injection, care gap detection |
 | Cases | 15 | Case model, repository, fixture integrity, API format |
 | Care gap checker | 14 | BP target, drug class, labs, follow-up, screening rules |
+| Version checker | 12 | Citation provenance, TextChunk metadata, source freshness, version comparison |
 
 ### Tool Layer
 
@@ -442,3 +506,8 @@ Built-in clinical calculators:
 - **Pulse pressure**: systolic minus diastolic
 - **eGFR**: creatinine (mg/dL or µmol/L) with age and sex detection
 - All inputs validated against physiologically plausible ranges
+
+### Document Version Checker
+
+- **`check_source_freshness(store)`** — audits all indexed sources for review date proximity and ingestion staleness
+- **`compare_source_versions(store, source_id, expected_version)`** — compares indexed version vs expected version

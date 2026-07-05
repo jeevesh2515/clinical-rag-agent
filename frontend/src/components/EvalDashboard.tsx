@@ -1,17 +1,42 @@
 import React, { useEffect, useState } from 'react'
-import { BarChart3, Play, Loader2, AlertCircle, CheckCircle2, XCircle, TrendingUp, Clock } from 'lucide-react'
+import { BarChart3, Play, Loader2, AlertCircle, CheckCircle2, XCircle, TrendingUp, Clock, Database, Shield, Wrench, FileText, MessageSquare, Activity } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useApi } from '../hooks/useApi'
 
-interface MetricCard {
+const DATASET_ICONS: Record<string, React.ElementType> = {
+  guideline_questions: FileText,
+  workflow_cases: Activity,
+  refusals: Shield,
+  prompt_injection: AlertCircle,
+  insufficient_evidence: MessageSquare,
+  tool_routing: Wrench,
+}
+
+const DATASET_LABELS: Record<string, string> = {
+  guideline_questions: 'Guideline Questions',
+  workflow_cases: 'Workflow Cases',
+  refusals: 'Refusals',
+  prompt_injection: 'Prompt Injection',
+  insufficient_evidence: 'Insufficient Evidence',
+  tool_routing: 'Tool Routing',
+}
+
+interface MetricData {
   label: string
   value: number | string
   icon: React.ElementType
   color: string
-  format?: 'number' | 'percent'
 }
 
-function MetricCard({ label, value, icon: Icon, color }: MetricCard) {
+interface MetricCardProps {
+  label: string
+  value: number | string
+  icon: React.ElementType
+  color: string
+  threshold?: number
+}
+
+function MetricCard({ label, value, icon: Icon, color, threshold }: MetricCardProps) {
   return (
     <div className="glass-panel p-4 hover-lift transition-all duration-300">
       <div className="flex items-start justify-between mb-2">
@@ -21,12 +46,15 @@ function MetricCard({ label, value, icon: Icon, color }: MetricCard) {
       </div>
       <div className={`text-2xl font-bold font-mono ${color} mb-0.5`}>{value}</div>
       <div className="text-[10px] text-slate-500 uppercase tracking-wider">{label}</div>
+      {threshold !== undefined && (
+        <div className="text-[9px] text-slate-600 mt-0.5">Threshold: {(threshold * 100).toFixed(0)}%</div>
+      )}
     </div>
   )
 }
 
 interface BarChartProps {
-  data: { label: string; value: number; color: string }[]
+  data: { label: string; value: number; color: string; threshold?: number }[]
   maxValue?: number
 }
 
@@ -48,10 +76,101 @@ function BarChart({ data, maxValue }: BarChartProps) {
               style={{ width: `${(item.value / max) * 100}%` }}
             />
           </div>
+          {item.threshold !== undefined && (
+            <div className="flex justify-between text-[9px] text-slate-600">
+              <span>Threshold: {(item.threshold * 100).toFixed(0)}%</span>
+            </div>
+          )}
         </div>
       ))}
     </div>
   )
+}
+
+interface DatasetCardProps {
+  name: string
+  data: Record<string, unknown>
+}
+
+function DatasetCard({ name, data }: DatasetCardProps) {
+  const Icon = DATASET_ICONS[name] || Database
+  const label = DATASET_LABELS[name] || name.replace(/_/g, ' ')
+  const metrics = data.metrics as Record<string, number> | undefined
+  const passed = data.passed_thresholds as Record<string, boolean> | undefined
+  const datasetSize = data.dataset_size as number | undefined
+  const latency = data.latency_seconds as number | undefined
+
+  if (!metrics) return null
+
+  const entries = Object.entries(metrics).filter(([, v]) => typeof v === 'number')
+  const passedCount = passed ? Object.values(passed).filter(Boolean).length : 0
+  const totalCount = passed ? Object.keys(passed).length : 0
+
+  return (
+    <div className="glass-panel p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Icon className="w-4 h-4 text-slate-400" />
+          <h4 className="text-sm font-semibold text-slate-200">{label}</h4>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-slate-500">
+          {datasetSize !== undefined && <span>{datasetSize} queries</span>}
+          {latency !== undefined && <span>{latency.toFixed(1)}s</span>}
+          {totalCount > 0 && (
+            <span className={cn(
+              'font-medium',
+              passedCount === totalCount ? 'text-emerald-400' : 'text-amber-400'
+            )}>
+              {passedCount}/{totalCount} passed
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {entries.map(([key, value]) => {
+          const isPercent = value >= 0 && value <= 1
+          const threshold = METRIC_THRESHOLDS_MAP[key]
+          const passedMetric = passed?.[key]
+          const color = passedMetric === false
+            ? 'text-rose-400'
+            : value >= 0.8
+              ? 'text-emerald-400'
+              : value >= 0.6
+                ? 'text-amber-400'
+                : 'text-rose-400'
+          return (
+            <div key={key} className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">{formatLabel(key)}</span>
+              <div className="flex items-center gap-2">
+                {threshold !== undefined && (
+                  <span className="text-slate-600">≥{(threshold * 100).toFixed(0)}%</span>
+                )}
+                <span className={cn('font-mono font-medium', color)}>
+                  {isPercent ? `${(value * 100).toFixed(1)}%` : value}
+                </span>
+                {passedMetric !== undefined && (
+                  passedMetric
+                    ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    : <XCircle className="w-3 h-3 text-rose-500" />
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const METRIC_THRESHOLDS_MAP: Record<string, number> = {
+  refusal_correctness: 0.95,
+  refusal_precision: 0.95,
+  tool_selection_accuracy: 0.90,
+  intent_accuracy: 0.90,
+  citation_presence_rate: 0.95,
+  care_gap_detection_rate: 0.80,
+  prompt_injection_detection_rate: 0.95,
+  refusal_message_quality: 0.95,
 }
 
 export const EvalDashboard: React.FC = () => {
@@ -77,9 +196,14 @@ export const EvalDashboard: React.FC = () => {
     }
   }
 
-  // Parse expected metric keys from results
-  const metrics = results ? extractMetrics(results) : []
-  const chartData = results ? extractChartData(results) : []
+  // Parse result structure
+  const aggregate = (results?.aggregate as Record<string, unknown>) || {}
+  const datasets = (results?.datasets as Record<string, unknown>) || {}
+  const datasetEntries = Object.entries(datasets)
+  const aggregateMetrics = extractMetrics(aggregate)
+  const aggregateChartData = extractChartData(aggregate)
+  const allPassed = (aggregate.all_passed as boolean) ?? false
+  const hasAggregateMetrics = aggregate.metrics != null
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,7 +215,7 @@ export const EvalDashboard: React.FC = () => {
             Evaluation Dashboard
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            RAGAS-compatible quality metrics and regression testing for clinical answers
+            Multi-dataset deterministic metrics with CI quality gates for clinical answers
           </p>
         </div>
         <button
@@ -112,8 +236,8 @@ export const EvalDashboard: React.FC = () => {
           </div>
           <p className="text-sm text-slate-500 mb-2">No evaluation results available.</p>
           <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-            Run the evaluation suite against the golden question set to see quality metrics,
-            refusal correctness, tool routing accuracy, and more.
+            Run the evaluation suite across all 6 datasets to see quality metrics,
+            refusal correctness, tool routing accuracy, citation presence, and more.
           </p>
           <button
             onClick={handleRun}
@@ -128,23 +252,82 @@ export const EvalDashboard: React.FC = () => {
 
       {results && (
         <div className="space-y-6 animate-fade-in-up">
-          {/* Metric Cards */}
-          {metrics.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {metrics.map((m, i) => (
-                <MetricCard key={i} {...m} />
-              ))}
+          {/* Overall Status Banner */}
+          {hasAggregateMetrics && (
+            <div className={cn(
+              'glass-panel p-5 border-l-4',
+              allPassed ? 'border-l-emerald-500' : 'border-l-rose-500'
+            )}>
+              <div className="flex items-center gap-3">
+                {allPassed
+                  ? <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                  : <XCircle className="w-6 h-6 text-rose-400" />
+                }
+                <div>
+                  <div className={cn(
+                    'text-sm font-semibold',
+                    allPassed ? 'text-emerald-400' : 'text-rose-400'
+                  )}>
+                    {allPassed ? 'All Quality Gates Passed' : 'Some Quality Gates Failed'}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {allPassed
+                      ? 'All evaluation metrics meet their CI thresholds.'
+                      : 'One or more metrics are below their required thresholds. Check individual dataset results.'
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Chart Area */}
-          {chartData.length > 0 && (
+          {/* Aggregate Metric Cards */}
+          {aggregateMetrics.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                Aggregate Metrics
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {aggregateMetrics.map((m, i) => {
+                  const thresholdKey = Object.keys(METRIC_THRESHOLDS_MAP).find(
+                    k => formatLabel(k) === m.label
+                  )
+                  const threshold = thresholdKey ? METRIC_THRESHOLDS_MAP[thresholdKey] : undefined
+                  return <MetricCard key={i} {...m} threshold={threshold} />
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Aggregate Chart */}
+          {aggregateChartData.length > 0 && (
             <div className="glass-panel p-6">
               <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <BarChart3 className="w-4 h-4 text-emerald-400" />
                 Quality Metrics
               </h3>
-              <BarChart data={chartData} />
+              <BarChart data={aggregateChartData.map(d => {
+                const thresholdKey = Object.keys(METRIC_THRESHOLDS_MAP).find(
+                  k => formatLabel(k) === d.label
+                )
+                return { ...d, threshold: thresholdKey ? METRIC_THRESHOLDS_MAP[thresholdKey] : undefined }
+              })} />
+            </div>
+          )}
+
+          {/* Per-Dataset Cards */}
+          {datasetEntries.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                <Database className="w-4 h-4 text-sky-400" />
+                Per-Dataset Results
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {datasetEntries.map(([name, data]) => (
+                  <DatasetCard key={name} name={name} data={data as Record<string, unknown>} />
+                ))}
+              </div>
             </div>
           )}
 
@@ -156,12 +339,20 @@ export const EvalDashboard: React.FC = () => {
             </h3>
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2 text-xs text-slate-500">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Status: <span className="text-emerald-400 font-medium">{results.status as string || 'Unknown'}</span></span>
+                <CheckCircle2 className={cn('w-4 h-4', allPassed ? 'text-emerald-400' : 'text-rose-400')} />
+                <span>Status: <span className={cn('font-medium', allPassed ? 'text-emerald-400' : 'text-rose-400')}>{allPassed ? 'PASSED' : 'FAILED'}</span></span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <BarChart3 className="w-4 h-4 text-medical-400" />
-                <span>Metrics: <span className="text-slate-300 font-mono font-medium">{metrics.length}</span></span>
+                <span>Datasets: <span className="text-slate-300 font-mono font-medium">{datasetEntries.length}</span></span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <Database className="w-4 h-4 text-sky-400" />
+                <span>Metrics: <span className="text-slate-300 font-mono font-medium">{aggregateMetrics.length}</span></span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <Activity className="w-4 h-4 text-violet-400" />
+                <span>Mode: <span className="text-slate-300 font-mono font-medium">{results.mode as string}</span></span>
               </div>
             </div>
           </div>
@@ -189,8 +380,8 @@ export const EvalDashboard: React.FC = () => {
   )
 }
 
-function extractMetrics(results: Record<string, unknown>): MetricCard[] {
-  const metrics: MetricCard[] = []
+function extractMetrics(results: Record<string, unknown>): MetricData[] {
+  const metrics: MetricData[] = []
   const seen = new Set<string>()
 
   // Walk the results object looking for numeric metrics

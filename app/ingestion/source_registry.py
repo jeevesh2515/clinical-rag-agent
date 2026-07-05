@@ -56,6 +56,10 @@ def build_source_registry(store: HybridStore) -> list[SourceMetadata]:
         version = catalog_entry.version if catalog_entry else None
         if manifest_entry and manifest_entry.get("version"):
             version = manifest_entry["version"]
+        source_type = catalog_entry.source_type if catalog_entry else "clinical_guideline"
+        review_date = catalog_entry.review_date if catalog_entry else None
+        effective_date = catalog_entry.effective_date if catalog_entry else None
+        license_notes = catalog_entry.license_notes if catalog_entry else None
 
         chunk_count = indexed["chunks"] if indexed else manifest_entry.get("chunk_count", 0) if manifest_entry else 0
         indexed_flag = chunk_count > 0
@@ -66,7 +70,7 @@ def build_source_registry(store: HybridStore) -> list[SourceMetadata]:
                 title=title,
                 source_url=url,
                 domain=_domain_from_url(url),
-                source_type="clinical_guideline",
+                source_type=source_type,
                 publication_year=publication_year,
                 guideline_version=version,
                 organization=organization,
@@ -76,7 +80,9 @@ def build_source_registry(store: HybridStore) -> list[SourceMetadata]:
                 content_hash=manifest_entry.get("content_hash") if manifest_entry else None,
                 last_ingested_at=manifest_entry.get("ingested_at") if manifest_entry else None,
                 last_manifest_id=manifest_entry.get("manifest_id") if manifest_entry else None,
-                license_notes="Public clinical guideline. Verify redistribution rights before committing PDFs.",
+                license_notes=license_notes or "Public clinical guideline. Verify redistribution rights before committing PDFs.",
+                review_date=review_date,
+                effective_date=effective_date,
             )
         )
 

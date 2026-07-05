@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 
 from app.models import Citation
 
@@ -30,6 +31,7 @@ RECOMMENDATION_MARKERS = (
 
 
 def build_citations(candidates: list[dict], max_quotes: int = 4) -> list[Citation]:
+    now = datetime.now(timezone.utc).isoformat()
     citations: list[Citation] = []
     for candidate in candidates[:max_quotes]:
         metadata = candidate.get("metadata", {})
@@ -41,11 +43,18 @@ def build_citations(candidates: list[dict], max_quotes: int = 4) -> list[Citatio
             Citation(
                 source_id=metadata.get("source_id", ""),
                 title=metadata.get("title", ""),
+                source_url=metadata.get("source_url", ""),
                 page=int(metadata.get("page", 0)),
                 chunk_id=candidate.get("chunk_id", metadata.get("chunk_id", "")),
                 quote=quote,
                 publication_year=metadata.get("publication_year"),
                 organization=metadata.get("organization", ""),
+                source_type=metadata.get("source_type", "clinical_guideline"),
+                source_version=metadata.get("source_version"),
+                retrieved_at=now,
+                review_date=metadata.get("review_date"),
+                effective_date=metadata.get("effective_date"),
+                license_notes=metadata.get("license_notes"),
             )
         )
     return citations

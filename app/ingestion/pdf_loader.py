@@ -101,6 +101,7 @@ def extract_pdf_chunks(source: IngestSource, pdf_path: Path) -> list[TextChunk]:
             f"Unable to parse PDF for source {source.source_id}"
         ) from exc
     chunks: list[TextChunk] = []
+    now = datetime.now(timezone.utc).isoformat()
     for page_number, page in enumerate(reader.pages, start=1):
         page_text = page.extract_text() or ""
         chunks.extend(
@@ -112,6 +113,12 @@ def extract_pdf_chunks(source: IngestSource, pdf_path: Path) -> list[TextChunk]:
                 text=page_text,
                 organization=source.organization,
                 publication_year=source.publication_year,
+                source_type=source.source_type,
+                source_version=source.version,
+                review_date=source.review_date if hasattr(source, "review_date") else None,
+                effective_date=source.effective_date if hasattr(source, "effective_date") else None,
+                license_notes=source.license_notes if hasattr(source, "license_notes") else None,
+                ingested_at=now,
             )
         )
     return chunks

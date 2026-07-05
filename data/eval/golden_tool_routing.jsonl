@@ -1,0 +1,8 @@
+{"question":"Calculate BMI for 82 kg and 1.75 m","expected_intent":"calculator_question","expected_tools":["calculator"],"ground_truth":"BMI = 26.8 kg/m^2."}
+{"question":"Calculate MAP for BP 120/80","expected_intent":"calculator_question","expected_tools":["calculator"],"ground_truth":"MAP = 93 mmHg."}
+{"question":"Calculate pulse pressure for BP 140/90","expected_intent":"calculator_question","expected_tools":["calculator"],"ground_truth":"Pulse pressure = 50 mmHg."}
+{"question":"Calculate eGFR for creatinine 1.0 mg/dL, 50yo female","expected_intent":"calculator_question","expected_tools":["calculator"],"ground_truth":"eGFR estimated using CKD-EPI formula."}
+{"question":"Calculate eGFR for creatinine 88 umol/L, 65yo male","expected_intent":"calculator_question","expected_tools":["calculator"],"ground_truth":"eGFR estimated using CKD-EPI formula."}
+{"question":"Calculate my BMI with weight 70 kg and height 1.8 m","expected_intent":"calculator_question","expected_tools":["calculator"],"ground_truth":"BMI calculated from weight and height."}
+{"question":"What follow-up workflow should be prepared after a BP review?","expected_intent":"workflow_question","expected_tools":["db_lookup"],"ground_truth":"Workflow reference from demo database."}
+{"question":"What is the referral workflow for resistant hypertension?","expected_intent":"workflow_question","expected_tools":["db_lookup"],"ground_truth":"Referral workflow from demo database."}

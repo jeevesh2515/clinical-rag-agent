@@ -13,6 +13,7 @@ import {
   X,
   Scale,
 } from 'lucide-react'
+import { Analytics } from '@vercel/analytics/react'
 import { cn } from './lib/utils'
 import { useApi } from './hooks/useApi'
 import { HeroSection } from './components/HeroSection'
@@ -429,6 +430,7 @@ export const App: React.FC = () => {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   )
 }

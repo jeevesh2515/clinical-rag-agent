@@ -23,15 +23,16 @@ app = FastAPI(
 
 settings = get_settings()
 
-if settings.cors_origins:
-    origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
-    )
+# Allow all origins in production (Vercel deployment) or use configured origins
+_cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_origin_regex=r"https://clinical-workflows.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+)
 
 
 class MaxBodySizeMiddleware(BaseHTTPMiddleware):

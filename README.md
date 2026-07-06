@@ -48,18 +48,33 @@ flowchart TB
 | Evaluation | Deterministic proxy metrics + CI threshold gates |
 | Frontend | React + Vite + TypeScript + Tailwind |
 | CI | pytest, ruff, pyright, make okf-check |
+| Auth | JWT + OAuth2 + bcrypt |
+| Chat | Persistent history + conversations |
 
 ## Quick Start
+
+### Backend
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload
+make run-backend
 ```
 
 Open `http://127.0.0.1:8000/docs`.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
 
 Without API keys, the app runs in local demo mode with deterministic embeddings, in-memory retrieval, lexical reranking, and extractive answers. With keys, it uses Pinecone and Cohere.
 
@@ -97,14 +112,17 @@ CORS_ORIGINS=            # Comma-separated allowed origins; empty = no cross-ori
 
 ## Security Features
 
-- **API key protection**: All credential fields (`cohere_api_key`, `pinecone_api_key`, `tavily_api_key`, `database_url`) use `repr=False` in Pydantic settings to prevent leakage in logs and error traces.
-- **CORS**: Config-driven via `CORS_ORIGINS` env var. Empty by default — no cross-origin requests allowed until explicitly configured.
-- **Request body limit**: 256 KB default with structured 413 response for oversized payloads.
-- **SSRF prevention**: PDF download URLs are validated against private/reserved IP ranges and localhost before connection. Scheme is restricted to HTTPS.
-- **Download size cap**: PDF downloads are limited to 100 MB with pre-flight `Content-Length` check and streaming byte counter.
-- **Logging safety**: Third-party HTTP/SDK loggers (`httpx`, `httpcore`, `openai`, `cohere`, `urllib3`) are suppressed to `WARNING` to avoid leaking API keys or request bodies in debug output.
-- **Container security**: Dockerfile runs as a non-root `app` user with Python 3.12-slim base.
-- **Prompt-injection defense**: Agent generation prompts explicitly mark retrieved context and tool notes as untrusted data.
+- **Authentication**: JWT-based authentication with secure password hashing (bcrypt).
+- **RBAC**: Role-Based Access Control for Clinicians, Patients, Admins, and Care Coordinators.
+- **API key protection**: All credential fields use `repr=False` in Pydantic settings to prevent leakage.
+- **CORS**: Config-driven via `CORS_ORIGINS` env var.
+- **Request body limit**: 256 KB default with structured 413 response.
+- **SSRF prevention**: PDF download URLs are validated against private/reserved IP ranges.
+- **Download size cap**: PDF downloads are limited to 100 MB.
+- **Logging safety**: Third-party loggers are suppressed to avoid leaking keys.
+- **Container security**: Dockerfile runs as a non-root `app` user.
+- **Prompt-injection defense**: Agent prompts explicitly mark retrieved context as untrusted data.
+
 
 ## Ingestion Metadata and Audit Trail
 

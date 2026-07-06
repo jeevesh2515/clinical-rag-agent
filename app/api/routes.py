@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request
+from app.auth.routes import router as auth_router
+from app.chat.routes import router as chat_router
 
 from app.agents.clinical_rag_agent import ClinicalRAGAgent
 from app.api.dependencies import get_agent, get_knowledge_interface, get_store
@@ -17,6 +19,8 @@ from app.okf.interface import KnowledgeInterface
 from app.retrieval.store import HybridStore
 
 router = APIRouter()
+router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+router.include_router(chat_router, prefix="/chat", tags=["Chat"])
 
 
 def request_id_from(request: Request) -> str | None:

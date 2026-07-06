@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     default_rerank_top_n: int = Field(default=6, ge=1, le=20)
 
     cors_origins: str = Field(
-        default="http://localhost:5173",
+        default="http://localhost:5173,https://clinical-workflows.vercel.app,https://clinical-workflows-*.vercel.app",
         description="Comma-separated list of allowed CORS origins. Default includes local frontend dev server.",
     )
 

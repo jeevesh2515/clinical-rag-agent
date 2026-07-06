@@ -7,9 +7,13 @@ RUN groupadd -r app && useradd --no-log-init -r -g app app
 COPY pyproject.toml README.md ./
 COPY app ./app
 COPY data ./data
-COPY notebooks ./notebooks
+COPY hypertension-okf ./hypertension-okf
+COPY scripts ./scripts
+COPY Makefile ./Makefile
+COPY requirements.txt ./
 
-RUN pip install --no-cache-dir -e . && \
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -e . && \
     chown -R app:app /app
 
 USER app

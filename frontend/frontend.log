@@ -1,0 +1,9 @@
+
+> clinical-rag-frontend@0.0.0 dev
+> vite --host 0.0.0.0 --port 5173
+
+
+  VITE v5.4.21  ready in 6249 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.0.148:5173/

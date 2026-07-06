@@ -2,11 +2,14 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Plus, MessageSquare, LogOut, User,
   Send, Activity, BookOpen, Shield, Zap, Brain, FlaskConical, Heart,
-  X, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2,
+  X, Loader2, AlertCircle, CheckCircle2,
   FileText, ExternalLink, Info, Stethoscope, Search, Trash2,
   BarChart3, Network, Database, Copy, Check, PanelLeftClose,
-  PanelLeft, Sparkles
+  PanelLeft, Sparkles, Sun, Moon
 } from 'lucide-react'
+import LoginPage from './components/LoginPage'
+import SignupPage from './components/SignupPage'
+import { useTheme } from './context/ThemeContext'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -230,108 +233,6 @@ function CopyButton({ text }: { text: string }) {
       className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
       {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} className="text-gray-400" />}
     </button>
-  )
-}
-
-// ─── Auth Screen ──────────────────────────────────────────────────────────────
-
-function AuthScreen({ onAuth }: { onAuth: (user: UserProfile, token: string) => void }) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setError(''); setIsLoading(true)
-    try {
-      if (mode === 'signup') await api.register(username, email, password)
-      const { access_token } = await api.login(username, password)
-      api.setToken(access_token)
-      localStorage.setItem('cw_token', access_token)
-      const user = await api.getCurrentUser()
-      onAuth(user, access_token)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900 flex items-center justify-center p-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl dark:bg-blue-500/10" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl dark:bg-teal-500/10" />
-      </div>
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-teal-500 shadow-lg shadow-blue-500/20 mb-4">
-            <Stethoscope size={28} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Clinical Workflows</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Evidence-Based Hypertension Care Planning</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200 dark:border-gray-700/50 rounded-2xl p-8 shadow-xl dark:shadow-2xl">
-          <div className="flex bg-gray-100 dark:bg-gray-900/60 rounded-xl p-1 mb-6">
-            {(['login', 'signup'] as const).map(m => (
-              <button key={m} onClick={() => { setMode(m); setError('') }}
-                className={cn('flex-1 py-2 text-sm font-semibold rounded-lg transition-all',
-                  mode === m ? 'bg-white dark:bg-blue-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300')}>
-                {m === 'login' ? 'Sign In' : 'Create Account'}
-              </button>
-            ))}
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Username</label>
-              <input type="text" value={username} onChange={e => setUsername(e.target.value)} required
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-300 dark:border-gray-600/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                placeholder="Enter your username" />
-            </div>
-            {mode === 'signup' && (
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email Address</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-300 dark:border-gray-600/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  placeholder="name@example.com" />
-              </div>
-            )}
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Password</label>
-              <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
-                  className="w-full px-4 py-3 pr-12 bg-gray-50 dark:bg-gray-900/60 border border-gray-300 dark:border-gray-600/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-            {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
-                <AlertCircle size={14} className="text-red-500 dark:text-red-400 shrink-0" />
-                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-              </div>
-            )}
-            <button type="submit" disabled={isLoading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2">
-              {isLoading ? <><Spinner size="sm" /> {mode === 'login' ? 'Signing in\u2026' : 'Creating account\u2026'}</> : (mode === 'login' ? 'Sign In' : 'Create Account')}
-            </button>
-          </form>
-          <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl">
-            <p className="text-xs text-blue-600 dark:text-blue-300 text-center">
-              <Info size={12} className="inline mr-1" />
-              Demo: Register with any username/email/password to get started
-            </p>
-          </div>
-        </div>
-        <p className="text-center text-gray-400 dark:text-gray-600 text-xs mt-6">For educational purposes only. Not for clinical use.</p>
-      </div>
-    </div>
   )
 }
 
@@ -728,6 +629,7 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [page, setPage] = useState<'login' | 'signup'>('login')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [evidencePanelOpen, setEvidencePanelOpen] = useState(false)
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
@@ -744,6 +646,7 @@ export default function App() {
   const [panelKnowledge, setPanelKnowledge] = useState<KnowledgePath | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { theme, toggle: toggleTheme } = useTheme()
 
   useEffect(() => {
     const savedToken = localStorage.getItem('cw_token')
@@ -762,7 +665,25 @@ export default function App() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, isLoading])
 
-  const handleAuth = (u: UserProfile, t: string) => { setUser(u); api.setToken(t) }
+  const handleLogin = async (token: string) => {
+    api.setToken(token)
+    try {
+      const u = await api.getCurrentUser()
+      setUser(u)
+    } catch {
+      throw new Error('Failed to load user profile')
+    }
+  }
+
+  const handleSignup = async (token: string) => {
+    api.setToken(token)
+    try {
+      const u = await api.getCurrentUser()
+      setUser(u)
+    } catch {
+      throw new Error('Failed to load user profile')
+    }
+  }
 
   const handleLogout = () => {
     setUser(null); api.setToken(null); localStorage.removeItem('cw_token')
@@ -828,7 +749,12 @@ export default function App() {
 
   const currentConv = conversations.find(c => c.id === currentConvId)
 
-  if (!user) return <AuthScreen onAuth={handleAuth} />
+  if (!user) {
+    if (page === 'login') {
+      return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} />
+    }
+    return <SignupPage onSignup={handleSignup} onSwitchToLogin={() => setPage('login')} />
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
@@ -852,6 +778,13 @@ export default function App() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <select value={caseId} onChange={e => setCaseId(e.target.value)}
               className="text-xs bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all">
               {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}

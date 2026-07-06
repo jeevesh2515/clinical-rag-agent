@@ -134,7 +134,10 @@ def _check_labs_overdue(case: SyntheticCase) -> list[CareGap]:
         ("lipid", "Lipid panel"),
     ]:
         lab = _latest_lab(case, test_keyword)
-        if lab and _months_since(lab.date) is not None and _months_since(lab.date) > MONTHS_OVERDUE_LABS:
+        if lab is None:
+            continue
+        months_ago = _months_since(lab.date)
+        if months_ago is not None and months_ago > MONTHS_OVERDUE_LABS:
             gaps.append(
                 CareGap(
                     gap_type="labs_overdue",

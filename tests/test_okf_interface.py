@@ -64,4 +64,4 @@ def test_interface_merged_content_includes_okf_label(tmp_path):
 def test_interface_rag_store_called_when_path_is_rag(tmp_path):
     interface = _build_interface(tmp_path)
     interface.search("Has there been any research on resistant hypertension?")
-    interface._rag.query.assert_called_once()
+    interface._rag.query.assert_called_once()  # type: ignore[attr-defined]

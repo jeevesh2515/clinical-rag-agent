@@ -71,9 +71,12 @@ class OKFRetriever:
             doc = self.get_concept(concept_path.replace(".md", "").lstrip("/"))
             if doc and tag_lower in [t.lower() for t in doc.tags]:
                 matching.append(concept_path.replace(".md", "").lstrip("/"))
-        return [
-            self.get_concept(path) for path in matching if self.get_concept(path) is not None
-        ]
+        result: list[OKFDocument] = []
+        for path in matching:
+            doc = self.get_concept(path)
+            if doc is not None:
+                result.append(doc)
+        return result
 
     def resolve_links(self, content: str, max_hops: int = 2) -> str:
         """Follow [[wikilinks]] and inline referenced concepts.
@@ -191,7 +194,7 @@ class OKFRetriever:
                     fm = yaml.safe_load(fm_block) or {}
                 except yaml.YAMLError:
                     fm = {}
-                return fm, body
+                return dict(fm) if isinstance(fm, dict) else {}, body
         return {}, raw
 
     def list_all_concepts(self) -> list[OKFDocument]:

@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react'
 import type { User, Token } from '../types/auth'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = ''
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'))
+  const [token, setToken] = useState<string | null>(localStorage.getItem('cw_token'))
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -13,12 +13,15 @@ export const useAuth = () => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
       })
-      if (!response.ok) throw new Error('Registration failed')
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.detail || 'Registration failed')
+      }
       const userData = await response.json()
       setUser(userData)
     } catch (err) {
@@ -32,18 +35,20 @@ export const useAuth = () => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${API_BASE}/auth/token`, {
+      const response = await fetch(`${API_BASE}/api/auth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ username, password }),
       })
-      if (!response.ok) throw new Error('Login failed')
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.detail || 'Login failed')
+      }
       const tokenData: Token = await response.json()
       setToken(tokenData.access_token)
-      localStorage.setItem('auth_token', tokenData.access_token)
+      localStorage.setItem('cw_token', tokenData.access_token)
 
-      // Fetch user info
-      const userResponse = await fetch(`${API_BASE}/auth/users/me`, {
+      const userResponse = await fetch(`${API_BASE}/api/auth/users/me`, {
         headers: { Authorization: `Bearer ${tokenData.access_token}` },
       })
       if (userResponse.ok) {
@@ -60,7 +65,7 @@ export const useAuth = () => {
   const logout = useCallback(() => {
     setUser(null)
     setToken(null)
-    localStorage.removeItem('auth_token')
+    localStorage.removeItem('cw_token')
   }, [])
 
   return {
@@ -71,6 +76,6 @@ export const useAuth = () => {
     register,
     login,
     logout,
-    isAuthenticated: !!token && !!user,
+    isAuthenticated: !!token,
   }
 }

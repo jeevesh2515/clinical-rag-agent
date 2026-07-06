@@ -228,7 +228,7 @@ class ClinicalRAGAgent:
             }),
         }
 
-    def _route_after_classification(self, state: AgentState) -> GraphRoute:
+    def _route_after_classification(self, state: dict) -> GraphRoute:
         if state.get("refusal_reason"):
             return "refuse"
         if state.get("intent") == "out_of_domain":

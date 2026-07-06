@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Conversation, ConversationSummary, ChatMessage } from '../types/chat'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = ''
 
 export const useChat = (token: string | null) => {
   const [isLoading, setIsLoading] = useState(false)
@@ -17,7 +17,7 @@ export const useChat = (token: string | null) => {
       setIsLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_BASE}/chat/conversations`, {
+        const response = await fetch(`${API_BASE}/api/chat/conversations`, {
           method: 'POST',
           headers,
           body: JSON.stringify({ title }),
@@ -38,7 +38,7 @@ export const useChat = (token: string | null) => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${API_BASE}/chat/conversations`, {
+      const response = await fetch(`${API_BASE}/api/chat/conversations`, {
         headers,
       })
       if (!response.ok) throw new Error('Failed to list conversations')
@@ -56,7 +56,7 @@ export const useChat = (token: string | null) => {
       setIsLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_BASE}/chat/conversations/${conversationId}`, {
+        const response = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}`, {
           headers,
         })
         if (!response.ok) throw new Error('Failed to get conversation')
@@ -76,7 +76,7 @@ export const useChat = (token: string | null) => {
       setIsLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_BASE}/chat/conversations/${conversationId}`, {
+        const response = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify({ title }),
@@ -98,7 +98,7 @@ export const useChat = (token: string | null) => {
       setIsLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_BASE}/chat/conversations/${conversationId}`, {
+        const response = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}`, {
           method: 'DELETE',
           headers,
         })
@@ -119,7 +119,7 @@ export const useChat = (token: string | null) => {
       setIsLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_BASE}/chat/conversations/${conversationId}/message`, {
+        const response = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/message`, {
           method: 'POST',
           headers,
           body: JSON.stringify({

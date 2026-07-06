@@ -49,3 +49,5 @@ PRIVATE_LEARNING_PLAN.md
 .gstack/
 test-results
 node_modules/
+backend.log
+frontend/frontend.log

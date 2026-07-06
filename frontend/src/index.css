@@ -10,260 +10,28 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   ::selection {
-    background-color: rgba(16, 185, 129, 0.25);
+    background-color: rgba(37, 99, 235, 0.2);
     color: inherit;
+  }
+
+  .dark ::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: inherit;
+  }
+
+  kbd {
+    font-family: 'Fira Code', 'SF Mono', 'Cascadia Code', monospace;
   }
 }
 
 @layer components {
-  /* ─── Glass Panel System ─── */
-  .glass-panel {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-xl;
-  }
-
-  .glass-panel-hover {
-    @apply glass-panel transition-all duration-300 hover:bg-white/[0.05] hover:border-white/[0.12];
-  }
-
-  .glass-panel-glow {
-    @apply glass-panel relative overflow-hidden;
-  }
-
-  .glass-panel-glow::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-      135deg,
-      rgba(16, 185, 129, 0.15),
-      transparent 40%,
-      transparent 60%,
-      rgba(16, 185, 129, 0.05)
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
-  .glass-panel-glow:hover {
-    @apply border-white/[0.15];
-  }
-
-  .glass-panel-glow:hover::before {
-    background: linear-gradient(
-      135deg,
-      rgba(16, 185, 129, 0.25),
-      transparent 40%,
-      transparent 60%,
-      rgba(16, 185, 129, 0.1)
-    );
-  }
-
-  /* ─── Accent-specific glass panels ─── */
-  .glass-panel-accent {
-    @apply glass-panel relative overflow-hidden;
-  }
-
-  .glass-panel-accent::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-color, rgba(16, 185, 129, 0.4)), transparent);
-    pointer-events: none;
-  }
-
-  .glass-panel-violet {
-    --accent-color: rgba(139, 92, 246, 0.4);
-  }
-
-  /* ─── Glow Effects ─── */
-  .glow-teal {
-    box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.15);
-  }
-
-  .glow-teal-lg {
-    box-shadow: 0 0 80px -20px rgba(16, 185, 129, 0.2);
-  }
-
-  .glow-violet {
-    box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.15);
-  }
-
-  .glow-rose {
-    box-shadow: 0 0 40px -10px rgba(244, 63, 94, 0.15);
-  }
-
-  /* ─── Typography ─── */
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-medical-400 to-emerald-300;
-  }
-
-  .text-gradient-animate {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      90deg,
-      #34d399 0%,
-      #10b981 25%,
-      #34d399 50%,
-      #10b981 75%,
-      #34d399 100%
-    );
-    background-size: 200% auto;
-    animation: shimmer 3s linear infinite;
-  }
-
-  .text-gradient-clinician {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-fuchsia-300;
-  }
-
-  .text-gradient-hero {
-    background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 50%, #34d399 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* ─── Animations ─── */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
-  }
-
-  .animate-fade-in-up {
-    animation: fadeInUp 0.4s ease-out forwards;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out forwards;
-  }
-
-  /* ─── Staggered Delays ─── */
-  .stagger-1 { animation-delay: 0ms; }
-  .stagger-2 { animation-delay: 80ms; }
-  .stagger-3 { animation-delay: 160ms; }
-  .stagger-4 { animation-delay: 240ms; }
-  .stagger-5 { animation-delay: 320ms; }
-  .stagger-6 { animation-delay: 400ms; }
-  .stagger-7 { animation-delay: 480ms; }
-  .stagger-8 { animation-delay: 560ms; }
-
-  /* ─── Background Patterns ─── */
-  .dot-grid-bg {
-    background-image: radial-gradient(
-      rgba(148, 163, 184, 0.08) 1px,
-      transparent 1px
-    );
-    background-size: 32px 32px;
-  }
-
-  .mesh-gradient {
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 70%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
-  }
-
-  .mesh-gradient-clinician {
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 70%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
-  }
-
-  /* ─── Interactive States ─── */
-  .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 40px -8px rgba(0, 0, 0, 0.4);
-  }
-
-  .hover-glow {
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
-  }
-
-  .hover-glow:hover {
-    box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.15);
-  }
-
-  /* ─── Chat Bubbles ─── */
-  .chat-bubble-user {
-    @apply relative rounded-2xl p-4;
-    @apply bg-gradient-to-br from-medical-500/20 via-medical-500/10 to-transparent;
-    @apply border border-medical-500/25;
-  }
-
-  .chat-bubble-clinician {
-    @apply relative rounded-2xl p-4;
-    @apply bg-gradient-to-br from-violet-500/20 via-violet-500/10 to-transparent;
-    @apply border border-violet-500/25;
-  }
-
-  .chat-bubble-assistant {
-    @apply relative rounded-2xl p-4;
-    @apply bg-white/[0.05] backdrop-blur-sm;
-    @apply border border-white/[0.1];
-  }
-
-  /* ─── Mini Score Bar ─── */
-  .score-bar {
-    @apply h-1.5 rounded-full bg-white/[0.06] overflow-hidden;
-  }
-
-  .score-bar-fill {
-    @apply h-full rounded-full transition-all duration-700 ease-out;
-  }
-
-  /* ─── Timeline ─── */
-  .timeline-node {
-    @apply relative pl-7 pb-4;
-  }
-
-  .timeline-node::before {
-    content: '';
-    @apply absolute left-[7px] top-3 bottom-0 w-px bg-white/[0.08];
-  }
-
-  .timeline-node:last-child::before {
-    display: none;
-  }
-
-  .timeline-dot {
-    @apply absolute left-0 top-[6px] w-[15px] h-[15px] rounded-full border-2;
-  }
-
-  /* ─── Metric Card ─── */
-  .metric-card {
-    @apply glass-panel p-4 text-center transition-all duration-300 hover:bg-white/[0.05];
-  }
-
-  .metric-value {
-    @apply text-2xl font-bold font-mono;
-  }
-
-  .metric-label {
-    @apply text-[10px] text-slate-500 uppercase tracking-widest mt-1;
-  }
-
-  /* ─── Scrollbar ─── */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.15) transparent;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -276,147 +44,33 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.15);
+    background-color: rgba(148, 163, 184, 0.3);
     border-radius: 3px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(148, 163, 184, 0.3);
+    background-color: rgba(148, 163, 184, 0.5);
   }
 
-  /* ─── Tag/Pill ─── */
-  .tag {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  .dark .scrollbar-thin {
+    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
   }
-
-  .tag-medical {
-    @apply tag bg-medical-500/10 text-medical-400 border border-medical-500/20;
-  }
-
-  .tag-violet {
-    @apply tag bg-violet-500/10 text-violet-400 border border-violet-500/20;
-  }
-
-  .tag-emerald {
-    @apply tag bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
-  }
-
-  .tag-amber {
-    @apply tag bg-amber-500/10 text-amber-400 border border-amber-500/20;
-  }
-
-  .tag-rose {
-    @apply tag bg-rose-500/10 text-rose-400 border border-rose-500/20;
-  }
-
-  .tag-sky {
-    @apply tag bg-sky-500/10 text-sky-400 border border-sky-500/20;
-  }
-
-  /* ─── Thinking Dots ─── */
-  .thinking-dot {
-    @apply w-2 h-2 rounded-full bg-medical-400;
-    animation: bounceGentle 1.4s ease-in-out infinite;
-  }
-
-  .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
-  .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
-
-  /* ─── Status Pill ─── */
-  .status-pill {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-full;
-  }
-
-  .status-pill-live {
-    @apply status-pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
-  }
-
-  .status-pill-live::before {
-    content: '';
-    @apply w-1.5 h-1.5 rounded-full bg-emerald-400;
-    animation: pulseGlow 2s ease-in-out infinite;
-  }
-
-  /* ─── Skeleton ─── */
-  .skeleton-pulse {
-    @apply bg-white/[0.04] rounded;
-    animation: skeleton 2s ease-in-out infinite;
-  }
-
-  /* ─── Button Base ─── */
-  .btn-ghost {
-    @apply flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all;
-    @apply text-slate-500 hover:text-slate-300 hover:bg-white/[0.04];
-  }
-
-  .btn-primary {
-    @apply flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover-lift;
-  }
-
-  .btn-primary-medical {
-    @apply btn-primary bg-medical-500/15 hover:bg-medical-500/20 text-medical-400 border border-medical-500/20;
-  }
-
-  .btn-primary-violet {
-    @apply btn-primary bg-violet-500/15 hover:bg-violet-500/20 text-violet-400 border border-violet-500/20;
-  }
-
-  .btn-primary-emerald {
-    @apply btn-primary bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20;
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33% { transform: translateY(-10px) rotate(1deg); }
-  66% { transform: translateY(5px) rotate(-1deg); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes meshShift {
-  0% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(5%, 3%) scale(1.05); }
-  50% { transform: translate(-3%, 5%) scale(0.95); }
-  75% { transform: translate(2%, -3%) scale(1.02); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-
-@keyframes bounceGentle {
-  0%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-6px); }
-}
-
-@keyframes skeleton {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
 }

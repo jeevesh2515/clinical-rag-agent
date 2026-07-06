@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, X, LogOut, Settings, Plus, MessageSquare, Send, ChevronDown } from 'lucide-react'
+import { Menu, LogOut, Plus, MessageSquare, Send } from 'lucide-react'
 import { useApi } from './hooks/useApi'
 import type { QueryResponse } from './types/api'
 
@@ -30,7 +30,6 @@ export const AppNew: React.FC = () => {
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
 
   // Chat state
@@ -87,7 +86,7 @@ export const AppNew: React.FC = () => {
     setIsLoading(true)
 
     try {
-      const response = await queryAgent(inputValue)
+      const response = await queryAgent({ question: inputValue, mode: 'patient' })
       if (response) {
         setLastResponse(response)
         const assistantMessage: ChatMessage = {
@@ -358,7 +357,7 @@ export const AppNew: React.FC = () => {
                 <div className="p-3 bg-white rounded-lg border border-gray-200">
                   <div className="font-medium text-sm text-gray-900">Knowledge Path</div>
                   <div className="text-xs text-gray-600 mt-2">
-                    <p>Route: {lastResponse.knowledge_path}</p>
+                    <p>Route: {lastResponse.knowledge_path.path}</p>
                   </div>
                 </div>
               ) : (

@@ -1,7 +1,7 @@
 
 from typing import Dict, List, Optional
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.chat.models import Conversation, ChatMessage, ConversationSummary
 
@@ -15,8 +15,8 @@ class ChatRepository:
             id=conversation_id,
             user_id=user_id,
             title=title if title else f"New Chat {len(self.conversations) + 1}",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
             messages=[]
         )
         self.conversations[conversation_id] = new_conversation
@@ -39,7 +39,7 @@ class ChatRepository:
         conversation = self.get_conversation(conversation_id, user_id)
         if conversation:
             conversation.messages.append(message)
-            conversation.updated_at = datetime.utcnow()
+            conversation.updated_at = datetime.now(timezone.utc)
             return conversation
         return None
 
@@ -47,7 +47,7 @@ class ChatRepository:
         conversation = self.get_conversation(conversation_id, user_id)
         if conversation:
             conversation.title = new_title
-            conversation.updated_at = datetime.utcnow()
+            conversation.updated_at = datetime.now(timezone.utc)
             return conversation
         return None
 

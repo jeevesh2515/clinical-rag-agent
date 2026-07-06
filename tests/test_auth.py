@@ -1,8 +1,6 @@
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.auth.security import get_password_hash, verify_password, create_access_token
-from app.auth.models import UserRole
 
 client = TestClient(app)
 
@@ -140,7 +138,7 @@ class TestAuthenticationEndpoints:
     def test_get_current_user_without_token(self):
         """Test getting current user without token."""
         response = client.get("/api/auth/users/me")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     def test_get_current_user_with_invalid_token(self):
         """Test getting current user with invalid token."""

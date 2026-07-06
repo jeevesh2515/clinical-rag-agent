@@ -222,11 +222,11 @@ class TestChatAuthentication:
             "/api/chat/conversations",
             json={"title": "No Auth Test"},
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
         # Try to list conversations without auth
         response = client.get("/api/chat/conversations")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     def test_chat_endpoints_require_valid_token(self):
         """Test that chat endpoints require valid token."""

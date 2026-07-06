@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "frontend/dist/**",
-      "use": "@vercel/static"
+      "use": "@vercel/static",
+      "config": {
+        "cleanUrls": true
+      }
     },
     {
       "src": "api/index.py",
@@ -20,7 +23,17 @@
     },
     {
       "src": "/assets/(.*)",
-      "dest": "frontend/dist/assets/$1"
+      "dest": "frontend/dist/assets/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/vite.svg",
+      "dest": "frontend/dist/vite.svg",
+      "headers": {
+        "cache-control": "public, max-age=86400"
+      }
     },
     {
       "src": "/(.*)",

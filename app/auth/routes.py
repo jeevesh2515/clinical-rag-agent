@@ -2,9 +2,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
-from typing import List
 
-from app.auth.models import User, UserInDB, Token, RegisterUser, LoginUser, UserRole, TokenData
+from app.auth.models import User, UserInDB, Token, RegisterUser, UserRole
 from app.auth.security import verify_password, get_password_hash, create_access_token, decode_access_token
 
 router = APIRouter()
@@ -17,12 +16,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-async def get_user(username: str) -> UserInDB:
+async def get_user(username: str) -> UserInDB | None:
     if username in USERS_DB:
         return USERS_DB[username]
     return None
 
-async def authenticate_user(username: str, password: str) -> UserInDB:
+async def authenticate_user(username: str, password: str) -> UserInDB | None:
     user = await get_user(username)
     if not user or not verify_password(password, user.hashed_password):
         return None

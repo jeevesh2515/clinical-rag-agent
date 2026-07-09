@@ -28,6 +28,7 @@ QUERY_CONTRACT_KEYS = {
     "confidence",
     "tool_trace",
     "knowledge_path",
+    "personal_chunks_used",
     "request_id",
     "graph_route",
 }

@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.chat.repository import chat_repository
+from app.db import SessionLocal
 
 client = TestClient(app)
 
@@ -242,7 +243,8 @@ class TestChatAuthentication:
 class TestChatRepository:
     def test_repository_create_conversation(self):
         """Test creating a conversation in the repository."""
-        conv = chat_repository.create_conversation("user123", "Test Conv")
+        with SessionLocal() as db:
+            conv = chat_repository.create_conversation(db, "user123", "Test Conv")
         assert conv.id is not None
         assert conv.title == "Test Conv"
         assert conv.user_id == "user123"
@@ -250,31 +252,34 @@ class TestChatRepository:
     def test_repository_list_conversations(self):
         """Test listing conversations for a user."""
         user_id = "user456"
-        chat_repository.create_conversation(user_id, "Conv 1")
-        chat_repository.create_conversation(user_id, "Conv 2")
-
-        convs = chat_repository.list_conversations(user_id)
+        with SessionLocal() as db:
+            chat_repository.create_conversation(db, user_id, "Conv 1")
+            chat_repository.create_conversation(db, user_id, "Conv 2")
+            convs = chat_repository.list_conversations(db, user_id)
         assert len(convs) >= 2
 
     def test_repository_get_conversation(self):
         """Test getting a conversation by ID."""
-        conv = chat_repository.create_conversation("user789", "Get Test")
-        retrieved = chat_repository.get_conversation(conv.id, "user789")
+        with SessionLocal() as db:
+            conv = chat_repository.create_conversation(db, "user789", "Get Test")
+            retrieved = chat_repository.get_conversation(db, conv.id, "user789")
         assert retrieved is not None
         assert retrieved.id == conv.id
 
     def test_repository_get_conversation_wrong_user(self):
         """Test that users can't access other users' conversations."""
-        conv = chat_repository.create_conversation("user_a", "Private Conv")
-        retrieved = chat_repository.get_conversation(conv.id, "user_b")
+        with SessionLocal() as db:
+            conv = chat_repository.create_conversation(db, "user_a", "Private Conv")
+            retrieved = chat_repository.get_conversation(db, conv.id, "user_b")
         assert retrieved is None
 
     def test_repository_delete_conversation(self):
         """Test deleting a conversation."""
-        conv = chat_repository.create_conversation("user_del", "To Delete")
-        result = chat_repository.delete_conversation(conv.id, "user_del")
-        assert result is True
+        with SessionLocal() as db:
+            conv = chat_repository.create_conversation(db, "user_del", "To Delete")
+            result = chat_repository.delete_conversation(db, conv.id, "user_del")
 
-        # Verify it's deleted
-        retrieved = chat_repository.get_conversation(conv.id, "user_del")
+            # Verify it's deleted
+            retrieved = chat_repository.get_conversation(db, conv.id, "user_del")
+        assert result is True
         assert retrieved is None

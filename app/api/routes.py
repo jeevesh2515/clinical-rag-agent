@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Request
 from app.auth.routes import router as auth_router
 from app.chat.routes import router as chat_router
+from app.uploads.routes import router as uploads_router
 
 from app.agents.clinical_rag_agent import ClinicalRAGAgent
 from app.api.dependencies import get_agent, get_knowledge_interface, get_store
@@ -21,6 +22,7 @@ from app.retrieval.store import HybridStore
 router = APIRouter()
 router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 router.include_router(chat_router, prefix="/chat", tags=["Chat"])
+router.include_router(uploads_router, prefix="", tags=["Uploads"])
 
 
 def request_id_from(request: Request) -> str | None:
@@ -92,6 +94,8 @@ def query(
     agent: ClinicalRAGAgent = Depends(get_agent),
 ) -> QueryResponse:
     settings = get_settings()
+    # Personalisation: only available for authenticated callers.
+    user_id = getattr(request.state, "user_id", None)
     return agent.invoke(
         payload.question,
         alpha=payload.alpha if payload.alpha is not None else settings.default_alpha,
@@ -105,6 +109,7 @@ def query(
         case_id=payload.case_id,
         include_patient_education=payload.include_patient_education,
         request_id=request_id_from(request),
+        user_id=user_id,
     )
 
 

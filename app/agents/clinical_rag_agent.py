@@ -22,6 +22,7 @@ from app.models import (
 from app.okf.interface import KnowledgeInterface
 from app.retrieval.reranker import Reranker
 from app.retrieval.store import HybridStore
+from app.personalization import personal_index
 from app.safety.classifier import QueryIntent, RefusalReason, classify_query, refusal_message
 from app.cases.models import SyntheticCase
 from app.cases.repository import CaseRepository
@@ -66,6 +67,8 @@ class AgentState(TypedDict, total=False):
     current_case: NotRequired[SyntheticCase | None]
     care_gaps: NotRequired[list[dict]]
     follow_up_plan: NotRequired[list[str]]
+    user_id: NotRequired[str | None]
+    personal_chunks_used: NotRequired[list[str]]
 
 
 class ClinicalRAGAgent:
@@ -100,6 +103,7 @@ class ClinicalRAGAgent:
         case_id: str | None = None,
         include_patient_education: bool = False,
         request_id: str | None = None,
+        user_id: str | None = None,
     ) -> QueryResponse:
         state = cast(
             AgentState,
@@ -116,12 +120,18 @@ class ClinicalRAGAgent:
                     "tools_used": [],
                     "tool_notes": [],
                     "tool_trace": [],
+                    "user_id": user_id,
+                    "personal_chunks_used": [],
                 }
             ),
         )
         response = state.get("response")
         if response is None:
             raise RuntimeError("Clinical RAG agent did not produce a response")
+        # Surface which personal-upload chunks (if any) actually influenced the answer.
+        personal_chunks = state.get("personal_chunks_used", []) or []
+        if personal_chunks and response is not None:
+            response.personal_chunks_used = personal_chunks  # type: ignore[attr-defined]
         return response
 
     def _build_graph(self) -> Any:
@@ -292,20 +302,65 @@ class ClinicalRAGAgent:
                     }
                 )
             candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
+            personal = self._personal_retrieve(state, limit=4)
+            if personal:
+                candidates.extend(personal)
+                candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
+                candidates = candidates[: state["top_k"] + len(personal)]
             logger.info(
-                "knowledge_retrieved request_id=%s path=%s okf=%d rag=%d",
+                "knowledge_retrieved request_id=%s path=%s okf=%d rag=%d personal=%d",
                 state.get("request_id"),
                 result.decision.path if result.decision else "unknown",
                 len(result.okf_docs),
                 len(result.rag_chunks),
+                len(personal),
             )
-            return {"candidates": candidates, "knowledge_result": result}
+            return {
+                "candidates": candidates,
+                "knowledge_result": result,
+                "personal_chunks_used": [c["chunk_id"] for c in personal],
+            }
         candidates = cast(
             list[dict[str, Any]],
             self.store.query(state["question"], alpha=state["alpha"], top_k=state["top_k"]),
         )
-        logger.info("retrieved_chunks=%s", [c["chunk_id"] for c in candidates])
-        return {"candidates": candidates}
+        personal = self._personal_retrieve(state, limit=4)
+        if personal:
+            candidates.extend(personal)
+            candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
+        logger.info(
+            "retrieved_chunks=%s personal=%d",
+            [c["chunk_id"] for c in candidates],
+            len(personal),
+        )
+        return {
+            "candidates": candidates,
+            "personal_chunks_used": [c["chunk_id"] for c in personal],
+        }
+
+    def _personal_retrieve(
+        self, state: AgentState, *, limit: int
+    ) -> list[dict[str, Any]]:
+        """Pull a small slice of the user's private corpus into the candidate set.
+
+        Returns an empty list if the user has no uploads or no user_id was
+        provided. Always limited to ``limit`` chunks so it can't drown out the
+        public guideline evidence.
+        """
+        user_id = state.get("user_id")
+        if not user_id:
+            return []
+        try:
+            personal = personal_index.query(
+                user_id,
+                state["question"],
+                alpha=state["alpha"],
+                top_k=limit,
+            )
+        except Exception as exc:  # never let personal retrieval break the answer
+            logger.warning("personal_retrieval_failed user=%s err=%s", user_id, exc)
+            return []
+        return cast(list[dict[str, Any]], personal)
 
     def _tools(self, state: AgentState) -> dict[str, Any]:
         question = state["question"]
@@ -501,14 +556,72 @@ Include a reminder to consult a licensed clinician.
             if state.get("mode") == "patient"
             else "Here is a care-team workflow summary from indexed evidence."
         )
-        evidence_lines = []
+
+        # Build a clean, structured answer from reranked chunks.
+        # Each chunk becomes a labeled section with its title as a heading,
+        # a short prose lead, and the chunk's own content (which may include
+        # markdown tables) preserved so the frontend renderer can format it.
+        sections: list[str] = []
         for item in state.get("reranked", [])[:3]:
-            snippet = item["text"].strip().replace("\n", " ")[:420]
-            evidence_lines.append(f"{snippet} [{item['chunk_id']}]")
-        if notes:
-            evidence_lines.extend(notes)
-        disclaimer = "This is educational workflow support, not medical advice."
-        return f"{disclaimer}\n\n{preface}\n\n" + "\n\n".join(evidence_lines)
+            raw_text = (item.get("text") or "").strip()
+            if not raw_text:
+                continue
+
+            title = (item.get("title") or item.get("chunk_id") or "Source").strip()
+
+            # Pull out the first markdown heading (## Title) if present —
+            # it usually names the table/topic (e.g. "BP Categories (Revised)").
+            heading_match = raw_text.split("\n", 1)[0] if raw_text.startswith("#") else ""
+            if heading_match:
+                # Strip leading '#' and trim — render as h2 in the answer.
+                stripped_heading = heading_match.lstrip("#").strip()
+                if stripped_heading:
+                    title = stripped_heading
+
+            # Compose the body. We keep table syntax |...| intact because the
+            # frontend renders it via remark-gfm. Strip the duplicated leading
+            # heading line so we don't repeat it.
+            body = raw_text
+            if heading_match and body.startswith(heading_match):
+                body = body[len(heading_match):].lstrip("\n").lstrip()
+
+            # Limit length to a reasonable per-section budget.
+            if len(body) > 900:
+                body = body[:900].rsplit(" ", 1)[0] + "…"
+
+            sections.append(f"## {title}\n\n{body}")
+
+        if not sections and not notes:
+            return "I could not find enough evidence in the indexed sources."
+
+        body_md = "\n\n---\n\n".join(sections) if sections else ""
+        notes_md = "\n\n".join(notes) if notes else ""
+
+        # Pull the chunk ids of the sources we cited — surface them inline so
+        # the answer keeps the [chunk_id] convention the suite asserts on.
+        cited_ids = [
+            (item.get("chunk_id") or "").strip()
+            for item in state.get("reranked", [])[:3]
+            if (item.get("chunk_id") or "").strip()
+        ]
+
+        parts: list[str] = [
+            "**This is educational workflow support — not medical advice.**",
+            "",
+            preface,
+            "",
+        ]
+        if body_md:
+            parts.extend([body_md, ""])
+        if notes_md:
+            parts.extend(["### Tool notes", "", notes_md, ""])
+        if cited_ids:
+            parts.extend([
+                "",
+                f"*Sources cited: {', '.join(f'`[{cid}]`' for cid in cited_ids)}*",
+            ])
+
+        return "\n".join(parts).rstrip() + "\n"
 
     def _format(self, state: AgentState) -> dict[str, Any]:
         citations = build_citations(state.get("reranked", []))

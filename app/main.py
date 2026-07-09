@@ -15,6 +15,22 @@ from app.models import ApiError, ApiErrorDetail, ApiErrorResponse
 
 configure_logging()
 
+# Initialise SQLite + ORM tables at import time. Safe to call repeatedly.
+from app.db import SessionLocal, bootstrap as _bootstrap_db  # noqa: E402
+_bootstrap_db()
+
+# Warm the personal-corpus retrieval index from persisted uploads so the
+# personalised RAG works after a restart.
+try:
+    from app.personalization import personal_index  # noqa: E402
+    with SessionLocal() as _db:
+        _loaded = personal_index.warm_from_db(_db)
+        import logging as _logging  # noqa: E402
+        _logging.getLogger(__name__).info("personal_index_warm chunks=%s", _loaded)
+except Exception as _exc:  # never let warm-up break startup
+    import logging as _logging  # noqa: E402
+    _logging.getLogger(__name__).warning("personal_index_warm_failed err=%s", _exc)
+
 app = FastAPI(
     title="Clinical Evidence RAG Agent",
     version="0.1.0",
@@ -67,6 +83,33 @@ async def add_request_id(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
+
+
+@app.middleware("http")
+async def attach_optional_user(request: Request, call_next):
+    """Resolve JWT (if any) and attach ``request.state.user_id``.
+
+    Endpoints that don't require auth can still personalise when a token is
+    supplied — used by ``/api/query`` so logged-in patients get their
+    personal corpus merged into the answer.
+    """
+    request.state.user_id = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        try:
+            from app.auth.security import decode_access_token  # noqa: E402
+            from app.db import User as _User  # noqa: E402
+            payload = decode_access_token(token)
+            if payload:
+                uid = payload.get("uid")
+                if uid:
+                    with SessionLocal() as _db:
+                        if _db.query(_User).filter(_User.id == uid).one_or_none():
+                            request.state.user_id = uid
+        except Exception:
+            request.state.user_id = None
+    return await call_next(request)
 
 
 @app.exception_handler(RequestValidationError)

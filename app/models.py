@@ -300,6 +300,10 @@ class QueryResponse(BaseModel):
         default=None,
         description="OKF vs RAG knowledge routing info.",
     )
+    personal_chunks_used: list[str] = Field(
+        default_factory=list,
+        description="Chunk IDs from the user's personal upload corpus that influenced this answer.",
+    )
     request_id: str | None = Field(
         default=None,
         description="Trace identifier assigned at the API boundary.",

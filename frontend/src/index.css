@@ -232,3 +232,132 @@
   color: #ffffff;
 }
 
+/* ─── Message entry animation ─────────────────── */
+@keyframes messageSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-message {
+  animation: messageSlideUp 0.3s ease-out forwards;
+}
+
+/* ─── Opacity low utility ─────────────────────── */
+.opacity-low {
+  opacity: 0.6;
+}
+
+/* ─── Glass panel utility ─────────────────────── */
+.glass-panel {
+  background: #ffffff;
+  border-top: 2px solid #1a1a1a;
+  transition: all 1000ms ease;
+}
+.dark .glass-panel {
+  background: #0f172a;
+  border-top-color: #ffffff;
+}
+
+/* ─── Pressure Relief Mode ───────────────────────
+ *  Toggled via js — softens all brutalist edges,
+ *  swaps brand-accent to teal, adds glassmorphism.
+ * ─────────────────────────────────────────────── */
+.relief-mode .clinical-shadow {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.relief-mode .bg-white,
+.relief-mode .bg-\[#fafafa\],
+.relief-mode .bg-\[#f0f0f0\] {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.dark.relief-mode .bg-white,
+.dark.relief-mode .bg-\[#fafafa\],
+.dark.relief-mode .bg-\[#f0f0f0\],
+.dark.relief-mode .bg-slate-900,
+.dark.relief-mode .bg-gray-950 {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.relief-mode .neo-brutal-shadow,
+.relief-mode .brutal-shadow,
+.relief-mode .brutal-shadow-sm,
+.relief-mode .shadow-\[4px_4px_0px_0px_\#1a1a1a\],
+.relief-mode .shadow-\[2px_2px_0px_0px_\#1a1a1a\],
+.relief-mode .shadow-\[4px_4px_0px_0px_rgba\(26\,26\,26\,1\)\],
+.relief-mode .shadow-\[2px_2px_0px_0px_rgba\(26\,26\,26\,1\)\] {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.relief-mode .border-2,
+.relief-mode .border-4,
+.relief-mode .brutal-border,
+.relief-mode .neo-brutal-shadow {
+  border-radius: 32px !important;
+  border-width: 1px !important;
+  border-color: rgba(26, 26, 26, 0.1) !important;
+}
+.dark.relief-mode .border-2,
+.dark.relief-mode .border-4,
+.dark.relief-mode .brutal-border {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.relief-mode .rounded-none,
+.relief-mode .rounded-sm,
+.relief-mode .rounded-lg,
+.relief-mode .rounded-xl {
+  border-radius: 32px !important;
+}
+
+.relief-mode .brutal-button:active,
+.relief-mode .neo-brutal-btn:active {
+  transform: translate(0, 0) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.relief-mode .bg-brand-accent {
+  background-color: #008080 !important;
+}
+.relief-mode .text-brand-accent {
+  color: #008080 !important;
+}
+.relief-mode .marker\:text-brand-accent::marker,
+.relief-mode .marker\:text-brand-accent li::marker {
+  color: #008080 !important;
+}
+.relief-mode .border-brand-accent {
+  border-color: #008080 !important;
+}
+.relief-mode .hover\:bg-brand-accent:hover {
+  background-color: #008080 !important;
+}
+.relief-mode .hover\:text-brand-accent:hover {
+  color: #008080 !important;
+}
+.relief-mode .from-brand-accent {
+  --tw-gradient-from: #008080 !important;
+}
+.relief-mode .accent-brand-accent {
+  accent-color: #008080 !important;
+}
+
+.relief-mode .opacity-low {
+  opacity: 0.6;
+}
+
+/* ─── Custom thin scrollbar (premium) ─────────── */
+.scroll-premium::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll-premium::-webkit-scrollbar-track { background: #f0f0f0; border-left: 1px solid #1a1a1a; }
+.scroll-premium::-webkit-scrollbar-thumb { background: #1a1a1a; border: 1px solid #f0f0f0; }
+.scroll-premium::-webkit-scrollbar-thumb:hover { background: #ff3366; }
+.dark .scroll-premium::-webkit-scrollbar-track { background: #1e293b; border-left-color: #334155; }
+.dark .scroll-premium::-webkit-scrollbar-thumb { background: #475569; border-color: #1e293b; }
+.dark .scroll-premium::-webkit-scrollbar-thumb:hover { background: #ff3366; }
+
+.relief-mode .scroll-premium::-webkit-scrollbar-track { background: transparent; border-left: none; }
+.relief-mode .scroll-premium::-webkit-scrollbar-thumb { background: #008080; border-radius: 10px; border: none; }
+

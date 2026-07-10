@@ -18,7 +18,7 @@ const mdComponents: Components = {
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-base font-semibold text-gray-900 dark:text-white mt-5 mb-2 first:mt-0 tracking-tight border-b border-gray-200/60 dark:border-gray-700/60 pb-1.5">
+    <h2 className="text-base font-bold text-gray-900 dark:text-white mt-5 mb-2 first:mt-0 tracking-tight border-b-2 border-[#1a1a1a] dark:border-white pb-1.5 uppercase">
       {children}
     </h2>
   ),
@@ -42,7 +42,7 @@ const mdComponents: Components = {
 
   // Inline formatting
   strong: ({ children }) => (
-    <strong className="font-semibold text-gray-900 dark:text-white">{children}</strong>
+    <strong className="font-bold text-gray-900 dark:text-white bg-brand-accent/10 dark:bg-brand-accent/20 px-0.5">{children}</strong>
   ),
   em: ({ children }) => (
     <em className="italic text-gray-800 dark:text-gray-200">{children}</em>
@@ -54,7 +54,7 @@ const mdComponents: Components = {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-brand-accent dark:text-brand-accent hover:underline decoration-brand-accent/60 underline-offset-2 transition-colors font-medium"
+      className="text-brand-accent dark:text-brand-accent font-bold underline decoration-brand-accent/60 underline-offset-2 hover:bg-brand-accent hover:text-white hover:no-underline transition-all px-0.5"
     >
       {children}
     </a>
@@ -71,62 +71,62 @@ const mdComponents: Components = {
       )
     }
     return (
-      <code className="px-1.5 py-0.5 mx-0.5 text-[12px] font-mono bg-gray-100 dark:bg-gray-800 text-rose-600 dark:text-rose-300 rounded border border-gray-200 dark:border-gray-700/60">
+      <code className="px-1.5 py-0.5 mx-0.5 text-[12px] font-mono bg-yellow-100 dark:bg-yellow-900/30 text-[#1a1a1a] dark:text-yellow-200 border-2 border-[#1a1a1a] dark:border-yellow-500/50 shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1px_1px_0px_0px_rgba(255,255,255,0.3)] rounded-none">
         {children}
       </code>
     )
   },
   pre: ({ children }) => (
-    <pre className="my-3 p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700/60 rounded-lg overflow-x-auto text-xs leading-relaxed">
+    <pre className="my-3 p-3 bg-[#1a1a1a] dark:bg-slate-900 text-white border-2 border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] overflow-x-auto text-xs leading-relaxed rounded-none">
       {children}
     </pre>
   ),
 
   // Blockquote — for disclaimers / source notes
   blockquote: ({ children }) => (
-    <blockquote className="my-3 pl-3 border-l-2 border-brand-accent/70 dark:border-brand-accent/60 text-gray-600 dark:text-gray-400 italic">
+    <blockquote className="my-3 border-2 border-[#1a1a1a] dark:border-white p-3 bg-[#f0f0f0] dark:bg-slate-900 font-mono text-[12px] font-bold text-[#1a1a1a] dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-none">
       {children}
     </blockquote>
   ),
 
   // Lists
   ul: ({ children }) => (
-    <ul className="my-2 pl-5 space-y-1 list-disc marker:text-gray-400 dark:marker:text-gray-500 text-sm text-gray-800 dark:text-gray-200">
+    <ul className="my-2 pl-5 space-y-1 list-disc marker:text-brand-accent dark:marker:text-brand-accent text-sm text-gray-800 dark:text-gray-200 font-medium">
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="my-2 pl-5 space-y-1 list-decimal marker:text-gray-400 dark:marker:text-gray-500 text-sm text-gray-800 dark:text-gray-200">
+    <ol className="my-2 pl-5 space-y-1 list-decimal marker:text-brand-accent dark:marker:text-brand-accent text-sm text-gray-800 dark:text-gray-200 font-medium">
       {children}
     </ol>
   ),
   li: ({ children }) => <li className="leading-relaxed">{children}</li>,
 
   // Horizontal rule
-  hr: () => <hr className="my-4 border-gray-200/80 dark:border-gray-700/80" />,
+  hr: () => <hr className="my-6 border-t-2 border-[#1a1a1a] dark:border-white" />,
 
-  // Tables — core of the clinical response
+  // Tables — core of the clinical response (brutalist style)
   table: ({ children }) => (
-    <div className="my-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700/60 shadow-sm">
-      <table className="w-full text-xs border-collapse">{children}</table>
+    <div className="my-3 overflow-x-auto border-2 border-[#1a1a1a] dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+      <table className="w-full text-sm border-collapse bg-white dark:bg-slate-900">{children}</table>
     </div>
   ),
   thead: ({ children }) => (
-    <thead className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700/60">
-      {children}
-    </thead>
+    <thead className="bg-[#1a1a1a] dark:bg-white text-white dark:text-black">{children}</thead>
   ),
-  tbody: ({ children }) => <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">{children}</tbody>,
+  tbody: ({ children }) => <tbody>{children}</tbody>,
   tr: ({ children }) => (
-    <tr className="border-b border-gray-100 dark:border-gray-700/50 last:border-b-0">{children}</tr>
+    <tr className="border-b-2 border-[#1a1a1a] dark:border-white last:border-b-0 hover:bg-brand-accent/10 dark:hover:bg-brand-accent/20 transition-colors">{children}</tr>
   ),
   th: ({ children }) => (
-    <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 text-[11px] uppercase tracking-wide">
+    <th className="px-3 py-2.5 text-left font-bold text-white dark:text-black text-xs uppercase tracking-wider border-r-2 border-white/20 last:border-r-0">
       {children}
     </th>
   ),
   td: ({ children }) => (
-    <td className="px-3 py-2 text-gray-800 dark:text-gray-200 align-top">{children}</td>
+    <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 align-top font-mono text-xs font-semibold">
+      {children}
+    </td>
   ),
 }
 

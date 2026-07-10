@@ -348,7 +348,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
             <p className="font-mono text-[10px] text-white/70 mt-1 uppercase">Hypertension AI</p>
           </div>
         </div>
-        <button onClick={onToggle} className="p-1 rounded text-white/50 hover:text-brand-accent transition-colors" title="Collapse sidebar">
+        <button onClick={onToggle} className="p-1 text-white/50 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30 rounded-none" title="Collapse sidebar">
           <PanelLeftClose size={16} />
         </button>
       </div>
@@ -375,7 +375,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium px-4 py-2 space-y-1">
         {isLoading ? (
           <div className="flex justify-center py-8"><Spinner className="text-white/50" /></div>
         ) : filtered.length === 0 ? (
@@ -486,7 +486,7 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
   const year = citation.publication_year
 
   return (
-    <div className="bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/80 rounded-xl overflow-hidden hover:border-brand-accent/60 dark:hover:border-brand-accent/30 transition-colors">
+    <div className="bg-white dark:bg-gray-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden hover:border-brand-accent/60 dark:hover:border-brand-accent/30 transition-all rounded-none">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-start gap-2.5 p-3 text-left"
@@ -654,20 +654,20 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
 
   return (
     <aside className={cn(
-      'flex flex-col h-full bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-l border-gray-200/80 dark:border-gray-800/80 transition-all duration-300 ease-in-out shrink-0',
+      'flex flex-col h-full bg-white dark:bg-gray-950 border-l-2 border-[#1a1a1a] dark:border-white transition-all duration-300 ease-in-out shrink-0',
       isOpen ? 'w-96' : 'w-0 overflow-hidden'
     )}>
       {isOpen && (
         <>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200/80 dark:border-gray-800/80">
-            <div>
-              <h3 className="text-gray-900 dark:text-white font-semibold text-[14px] tracking-tight">Evidence & Context</h3>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Sources, tools, and safety for this answer</p>
+          <div className="px-6 py-6 border-b-2 border-[#1a1a1a] dark:border-white bg-brand-accent text-white transition-colors">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-headline-md text-headline-md font-bold uppercase tracking-wide">Evidence & Context</h3>
+              <button onClick={onClose} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-none border-2 border-transparent hover:border-white/30" title="Close">
+                <X size={16} />
+              </button>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all" title="Close">
-              <X size={15} />
-            </button>
+            <p className="font-code-sm text-xs font-bold uppercase opacity-low">Sources, tools, and safety</p>
           </div>
 
           {/* Tabs */}
@@ -698,7 +698,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6 bg-[#fafafa] dark:bg-gray-950">
             {tab === 'sources' && (
               <>
                 {/* Titration Sandbox */}
@@ -750,11 +750,11 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               toolTrace.length === 0 ? (
                 <EmptyEvidence icon={Zap} title="No tools used" subtitle="Tools will appear here if the agent called them" />
               ) : toolTrace.map((t, i) => (
-                <div key={i} className="bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/80 rounded-xl p-3.5 space-y-2.5">
+                  <div key={i} className="bg-white dark:bg-gray-900/60 border-2 border-[#1a1a1a] dark:border-white p-3.5 space-y-2.5 rounded-none">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
-                      <Zap size={13} className="text-amber-600 dark:text-amber-400" />
-                    </div>
+                      <div className="w-7 h-7 bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center border border-[#1a1a1a]/10 dark:border-white/10 rounded-none">
+                          <Zap size={13} className="text-amber-600 dark:text-amber-400" />
+                        </div>
                     <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-200">{t.name}</p>
                     {typeof t.duration_ms === 'number' && (
                       <span className="ml-auto text-[11px] text-gray-400 dark:text-gray-500 font-mono">{t.duration_ms}ms</span>
@@ -763,7 +763,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   {(t.input_summary || t.inputs) && (
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Input</p>
-                      <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950/60 border border-gray-200/80 dark:border-gray-800/60 rounded-lg p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
+                        <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950/60 border-2 border-[#1a1a1a] dark:border-white p-2.5 overflow-x-auto whitespace-pre-wrap break-all rounded-none">
                         {t.input_summary || JSON.stringify(t.inputs, null, 2)}
                       </pre>
                     </div>
@@ -771,7 +771,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   {(t.output_summary || t.output !== undefined) && (
                     <div>
                       <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1.5">Output</p>
-                      <pre className="text-[11.5px] leading-relaxed text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-200/80 dark:border-emerald-500/20 rounded-lg p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
+                        <pre className="text-[11.5px] leading-relaxed text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-200 dark:border-emerald-500/20 p-2.5 overflow-x-auto whitespace-pre-wrap break-all rounded-none">
                         {t.output_summary || JSON.stringify(t.output, null, 2)}
                       </pre>
                     </div>
@@ -782,7 +782,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
             {tab === 'safety' && (
               <div className="space-y-3">
                 <div className={cn(
-                  'flex items-start gap-3 p-3.5 rounded-xl border',
+                    'flex items-start gap-3 p-3.5 border-2 border-[#1a1a1a] dark:border-white rounded-none',
                   safetyFlags?.unsupported_claims_detected
                     ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
                     : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
@@ -824,7 +824,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   <>
                     <div className="bg-stone-50 dark:bg-slate-900 border border-[#1a1a1a]/20 dark:border-white/20 rounded-none p-3.5">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 rounded-lg bg-brand-accent/20 flex items-center justify-center">
+                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border border-[#1a1a1a]/10 dark:border-white/10 rounded-none">
                           <Network size={13} className="text-brand-accent" />
                         </div>
                         <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-200">Knowledge Path</p>
@@ -844,9 +844,9 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                         {knowledgePath.okf_concepts.map((c, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border border-[#1a1a1a]/20 dark:border-white/20 hover:border-brand-accent/60 dark:hover:border-brand-accent/30 rounded-none mb-1.5 transition-colors"
+                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 rounded-none mb-1.5 transition-all"
                           >
-                            <div className="w-7 h-7 rounded-none bg-brand-accent/10 flex items-center justify-center shrink-0 border border-[#1a1a1a]/10 dark:border-white/10">
+                            <div className="w-7 h-7 bg-brand-accent/10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
                               <Brain size={12} className="text-brand-accent" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -879,7 +879,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
 function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title: string; subtitle?: string }) {
   return (
     <div className="text-center py-12">
-      <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800/60 mx-auto mb-3 flex items-center justify-center">
+      <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800/60 mx-auto mb-3 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white rounded-none">
         <Icon size={20} className="text-gray-300 dark:text-gray-600" />
       </div>
       <p className="text-gray-700 dark:text-gray-300 text-[13px] font-medium">{title}</p>
@@ -892,7 +892,7 @@ function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title:
 
 function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) => void }) {
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto scroll-premium">
       <div className="flex flex-col items-center justify-center min-h-full text-center px-6 py-12 max-w-3xl mx-auto">
         {/* Hero */}
         <div className="relative mb-8">
@@ -1597,11 +1597,11 @@ export default function App() {
       {/* Main Chat Area */}
       <main className="flex flex-col flex-1 min-w-0 relative">
         {/* Header */}
-        <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-200/80 dark:border-gray-800/80 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl shrink-0 z-10">
+        <header className="flex items-center gap-2 px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-gray-950 shrink-0 z-10">
           {!canCollapseLeft && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+              className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all rounded-none border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
               title="Open sidebar"
             >
               <PanelLeft size={16} />
@@ -1683,7 +1683,7 @@ export default function App() {
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium">
           {messages.length === 0 ? (
             <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
           ) : (
@@ -1719,6 +1719,13 @@ export default function App() {
                 rows={1}
                 className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-[14px] font-bold uppercase tracking-wide resize-none focus:outline-none focus:ring-0 leading-relaxed px-2 py-2 min-h-[36px] max-h-[200px]"
               />
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-2 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white rounded-none shrink-0"
+                title="Upload documents"
+              >
+                <span className="material-symbols-outlined text-[22px]">add_circle</span>
+              </button>
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isLoading}

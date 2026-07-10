@@ -44,8 +44,8 @@ export default {
           950: '#020617',
         },
         // Landing page design tokens
-        'primary': '#1a1a1a',
-        'brand-accent': '#0066CC',
+        'primary': '#000000',
+        'brand-accent': '#ff3366',
         'clinical-black': '#1a1a1a',
         'on-surface': '#1a1c1c',
         'on-surface-variant': '#444748',

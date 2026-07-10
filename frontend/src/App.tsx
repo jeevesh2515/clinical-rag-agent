@@ -286,7 +286,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       {/* Brand */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200/80 dark:border-gray-800/80">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0 shadow-sm">
             <Stethoscope size={16} className="text-white" />
             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-950" />
           </div>
@@ -303,7 +303,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       {/* New chat */}
       <div className="p-3">
         <button onClick={onNewChat}
-          className="group flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-semibold transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] px-4 py-2.5 text-[13px]">
+          className="group flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold transition-all shadow-sm hover:shadow-md active:scale-[0.98] px-4 py-2.5 text-[13px]">
           <Plus size={15} className="transition-transform group-hover:rotate-90 duration-300" />
           <span>New Chat</span>
         </button>
@@ -316,7 +316,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all"
+            className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400/50 transition-all"
           />
         </div>
       </div>
@@ -360,7 +360,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       {/* User card */}
       <div className="border-t border-gray-200/80 dark:border-gray-800/80 p-3 bg-gray-50/50 dark:bg-gray-900/50">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center text-white text-[12px] font-bold shrink-0 ring-2 ring-white dark:ring-gray-950">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-[12px] font-bold shrink-0 ring-2 ring-white dark:ring-gray-950">
             {getInitials(user.username)}
           </div>
           <div className="flex-1 min-w-0">
@@ -501,7 +501,7 @@ function MessageBubble({ message, onCitationClick, mode }: {
       <div className={cn(
         'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm',
         isUser
-          ? 'bg-gradient-to-br from-blue-600 to-teal-500 text-white'
+          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
           : isClinician
           ? 'bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 border border-slate-700 dark:border-slate-600'
           : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700'
@@ -524,7 +524,7 @@ function MessageBubble({ message, onCitationClick, mode }: {
         <div className={cn(
           'rounded-2xl text-[13.5px] leading-relaxed shadow-sm overflow-hidden',
           isUser
-            ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-sm px-4 py-3 max-w-full'
+            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-sm px-4 py-3 max-w-full'
             : isClinician
               ? 'bg-slate-50 dark:bg-slate-900/40 text-gray-900 dark:text-gray-100 border border-slate-200/80 dark:border-slate-700/60 rounded-tl-sm'
               : 'bg-white dark:bg-gray-900/80 text-gray-900 dark:text-gray-100 border border-gray-200/80 dark:border-gray-800/80 rounded-tl-sm'
@@ -739,10 +739,10 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               <div className="space-y-3">
                 {knowledgePath ? (
                   <>
-                    <div className="bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-500/10 dark:to-blue-500/10 border border-violet-200/80 dark:border-violet-500/30 rounded-xl p-3.5">
+                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200/80 dark:border-blue-500/30 rounded-xl p-3.5">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
-                          <Network size={13} className="text-violet-600 dark:text-violet-400" />
+                        <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+                          <Network size={13} className="text-blue-600 dark:text-blue-400" />
                         </div>
                         <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-200">Knowledge Path</p>
                         <Pill variant={knowledgePath.path === 'okf' ? 'okf' : 'rag'} className="ml-auto">
@@ -761,7 +761,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                         {knowledgePath.okf_concepts.map((c, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/60 hover:border-violet-300/60 dark:hover:border-violet-500/30 rounded-lg mb-1.5 transition-colors"
+                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/60 hover:border-blue-300/60 dark:hover:border-blue-500/30 rounded-lg mb-1.5 transition-colors"
                           >
                             <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center shrink-0">
                               <Brain size={12} className="text-violet-600 dark:text-violet-400" />
@@ -772,7 +772,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                             </div>
                             <div className="shrink-0 w-16">
                               <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-violet-500 to-blue-500 rounded-full transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
+                                <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
                               </div>
                               <p className="text-[10px] text-gray-500 dark:text-gray-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
                             </div>
@@ -813,8 +813,7 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
       <div className="flex flex-col items-center justify-center min-h-full text-center px-6 py-12 max-w-3xl mx-auto">
         {/* Hero */}
         <div className="relative mb-7">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-teal-500 blur-2xl opacity-20 animate-pulse-slow" />
-          <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-teal-500 flex items-center justify-center shadow-xl shadow-blue-500/30">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/10">
             <Sparkles size={32} className="text-white" />
           </div>
         </div>
@@ -840,7 +839,7 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
             <button
               key={i}
               onClick={() => onQuestionClick(q.text)}
-              className="group flex items-start gap-3 p-4 bg-white dark:bg-gray-900/60 hover:bg-gradient-to-br hover:from-blue-50/80 hover:to-white dark:hover:from-blue-500/10 dark:hover:to-gray-900/60 border border-gray-200/80 dark:border-gray-800/80 hover:border-blue-300 dark:hover:border-blue-500/40 rounded-xl text-left transition-all hover:shadow-md hover:shadow-blue-500/5"
+              className="group flex items-start gap-3 p-4 bg-white dark:bg-gray-900/60 hover:bg-blue-50/80 dark:hover:bg-blue-500/10 border border-gray-200/80 dark:border-gray-800/80 hover:border-blue-300 dark:hover:border-blue-500/40 rounded-xl text-left transition-all hover:shadow-md"
             >
               <div className={cn('w-9 h-9 rounded-lg bg-gray-50 dark:bg-gray-800/60 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform', q.tone)}>
                 <q.icon size={15} />
@@ -1023,8 +1022,8 @@ export default function App() {
     <div className={cn(
       'flex h-screen overflow-hidden',
       isClinicianMode
-        ? 'bg-slate-50 dark:bg-slate-950'
-        : 'bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 dark:from-gray-950 dark:via-slate-950 dark:to-gray-950'
+        ? 'bg-stone-50 dark:bg-stone-950'
+        : 'bg-stone-50 dark:bg-stone-950'
     )}>
       <Sidebar
         isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user}
@@ -1051,7 +1050,7 @@ export default function App() {
               'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
               isClinicianMode
                 ? 'bg-gradient-to-br from-slate-700 to-slate-900'
-                : 'bg-gradient-to-br from-blue-600 to-teal-500'
+                : 'bg-gradient-to-br from-blue-500 to-blue-600'
             )}>
               <Stethoscope size={13} className="text-white" />
             </div>
@@ -1135,7 +1134,7 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-white via-white to-white/0 dark:from-gray-950 dark:via-gray-950 dark:to-gray-950/0 shrink-0">
+        <div className="px-4 sm:px-6 pb-4 pt-2 bg-stone-50 dark:bg-stone-950/90 shrink-0">
           <div className="max-w-4xl mx-auto">
             <div className={cn(
               'relative flex items-end gap-2 bg-white dark:bg-gray-900/80 border rounded-2xl p-2 transition-all shadow-sm',
@@ -1160,7 +1159,7 @@ export default function App() {
                   inputValue.trim() && !isLoading
                     ? isClinicianMode
                       ? 'bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white'
-                      : 'bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white shadow-blue-500/20'
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                 )}
               >

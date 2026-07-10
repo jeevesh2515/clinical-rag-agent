@@ -43,16 +43,8 @@ export default {
         'slide-up': 'slideUp 0.4s ease-out',
         'scale-in': 'scaleIn 0.3s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
-        'shimmer': 'shimmer 2s linear infinite',
         'float': 'float 6s ease-in-out infinite',
-        'float-slow': 'float 8s ease-in-out infinite',
-        'mesh-shift': 'meshShift 20s ease-in-out infinite',
-        'spin-slow': 'spin 8s linear infinite',
-        'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
-        'bounce-gentle': 'bounceGentle 2s ease-in-out infinite',
         'skeleton': 'skeleton 2s ease-in-out infinite',
-        'breath': 'breath 4s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -71,38 +63,14 @@ export default {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-        shimmer: {
-          '0%': { backgroundPosition: '-1000px 0' },
-          '100%': { backgroundPosition: '1000px 0' },
-        },
         float: {
-          '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-          '33%': { transform: 'translateY(-10px) rotate(1deg)' },
-          '66%': { transform: 'translateY(5px) rotate(-1deg)' },
-        },
-        pulseGlow: {
-          '0%, 100%': { opacity: '0.3' },
-          '50%': { opacity: '0.6' },
-        },
-        meshShift: {
-          '0%': { transform: 'translate(0, 0) scale(1)' },
-          '25%': { transform: 'translate(5%, 3%) scale(1.05)' },
-          '50%': { transform: 'translate(-3%, 5%) scale(0.95)' },
-          '75%': { transform: 'translate(2%, -3%) scale(1.02)' },
-          '100%': { transform: 'translate(0, 0) scale(1)' },
-        },
-        bounceGentle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-4px)' },
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-6px)' },
         },
         skeleton: {
           '0%': { opacity: '0.5' },
           '50%': { opacity: '1' },
           '100%': { opacity: '0.5' },
-        },
-        breath: {
-          '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
-          '50%': { opacity: '0.8', transform: 'scale(1.05)' },
         },
       },
     },

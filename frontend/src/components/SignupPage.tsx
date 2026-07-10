@@ -85,15 +85,13 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
   return (
     <div className="min-h-screen flex">
       {/* Left - Brand Side */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950">
         <div className="absolute inset-0">
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse-glow" />
-          <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl animate-breath" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute top-1/3 -right-1/4 w-[500px] h-[500px] bg-stone-700/20 rounded-full blur-3xl" />
         </div>
         <div className="relative flex flex-col justify-center px-16 py-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center shadow-lg">
               <Stethoscope size={22} className="text-white" />
             </div>
             <span className="text-white text-xl font-bold tracking-tight">Clinical Workflows</span>
@@ -101,7 +99,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
           <h1 className="text-4xl font-bold text-white leading-tight mb-4">
             Start Your<br />Clinical Journey
           </h1>
-          <p className="text-blue-200 text-lg leading-relaxed mb-12 max-w-md">
+          <p className="text-stone-300 text-lg leading-relaxed mb-12 max-w-md">
             Create an account to access evidence-based hypertension management tools.
           </p>
           <div className="space-y-4">
@@ -110,12 +108,12 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
                 <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
                   <f.icon size={16} className={f.color} />
                 </div>
-                <span className="text-blue-100 text-sm">{f.text}</span>
+                <span className="text-stone-300 text-sm">{f.text}</span>
               </div>
             ))}
           </div>
           <div className="mt-auto pt-16">
-            <p className="text-blue-300/60 text-xs">For educational purposes only. Not for clinical use.</p>
+            <p className="text-stone-400/60 text-xs">For educational purposes only. Not for clinical use.</p>
           </div>
         </div>
       </div>
@@ -132,7 +130,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
           <div className="w-full max-w-sm py-8">
             {/* Mobile logo */}
             <div className="lg:hidden flex flex-col items-center mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-teal-500 shadow-lg shadow-blue-500/20 flex items-center justify-center mb-3">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 shadow-lg flex items-center justify-center mb-3">
                 <Stethoscope size={24} className="text-white" />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">Clinical Workflows</h1>
@@ -258,7 +256,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
               <button
                 type="submit"
                 disabled={isLoading || (password !== confirmPassword && confirmPassword.length > 0)}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <><Loader2 size={16} className="animate-spin" /> Creating account&hellip;</>

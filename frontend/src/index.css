@@ -74,3 +74,74 @@
 .animate-slide-up {
   animation: slideUp 0.3s ease-out forwards;
 }
+
+/* Neo Brutalist Styles */
+.neo-brutal-shadow {
+  box-shadow: 4px 4px 0px 0px #1a1a1a;
+  transition: all 200ms ease;
+}
+
+.neo-brutal-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #1a1a1a;
+  transition: all 200ms ease;
+}
+
+.neo-brutal-btn {
+  transition: all 200ms ease;
+}
+
+.neo-brutal-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px 0px #1a1a1a;
+}
+
+.tipped-label {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  padding: 2px 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid #1a1a1a;
+  transform: rotate(-3deg);
+  z-index: 10;
+}
+
+.scanline-effect {
+  position: relative;
+}
+
+.scanline-effect::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.005), rgba(0, 0, 255, 0.01));
+  z-index: 2;
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Scroll Reveal */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-on-scroll.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Parallax Element Smoothness */
+.parallax-element {
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+

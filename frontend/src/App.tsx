@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import LoginPage from './components/LoginPage'
 import SignupPage from './components/SignupPage'
+import LandingPage from './components/LandingPage'
 import Markdown from './components/Markdown'
 import { useTheme } from './context/ThemeContext'
 
@@ -861,7 +862,7 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [page, setPage] = useState<'login' | 'signup'>('login')
+  const [page, setPage] = useState<'landing' | 'login' | 'signup'>('landing')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [evidencePanelOpen, setEvidencePanelOpen] = useState(false)
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
@@ -928,6 +929,7 @@ export default function App() {
   const handleLogout = () => {
     setUser(null); api.setToken(null); localStorage.removeItem('cw_token')
     setConversations([]); setMessages([]); setCurrentConvId(null)
+    setPage('landing')
   }
 
   const handleNewChat = () => {
@@ -1012,6 +1014,9 @@ export default function App() {
   const isClinicianMode = mode === 'clinician'
 
   if (!user) {
+    if (page === 'landing') {
+      return <LandingPage onLogin={() => setPage('login')} onRegister={() => setPage('signup')} />
+    }
     if (page === 'login') {
       return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} />
     }

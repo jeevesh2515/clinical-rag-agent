@@ -7,6 +7,13 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         mono: ['Fira Code', 'monospace'],
+        'headline-xl': ['Space Grotesk', 'sans-serif'],
+        'headline-lg': ['Space Grotesk', 'sans-serif'],
+        'headline-md': ['Space Grotesk', 'sans-serif'],
+        'label-md': ['Space Grotesk', 'sans-serif'],
+        'body-md': ['Inter', 'sans-serif'],
+        'body-sm': ['Inter', 'sans-serif'],
+        'code-sm': ['Fira Code', 'monospace'],
       },
       colors: {
         medical: {
@@ -36,6 +43,28 @@ export default {
           900: '#0f172a',
           950: '#020617',
         },
+        // Landing page design tokens
+        'brand-accent': '#0066CC',
+        'clinical-black': '#1a1a1a',
+        'on-surface': '#1a1c1c',
+        'on-surface-variant': '#444748',
+        'outline-variant': '#c4c7c7',
+        'surface-container-low': '#f3f3f3',
+        'surface-container-highest': '#e2e2e2',
+        'surface-container-high': '#e8e8e8',
+        'surface-container': '#eeeeee',
+        'surface-bright': '#f9f9f9',
+        'surface-dim': '#dadada',
+        'surface-variant': '#e2e2e2',
+        'tertiary-fixed': '#f2e580',
+        'tertiary-fixed-dim': '#d5c867',
+        'secondary-fixed': '#ffd9dc',
+        'glass-border': 'rgba(26, 26, 26, 0.2)',
+      },
+      spacing: {
+        'gutter': '1.5rem',
+        'component-gap': '0.5rem',
+        'container-padding': '2rem',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
@@ -45,6 +74,8 @@ export default {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'float': 'float 6s ease-in-out infinite',
         'skeleton': 'skeleton 2s ease-in-out infinite',
+        'spin-slow': 'spin 10s linear infinite',
+        'spin-slower-reverse': 'spin 6s linear infinite reverse',
       },
       keyframes: {
         fadeIn: {

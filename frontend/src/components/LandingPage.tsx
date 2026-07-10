@@ -305,8 +305,8 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Hybrid Retrieval */}
-              <div id="retrieval" className="md:col-span-8 group relative p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
-                <div className="tipped-label dark:border-white dark:text-white">V3_RETRIEVAL</div>
+              <div id="retrieval" className="md:col-span-8 group relative p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
+                <div className="tipped-label dark:bg-white dark:text-slate-950 dark:border-white">V3_RETRIEVAL</div>
                 <div className="flex flex-col md:flex-row gap-8 h-full">
                   <div className="flex-1 space-y-4">
                     <span className="material-symbols-outlined text-4xl text-brand-accent">layers</span>
@@ -319,7 +319,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
                   </div>
                   <div className="w-full md:w-1/3 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative">
                     <img 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 dark:invert dark:opacity-85 dark:contrast-125 dark:brightness-95 transition-all duration-500" 
                       alt="Technical illustration representing Hybrid Retrieval" 
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHfzT8ed21I3l9fZvTedw9-x6BODLmDa9b-Zmi9N-jl_xgCe_6CvtWX9iRWCZyyfEPrVweqsbs77CaZoFgsOVs1iRet9TCx1j1Zj4NiqD7-8_gnB3qYzmoWRWW-SA-tYgu6hJBT5ba62hYuXA-czO52G1W3vFc1SAm-iaJSuEe-VwlyKgN2EAeKxw-apbjFW5M0BYBWiAiWUqFcqYuXGPzbxvOy3OK34N7IwINDMOi_UuNxbCtEyYt"
                     />
@@ -328,38 +328,38 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* OKF Spine */}
-              <div className="md:col-span-4 group p-8 bg-tertiary-fixed dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] reveal-right" style={{ transitionDelay: '200ms' }}>
-                <div className="tipped-label dark:border-white dark:text-white">OKF_CORE</div>
+              <div className="md:col-span-4 group p-8 bg-tertiary-fixed dark:bg-amber-955/20 border-2 border-clinical-black dark:border-amber-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f59e0b] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '200ms' }}>
+                <div className="tipped-label dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500">OKF_CORE</div>
                 <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-white">verified</span>
+                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-amber-400">verified</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">OKF Spine</h3>
                   <p className="text-on-surface-variant dark:text-slate-300 font-body-md">The Open Knowledge Framework ensures that every decision made by the system is tethered to validated medical literature.</p>
                 </div>
               </div>
 
               {/* Safety Guardrails */}
-              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] reveal-left" style={{ transitionDelay: '300ms' }}>
-                <div className="tipped-label dark:border-white dark:text-white">SAFETY_V1</div>
+              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-rose-955/20 border-2 border-clinical-black dark:border-rose-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f43f5e] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
+                <div className="tipped-label dark:bg-rose-500 dark:text-slate-950 dark:border-rose-500">SAFETY_V1</div>
                 <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-white">security</span>
+                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-rose-450">security</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Safety Guardrails</h3>
                   <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Multi-layer verification protocols that prevent off-label advice and maintain strict clinical boundaries.</p>
                 </div>
               </div>
 
               {/* Full Provenance */}
-              <div id="provenance" className="md:col-span-4 group p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] reveal-bottom" style={{ transitionDelay: '400ms' }}>
-                <div className="tipped-label dark:border-white dark:text-white">AUDIT_TRACE</div>
+              <div id="provenance" className="md:col-span-4 group p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-sky-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#0EA5E9] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
+                <div className="tipped-label dark:bg-sky-500 dark:text-slate-950 dark:border-sky-500">AUDIT_TRACE</div>
                 <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-brand-accent">menu_book</span>
+                  <span className="material-symbols-outlined text-4xl text-brand-accent dark:text-sky-400">menu_book</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Full Provenance</h3>
                   <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Complete chain of custody for every data point used in the clinical inference process.</p>
                 </div>
               </div>
 
               {/* Real-Time Audit */}
-              <div className="md:col-span-4 group p-8 bg-clinical-black dark:bg-slate-950 text-white border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] reveal-right" style={{ transitionDelay: '500ms' }}>
-                <div className="tipped-label bg-white dark:bg-slate-900 text-clinical-black dark:text-white">LIVE_SYNC</div>
+              <div className="md:col-span-4 group p-8 bg-clinical-black dark:bg-slate-900 text-white border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '500ms' }}>
+                <div className="tipped-label bg-white dark:bg-white text-clinical-black dark:text-slate-950 dark:border-white">LIVE_SYNC</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-brand-accent">radar</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-white">Real-Time Audit</h3>

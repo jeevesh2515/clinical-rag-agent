@@ -348,10 +348,10 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* Full Provenance */}
-              <div id="provenance" className="md:col-span-4 group p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-sky-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#0EA5E9] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
-                <div className="tipped-label dark:bg-sky-500 dark:text-slate-950 dark:border-sky-500">AUDIT_TRACE</div>
+              <div id="provenance" className="md:col-span-4 group p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-brand-accent/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ff3366] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
+                <div className="tipped-label dark:bg-brand-accent dark:text-white dark:border-brand-accent">AUDIT_TRACE</div>
                 <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-brand-accent dark:text-sky-400">menu_book</span>
+                  <span className="material-symbols-outlined text-4xl text-brand-accent">menu_book</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Full Provenance</h3>
                   <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Complete chain of custody for every data point used in the clinical inference process.</p>
                 </div>

@@ -58,9 +58,38 @@ function AnimatedCounter({
 }
 
 export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
+  const [canReveal, setCanReveal] = useState(false)
+
+  // Track scroll position to trigger reveal only after 40% scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop
+      const scrollHeight = document.documentElement.scrollHeight
+      const clientHeight = document.documentElement.clientHeight
+      const maxScroll = scrollHeight - clientHeight
+      
+      // If page is not scrollable (e.g. huge screen), allow reveal immediately
+      if (maxScroll <= 0) {
+        setCanReveal(true)
+        return
+      }
+
+      const scrollPercent = (scrollTop / maxScroll) * 100
+      if (scrollPercent >= 40) {
+        setCanReveal(true)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // Initial check
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   // Scroll Reveal Observer
   useEffect(() => {
-    const revealElements = document.querySelectorAll('.reveal-on-scroll')
+    if (!canReveal) return
+
+    const revealElements = document.querySelectorAll('.reveal-on-scroll, .reveal-left, .reveal-right, .reveal-bottom')
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -74,7 +103,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
     revealElements.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
-  }, [])
+  }, [canReveal])
 
   // Parallax Mouse Effect
   useEffect(() => {
@@ -213,7 +242,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Hybrid Retrieval */}
-              <div id="retrieval" className="md:col-span-8 group relative p-8 bg-white border-2 border-clinical-black neo-brutal-shadow hover:translate-x-1 hover:translate-y-1 transition-all reveal-on-scroll" style={{ transitionDelay: '100ms' }}>
+              <div id="retrieval" className="md:col-span-8 group relative p-8 bg-white border-2 border-clinical-black neo-brutal-shadow hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
                 <div className="tipped-label">V3_RETRIEVAL</div>
                 <div className="flex flex-col md:flex-row gap-8 h-full">
                   <div className="flex-1 space-y-4">
@@ -236,7 +265,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* OKF Spine */}
-              <div className="md:col-span-4 group p-8 bg-tertiary-fixed border-2 border-clinical-black neo-brutal-shadow reveal-on-scroll" style={{ transitionDelay: '200ms' }}>
+              <div className="md:col-span-4 group p-8 bg-tertiary-fixed border-2 border-clinical-black neo-brutal-shadow reveal-right" style={{ transitionDelay: '200ms' }}>
                 <div className="tipped-label">OKF_CORE</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-clinical-black">verified</span>
@@ -246,7 +275,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* Safety Guardrails */}
-              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed border-2 border-clinical-black neo-brutal-shadow reveal-on-scroll" style={{ transitionDelay: '300ms' }}>
+              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed border-2 border-clinical-black neo-brutal-shadow reveal-left" style={{ transitionDelay: '300ms' }}>
                 <div className="tipped-label">SAFETY_V1</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-clinical-black">security</span>
@@ -256,7 +285,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* Full Provenance */}
-              <div id="provenance" className="md:col-span-4 group p-8 bg-white border-2 border-clinical-black neo-brutal-shadow reveal-on-scroll" style={{ transitionDelay: '400ms' }}>
+              <div id="provenance" className="md:col-span-4 group p-8 bg-white border-2 border-clinical-black neo-brutal-shadow reveal-bottom" style={{ transitionDelay: '400ms' }}>
                 <div className="tipped-label">AUDIT_TRACE</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-brand-accent">menu_book</span>
@@ -266,7 +295,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* Real-Time Audit */}
-              <div className="md:col-span-4 group p-8 bg-clinical-black text-white border-2 border-clinical-black neo-brutal-shadow reveal-on-scroll" style={{ transitionDelay: '500ms' }}>
+              <div className="md:col-span-4 group p-8 bg-clinical-black text-white border-2 border-clinical-black neo-brutal-shadow reveal-right" style={{ transitionDelay: '500ms' }}>
                 <div className="tipped-label bg-white text-clinical-black">LIVE_SYNC</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-brand-accent">radar</span>

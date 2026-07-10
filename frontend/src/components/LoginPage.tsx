@@ -6,10 +6,10 @@ import ThemeToggle from './ThemeToggle'
 const API_BASE = ''
 
 const FEATURES = [
-  { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-400' },
-  { icon: Activity, text: 'Hypertension management', color: 'text-emerald-400' },
-  { icon: Shield, text: 'Safety-first AI', color: 'text-blue-400' },
-  { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-400' },
+  { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600' },
+  { icon: Activity, text: 'Hypertension management', color: 'text-emerald-600' },
+  { icon: Shield, text: 'Safety-first AI', color: 'text-brand-accent' },
+  { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-600' },
 ]
 
 interface LoginPageProps {
@@ -56,156 +56,156 @@ export default function LoginPage({ onLogin, onSwitchToSignup }: LoginPageProps)
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background text-on-surface font-body-md">
       {/* Left - Brand Side */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/3 -right-1/4 w-[500px] h-[500px] bg-stone-700/20 rounded-full blur-3xl" />
-        </div>
-        <div className="relative flex flex-col justify-center px-16 py-16">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center shadow-lg">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-container-low border-r-4 border-clinical-black bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:24px_24px] [background-position:center] justify-center items-center">
+        <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 border-2 border-clinical-black bg-brand-accent flex items-center justify-center text-white neo-brutal-shadow-sm font-bold">
               <Stethoscope size={22} className="text-white" />
             </div>
-            <span className="text-white text-xl font-bold tracking-tight">Clinical Workflows</span>
+            <span className="text-clinical-black font-headline-md text-headline-md font-bold tracking-tight uppercase">Clinical Workflows</span>
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+          
+          <h1 className="font-headline-xl text-[48px] font-black text-clinical-black leading-tight uppercase mb-6">
             Evidence-Based<br />Care Planning
           </h1>
-          <p className="text-stone-300 text-lg leading-relaxed mb-12 max-w-md">
+          
+          <p className="font-body-md text-headline-md text-on-surface-variant leading-relaxed mb-12 border-l-4 border-outline-variant pl-6">
             Hybrid retrieval, grounded citations, and safety-first AI for hypertension management.
           </p>
-          <div className="space-y-4">
+          
+          <div className="grid grid-cols-2 gap-4">
             {FEATURES.map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                  <f.icon size={16} className={f.color} />
+              <div key={i} className="flex items-center gap-3 p-4 bg-white border-2 border-clinical-black neo-brutal-shadow-sm">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                  <f.icon size={20} className={f.color} />
                 </div>
-                <span className="text-stone-300 text-sm">{f.text}</span>
+                <span className="text-clinical-black font-bold text-xs uppercase tracking-wide">{f.text}</span>
               </div>
             ))}
           </div>
-          <div className="mt-auto pt-16">
-            <p className="text-stone-400/60 text-xs">For educational purposes only. Not for clinical use.</p>
+          
+          <div className="mt-16">
+            <p className="text-on-surface-variant font-code-sm text-[10px] uppercase font-bold">For educational purposes only. Not for clinical use.</p>
           </div>
         </div>
       </div>
 
       {/* Right - Form Side */}
-      <div className="flex-1 flex flex-col bg-white dark:bg-gray-950">
-        <div className="flex items-center justify-end gap-3 px-6 py-4">
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white">
+        <div className="absolute top-4 right-4 flex items-center justify-end gap-3">
+          <span className="text-xs text-clinical-black font-code-sm font-bold uppercase">
             {theme === 'dark' ? 'Dark' : 'Light'}
           </span>
-          <ThemeToggle />
+          <div className="border-2 border-clinical-black p-0.5 bg-white">
+            <ThemeToggle />
+          </div>
         </div>
-        <div className="flex-1 flex items-center justify-center px-6">
-          <div className="w-full max-w-sm">
-            {/* Mobile logo */}
-            <div className="lg:hidden flex flex-col items-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-500 shadow-lg flex items-center justify-center mb-3">
-                <Stethoscope size={24} className="text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Clinical Workflows</h1>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Sign in to your account</p>
+
+        <div className="w-full max-w-md border-4 border-clinical-black p-8 bg-white neo-brutal-shadow">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex flex-col items-center mb-8">
+            <div className="w-12 h-12 border-2 border-clinical-black bg-brand-accent flex items-center justify-center text-white mb-3">
+              <Stethoscope size={22} className="text-white" />
+            </div>
+            <h1 className="font-headline-md text-headline-lg font-black text-clinical-black uppercase">Clinical Workflows</h1>
+            <p className="text-on-surface-variant text-xs font-bold font-code-sm uppercase mt-1">Sign in to your account</p>
+          </div>
+
+          <div className="hidden lg:block mb-8">
+            <h2 className="font-headline-xl text-headline-xl font-black text-clinical-black uppercase">Welcome back</h2>
+            <p className="text-on-surface-variant text-xs font-bold font-code-sm uppercase mt-1">Sign in to your account to continue</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black mb-1.5">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+                autoFocus
+                placeholder="Enter your username"
+                className="w-full px-4 py-3 bg-white border-2 border-clinical-black text-clinical-black placeholder-clinical-black/40 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+              />
             </div>
 
-            <div className="hidden lg:block mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Welcome back</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Sign in to your account to continue</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Username
-                </label>
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black mb-1.5">
+                Password
+              </label>
+              <div className="relative">
                 <input
-                  type="text"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                   required
-                  autoFocus
-                  placeholder="Enter your username"
-                  className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-900/60 border border-stone-300 dark:border-stone-700/50 rounded-xl text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all"
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 pr-12 bg-white border-2 border-clinical-black text-clinical-black placeholder-clinical-black/40 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 hover:text-clinical-black transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    placeholder="Enter your password"
-                    className="w-full px-4 py-3 pr-12 bg-gray-50 dark:bg-gray-900/60 border border-gray-300 dark:border-gray-700/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500/50"
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
-                </label>
-              </div>
-
-              {error && (
-                <div className="flex items-start gap-2.5 p-3.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl animate-fade-in-up">
-                  <AlertCircle size={15} className="text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
-                  <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <><Loader2 size={16} className="animate-spin" /> Signing in&hellip;</>
-                ) : (
-                  'Sign in'
-                )}
-              </button>
-            </form>
-
-            <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              Don&apos;t have an account?{' '}
-              <button
-                onClick={onSwitchToSignup}
-                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
-              >
-                Create one
-              </button>
-            </p>
-
-            <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl">
-              <p className="text-xs text-blue-600 dark:text-blue-300 text-center">
-                Demo: Register with any username/email/password to get started
-              </p>
             </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded-none border-2 border-clinical-black text-brand-accent focus:ring-0"
+                />
+                <span className="text-xs font-bold text-clinical-black uppercase font-code-sm">Remember me</span>
+              </label>
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 border-2 border-rose-500 text-rose-700 font-bold text-xs uppercase animate-fade-in-up">
+                <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+                <p>{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black neo-brutal-shadow neo-brutal-btn uppercase font-bold tracking-wider hover:bg-brand-accent/90 transition-all flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <><Loader2 size={16} className="animate-spin" /> Signing in&hellip;</>
+              ) : (
+                'Sign in'
+              )}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-xs font-bold text-on-surface-variant font-code-sm uppercase">
+            Don&apos;t have an account?{' '}
+            <button
+              onClick={onSwitchToSignup}
+              className="font-bold text-brand-accent hover:underline hover:text-brand-accent/80 transition-colors"
+            >
+              Create one
+            </button>
+          </p>
+
+          <div className="mt-6 p-3 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm text-center">
+            <p className="text-clinical-black">
+              Demo: Register with any username/email/password to get started
+            </p>
           </div>
         </div>
       </div>
     </div>
   )
 }
-
-

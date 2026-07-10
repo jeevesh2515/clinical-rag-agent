@@ -139,6 +139,39 @@
   transform: translateY(0);
 }
 
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-left.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-right.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-bottom {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-bottom.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Parallax Element Smoothness */
 .parallax-element {
   transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);

@@ -361,3 +361,122 @@
 .relief-mode .scroll-premium::-webkit-scrollbar-track { background: transparent; border-left: none; }
 .relief-mode .scroll-premium::-webkit-scrollbar-thumb { background: #008080; border-radius: 10px; border: none; }
 
+/* ─── Relief Mode Transitions (1000ms) ────────── */
+.relief-mode .transition-relief {
+  transition: all 1000ms ease !important;
+}
+
+/* ─── Breath Guide Overlay ────────────────────── */
+@keyframes breathInOut {
+  0%, 100% { opacity: 0; transform: translateY(0) scale(0.95); }
+  15%      { opacity: 1; transform: translateY(0) scale(1); }
+  50%      { opacity: 0; transform: translateY(-6px) scale(1); }
+  65%      { opacity: 1; transform: translateY(0) scale(1); }
+  85%      { opacity: 0; transform: translateY(0) scale(0.95); }
+}
+
+.relief-breath-guide {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  pointer-events: none;
+  text-align: center;
+  animation: breathInOut 4.8s ease-in-out infinite;
+}
+
+.relief-breath-guide .breath-label-in,
+.relief-breath-guide .breath-label-out {
+  display: block;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: opacity 0.6s ease;
+}
+
+.relief-breath-guide .breath-label-in {
+  color: #008080;
+  animation: fadeInOut 4.8s ease-in-out infinite;
+}
+
+.relief-breath-guide .breath-label-out {
+  color: #008080;
+  opacity: 0;
+  animation: fadeOutIn 4.8s ease-in-out infinite;
+}
+
+.dark .relief-breath-guide .breath-label-in,
+.dark .relief-breath-guide .breath-label-out {
+  color: #40c0c0;
+}
+
+@keyframes fadeInOut {
+  0%, 40%  { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes fadeOutIn {
+  0%, 40%  { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+
+.relief-breath-guide .breath-ring {
+  width: 120px;
+  height: 120px;
+  border: 1.5px solid rgba(0, 128, 128, 0.15);
+  border-radius: 50%;
+  margin: 0 auto 8px;
+  animation: breatheRing 4.8s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0, 128, 128, 0.08);
+}
+
+.dark .relief-breath-guide .breath-ring {
+  border-color: rgba(64, 192, 192, 0.2);
+  box-shadow: 0 0 40px rgba(64, 192, 192, 0.12);
+}
+
+@keyframes breatheRing {
+  0%, 100% { transform: scale(0.6); opacity: 0.3; }
+  50%      { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* ─── CSS-Only Floating Particles ─────────────── */
+.relief-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.relief-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 128, 128, 0.25);
+  border-radius: 50%;
+  animation: floatUp linear infinite;
+}
+
+.dark .relief-particle {
+  background: rgba(64, 192, 192, 0.2);
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-10vh) translateX(20px) scale(1); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+

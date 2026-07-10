@@ -305,7 +305,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-none border border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
       title={copied ? 'Copied!' : 'Copy'}
     >
       {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} className="text-gray-400" />}
@@ -582,7 +582,7 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
 
             {/* Action Row & Badges */}
             {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
-              <div className="flex items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white/20">
+              <div className="flex items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white">
                 {message.citations && message.citations.length > 0 && (
                   <button
                     onClick={() => onCitationClick(message.citations!)}
@@ -822,9 +822,9 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               <div className="space-y-3">
                 {knowledgePath ? (
                   <>
-                    <div className="bg-stone-50 dark:bg-slate-900 border border-[#1a1a1a]/20 dark:border-white/20 rounded-none p-3.5">
+                    <div className="bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white rounded-none p-3.5 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border border-[#1a1a1a]/10 dark:border-white/10 rounded-none">
+                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
                           <Network size={13} className="text-brand-accent" />
                         </div>
                         <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">Knowledge Path</p>
@@ -1264,7 +1264,7 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
   )
 }
 
-// ─── Respiratory Rhythm Shader ────────────────────────────────────────────────
+// ─── Respiratory Rhythm Shader (Enhanced) ─────────────────────────────────────
 function BreathingShader() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -1283,7 +1283,6 @@ function BreathingShader() {
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w
         canvas.height = h
-        gl.viewport(0, 0, w, h)
       }
     }
 
@@ -1300,26 +1299,73 @@ function BreathingShader() {
       }
     `
 
+    // Enhanced fragment shader with breathing ring, particles, and rich teal palette
     const fs = `
       precision highp float;
       varying vec2 v_texCoord;
       uniform float u_time;
+      uniform vec2 u_resolution;
+
+      // pseudo-random hash for particle positions
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
 
       void main() {
           vec2 uv = v_texCoord;
+          float aspect = u_resolution.x / u_resolution.y;
+          vec2 pos = uv;
+          pos.x *= aspect;
+
+          // Slow respiratory rhythm (~12 breaths/min)
           float breath = sin(u_time * 0.25) * 0.5 + 0.5;
-          
-          vec3 colorA = vec3(0.95, 0.98, 1.0);
-          vec3 colorB = vec3(0.85, 0.92, 0.95);
-          
-          vec3 baseColor = mix(colorA, colorB, uv.y + breath * 0.1);
-          
-          float dist = distance(uv, vec2(0.5, 0.5));
-          float pulse = exp(-dist * (2.0 - breath * 0.5));
-          
-          vec3 finalColor = mix(baseColor, vec3(1.0), pulse * 0.05);
-          
-          gl_FragColor = vec4(finalColor, 1.0);
+          float breathIn = sin(u_time * 0.25); // -1..1 raw
+
+          // Gradient background — soft teal/cyan medical palette
+          vec3 deep = vec3(0.05, 0.30, 0.35);   // dark teal
+          vec3 mid  = vec3(0.10, 0.55, 0.55);   // rich teal
+          vec3 light = vec3(0.70, 0.92, 0.95);  // airy cyan
+          vec3 top  = mix(light, mid, 0.3);
+
+          vec3 bg = mix(mid, top, uv.y + breath * 0.15);
+          bg = mix(bg, deep, 1.0 - uv.y * 0.4);
+
+          // Breathing ring — concentric pulse that expands/contracts
+          vec2 center = vec2(0.5 * aspect, 0.5);
+          float dist = distance(pos, center);
+          float ringRadius = 0.25 + breath * 0.15;
+          float ring = 1.0 - smoothstep(0.02, 0.08, abs(dist - ringRadius));
+          vec3 ringColor = vec3(0.25, 0.85, 0.85);
+          bg += ring * ringColor * (0.3 + breath * 0.2);
+
+          // Inner glow — brightness pulse with breath
+          float innerGlow = exp(-dist * 3.0) * (0.1 + breath * 0.15);
+          bg += vec3(0.2, 0.7, 0.8) * innerGlow;
+
+          // Floating particles — 24 slow drifting dots
+          for (int i = 0; i < 24; i++) {
+            float fi = float(i);
+            float px = hash(vec2(fi, 0.0));
+            float py = hash(vec2(fi, 1.0));
+            float speed = 0.08 + hash(vec2(fi, 2.0)) * 0.12;
+            float size = 0.005 + hash(vec2(fi, 3.0)) * 0.015;
+            float phase = hash(vec2(fi, 4.0)) * 6.28;
+
+            vec2 p = vec2(px * aspect, py);
+            p.y = fract(p.y - u_time * speed * 0.15 + phase * 0.1);
+            p.x = px * aspect + sin(u_time * 0.1 + fi) * 0.05;
+
+            float d = distance(pos, p);
+            float particle = smoothstep(size, 0.0, d);
+            float twinkle = 0.5 + 0.5 * sin(u_time * 2.0 + fi * 1.7);
+            bg += vec3(0.3, 0.9, 0.9) * particle * twinkle * 0.25;
+          }
+
+          // Subtle vignette
+          float vignette = 1.0 - dist * 0.6;
+          bg *= vignette;
+
+          gl_FragColor = vec4(bg, 0.85);
       }
     `
 
@@ -1374,7 +1420,7 @@ function BreathingShader() {
   }, [])
 
   return (
-    <div className="absolute inset-0 w-full h-full -z-10 pointer-events-none transition-opacity duration-1000">
+    <div className="absolute inset-0 w-full h-full -z-10 pointer-events-none transition-opacity duration-1000 opacity-80">
       <canvas ref={canvasRef} className="block w-full h-full" />
     </div>
   )
@@ -1578,13 +1624,34 @@ export default function App() {
   }
 
   return (
-    <div className={cn(
-      'flex h-screen overflow-hidden relative',
-      isClinicianMode
-        ? 'bg-stone-50 dark:bg-slate-950'
-        : 'bg-stone-50 dark:bg-slate-950'
-    )}>
-      {isReliefMode && <BreathingShader />}
+      <div className="flex h-screen overflow-hidden relative bg-white dark:bg-slate-950">
+      {isReliefMode && (
+        <>
+          <BreathingShader />
+          {/* Breath Guide */}
+          <div className="relief-breath-guide">
+            <div className="breath-ring" />
+            <span className="breath-label-in">breathe in</span>
+            <span className="breath-label-out">breathe out</span>
+          </div>
+          {/* CSS Floating Particles */}
+          <div className="relief-particles">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className="relief-particle"
+                style={{
+                  left: `${(i * 8.3 + 3) % 100}%`,
+                  width: `${3 + (i % 3) * 2}px`,
+                  height: `${3 + (i % 3) * 2}px`,
+                  animationDuration: `${6 + (i % 4) * 3}s`,
+                  animationDelay: `${i * 0.6}s`,
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       <Sidebar
         isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user}
@@ -1631,14 +1698,23 @@ export default function App() {
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 border-2 border-[#1a1a1a] dark:border-white transition-all font-semibold rounded-none text-[11px] uppercase tracking-wider",
+                "relative flex items-center gap-1.5 px-3 py-1.5 border-2 transition-all font-semibold text-[11px] uppercase tracking-wider overflow-hidden",
                 isReliefMode 
-                  ? "bg-[#008080] text-white border-teal-600 shadow-none" 
-                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                  ? "bg-[#008080] text-white !border-[#008080] shadow-none"
+                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
               )}
             >
-              <span className="material-symbols-outlined text-[15px]">{isReliefMode ? 'spa' : 'air'}</span>
-              <span>{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
+              {isReliefMode && (
+                <>
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#008080]/0 via-[#40c0c0]/20 to-[#008080]/0 animate-[shimmer_3s_ease-in-out_infinite]" />
+                  <span className="relative flex w-1.5 h-1.5 mr-0.5">
+                    <span className="absolute inset-0 rounded-full bg-teal-200 animate-ping opacity-40" />
+                    <span className="relative rounded-full bg-teal-100 w-1.5 h-1.5" />
+                  </span>
+                </>
+              )}
+              <span className="material-symbols-outlined text-[15px] relative">{isReliefMode ? 'spa' : 'air'}</span>
+              <span className="relative">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
             </button>
 
             <ThemeToggle />
@@ -1704,7 +1780,7 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="px-4 sm:px-6 pb-4 pt-2 bg-stone-50 dark:bg-slate-950/90 shrink-0">
+        <div className="px-4 sm:px-6 pb-4 pt-2 bg-white dark:bg-slate-950/90 shrink-0">
           <div className="max-w-4xl mx-auto">
             <div className={cn(
               'relative flex items-end gap-2 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 transition-all rounded-none',

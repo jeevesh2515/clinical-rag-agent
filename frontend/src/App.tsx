@@ -5,14 +5,14 @@ import {
   X, Loader2, AlertCircle, CheckCircle2,
   FileText, ExternalLink, Info, Stethoscope, Search, Trash2,
   BarChart3, Network, Database, Copy, Check, PanelLeftClose,
-  PanelLeft, Sparkles, Sun, Moon, ChevronDown, ChevronRight,
+  PanelLeft, Sparkles, ChevronDown, ChevronRight,
   Quote, ArrowUp, FlaskRound, type LucideIcon
 } from 'lucide-react'
 import LoginPage from './components/LoginPage'
 import SignupPage from './components/SignupPage'
 import LandingPage from './components/LandingPage'
 import Markdown from './components/Markdown'
-import { useTheme } from './context/ThemeContext'
+import ThemeToggle from './components/ThemeToggle'
 
 // Permissive icon type — lucide props allow string | number for size, but we
 // only ever pass numbers.
@@ -1267,7 +1267,7 @@ export default function App() {
   
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { theme, toggle: toggleTheme } = useTheme()
+
 
   // Auto-resize composer
   useEffect(() => {
@@ -1478,14 +1478,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-              aria-label="Toggle theme"
-              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-            >
-              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-            </button>
+            <ThemeToggle />
             <select
               value={caseId}
               onChange={e => setCaseId(e.target.value)}

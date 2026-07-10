@@ -94,13 +94,11 @@ export default function LoginPage({ onLogin, onSwitchToSignup }: LoginPageProps)
 
       {/* Right - Form Side */}
       <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white">
-        <div className="absolute top-4 right-4 flex items-center justify-end gap-3">
-          <span className="text-xs text-clinical-black font-code-sm font-bold uppercase">
+        <div className="absolute top-4 right-4 flex items-center justify-end gap-3 z-20">
+          <span className="text-xs text-clinical-black font-code-sm font-bold uppercase select-none">
             {theme === 'dark' ? 'Dark' : 'Light'}
           </span>
-          <div className="border-2 border-clinical-black p-0.5 bg-white">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
 
         <div className="w-full max-w-md border-4 border-clinical-black p-8 bg-white neo-brutal-shadow">

@@ -27,7 +27,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [role, setRole] = useState<'patient' | 'clinician'>('patient')
+  const [role, setRole] = useState<'patient' | 'clinician' | 'admin' | 'care_coordinator'>('patient')
 
   const passwordChecks = {
     length: password.length >= 8,
@@ -122,13 +122,11 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
 
       {/* Right - Form Side */}
       <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white overflow-y-auto">
-        <div className="absolute top-4 right-4 flex items-center justify-end gap-3">
-          <span className="text-xs text-clinical-black font-code-sm font-bold uppercase">
+        <div className="absolute top-4 right-4 flex items-center justify-end gap-3 z-20">
+          <span className="text-xs text-clinical-black font-code-sm font-bold uppercase select-none">
             {theme === 'dark' ? 'Dark' : 'Light'}
           </span>
-          <div className="border-2 border-clinical-black p-0.5 bg-white">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
 
         <div className="w-full max-w-md border-4 border-clinical-black p-8 bg-white my-8 neo-brutal-shadow">
@@ -140,32 +138,18 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black mb-1.5">
-                Account Role
+                Account Scope / Role
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole('patient')}
-                  className={`py-2 px-3 border-2 border-clinical-black font-code-sm font-bold uppercase text-xs transition-all ${
-                    role === 'patient'
-                      ? 'bg-brand-accent text-white neo-brutal-shadow-sm'
-                      : 'bg-white text-clinical-black'
-                  }`}
-                >
-                  Patient
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('clinician')}
-                  className={`py-2 px-3 border-2 border-clinical-black font-code-sm font-bold uppercase text-xs transition-all ${
-                    role === 'clinician'
-                      ? 'bg-brand-accent text-white neo-brutal-shadow-sm'
-                      : 'bg-white text-clinical-black'
-                  }`}
-                >
-                  Clinician
-                </button>
-              </div>
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value as any)}
+                className="w-full px-4 py-2.5 bg-white border-2 border-clinical-black text-clinical-black text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
+              >
+                <option value="patient">Patient (Normal User)</option>
+                <option value="clinician">Clinician (Medical Staff)</option>
+                <option value="admin">Administrator (System Control)</option>
+                <option value="care_coordinator">Care Coordinator (Operations)</option>
+              </select>
             </div>
 
             <div>

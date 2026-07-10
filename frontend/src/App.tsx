@@ -279,14 +279,14 @@ function Pill({
   icon?: IconType
 }) {
   const v: Record<string, string> = {
-    default: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+    default: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     success: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
     warning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
     danger:  'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30',
     info:    'bg-stone-100 text-[#1a1a1a] border-[#1a1a1a] dark:bg-slate-800 dark:text-white dark:border-white',
     okf:     'bg-[#ffddb8] text-[#1a1a1a] border-[#1a1a1a] dark:bg-amber-955/40 dark:text-amber-200 dark:border-amber-500',
     rag:     'bg-[#6ffbbe] text-[#1a1a1a] border-[#1a1a1a] dark:bg-emerald-955/40 dark:text-emerald-200 dark:border-emerald-500',
-    neutral: 'bg-white/80 text-gray-600 border-gray-200 dark:bg-gray-800/60 dark:text-gray-300 dark:border-gray-700/60',
+    neutral: 'bg-white/80 text-gray-600 border-gray-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700/60',
   }
   return (
     <span className={cn(
@@ -486,7 +486,7 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
   const year = citation.publication_year
 
   return (
-    <div className="bg-white dark:bg-gray-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden hover:border-brand-accent/60 dark:hover:border-brand-accent/30 transition-all rounded-none">
+    <div className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden hover:border-brand-accent/60 dark:hover:border-brand-accent/30 transition-all rounded-none">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-start gap-2.5 p-3 text-left"
@@ -495,15 +495,15 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
           {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 leading-snug">{citation.title}</p>
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-100 leading-snug">{citation.title}</p>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
             <Pill variant={citation.source_type === 'okf' ? 'okf' : 'rag'} icon={citation.source_type === 'okf' ? Brain : Database}>
               {citation.source_type?.toUpperCase() || 'RAG'}
             </Pill>
-            {org && <span className="text-[11px] text-gray-500 dark:text-gray-400">{org}</span>}
-            {year && <span className="text-[11px] text-gray-400 dark:text-gray-500">· {year}</span>}
+            {org && <span className="text-[11px] text-gray-500 dark:text-slate-400">{org}</span>}
+            {year && <span className="text-[11px] text-gray-400 dark:text-slate-500">· {year}</span>}
             {citation.page && (
-              <span className="inline-flex items-center gap-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+              <span className="inline-flex items-center gap-0.5 text-[11px] text-gray-500 dark:text-slate-400">
                 <FileText size={10} /> p.{citation.page}
               </span>
             )}
@@ -511,19 +511,19 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
         </div>
       </button>
       {open && (citation.quote || citation.source_url || citation.chunk_id) && (
-        <div className="border-t border-gray-100 dark:border-gray-800/80 p-3 space-y-2.5 bg-gray-50/50 dark:bg-gray-900/40">
+        <div className="border-t border-gray-100 dark:border-slate-800/80 p-3 space-y-2.5 bg-gray-50/50 dark:bg-slate-900/40">
           {citation.quote && (
             <div>
-              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
                 <Quote size={10} /> Quoted
               </p>
-              <blockquote className="border-l-2 border-brand-accent/70 dark:border-brand-accent/60 pl-2.5 text-[12px] italic text-gray-600 dark:text-gray-400 leading-relaxed">
+              <blockquote className="border-l-2 border-brand-accent/70 dark:border-brand-accent/60 pl-2.5 text-[12px] italic text-gray-600 dark:text-slate-400 leading-relaxed">
                 {citation.quote}
               </blockquote>
             </div>
           )}
           {citation.chunk_id && (
-            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-500 font-mono bg-white dark:bg-gray-950/60 rounded-md px-2 py-1.5 border border-gray-200/80 dark:border-gray-800/60">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono bg-white dark:bg-slate-950/60 rounded-md px-2 py-1.5 border border-gray-200/80 dark:border-slate-800/60">
               <Database size={11} className="shrink-0" />
               <span className="truncate flex-1">{citation.chunk_id}</span>
               <CopyButton text={citation.chunk_id} />
@@ -654,7 +654,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
 
   return (
     <aside className={cn(
-      'flex flex-col h-full bg-white dark:bg-gray-950 border-l-2 border-[#1a1a1a] dark:border-white transition-all duration-300 ease-in-out shrink-0',
+      'flex flex-col h-full bg-white dark:bg-slate-950 border-l-2 border-[#1a1a1a] dark:border-white transition-all duration-300 ease-in-out shrink-0',
       isOpen ? 'w-96' : 'w-0 overflow-hidden'
     )}>
       {isOpen && (
@@ -698,7 +698,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6 bg-[#fafafa] dark:bg-gray-950">
+          <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6 bg-[#fafafa] dark:bg-slate-950">
             {tab === 'sources' && (
               <>
                 {/* Titration Sandbox */}
@@ -750,20 +750,20 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               toolTrace.length === 0 ? (
                 <EmptyEvidence icon={Zap} title="No tools used" subtitle="Tools will appear here if the agent called them" />
               ) : toolTrace.map((t, i) => (
-                  <div key={i} className="bg-white dark:bg-gray-900/60 border-2 border-[#1a1a1a] dark:border-white p-3.5 space-y-2.5 rounded-none">
+                  <div key={i} className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white p-3.5 space-y-2.5 rounded-none">
                   <div className="flex items-center gap-2">
                       <div className="w-7 h-7 bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center border border-[#1a1a1a]/10 dark:border-white/10 rounded-none">
                           <Zap size={13} className="text-amber-600 dark:text-amber-400" />
                         </div>
-                    <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-200">{t.name}</p>
+                    <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">{t.name}</p>
                     {typeof t.duration_ms === 'number' && (
-                      <span className="ml-auto text-[11px] text-gray-400 dark:text-gray-500 font-mono">{t.duration_ms}ms</span>
+                      <span className="ml-auto text-[11px] text-gray-400 dark:text-slate-500 font-mono">{t.duration_ms}ms</span>
                     )}
                   </div>
                   {(t.input_summary || t.inputs) && (
                     <div>
-                      <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Input</p>
-                        <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950/60 border-2 border-[#1a1a1a] dark:border-white p-2.5 overflow-x-auto whitespace-pre-wrap break-all rounded-none">
+                      <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Input</p>
+                        <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-950/60 border-2 border-[#1a1a1a] dark:border-white p-2.5 overflow-x-auto whitespace-pre-wrap break-all rounded-none">
                         {t.input_summary || JSON.stringify(t.inputs, null, 2)}
                       </pre>
                     </div>
@@ -797,7 +797,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                     )}>
                       {safetyFlags?.unsupported_claims_detected ? 'Unsupported Claims Detected' : 'Claims Validated'}
                     </p>
-                    <p className="text-[11.5px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                    <p className="text-[11.5px] text-gray-600 dark:text-slate-400 mt-1 leading-relaxed">
                       {safetyFlags?.unsupported_claims_detected
                         ? 'Some claims could not be fully supported by indexed sources — treat as provisional.'
                         : 'All clinical claims are supported by indexed guideline sources.'}
@@ -809,7 +809,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                     <Info size={18} className="text-brand-accent shrink-0 mt-0.5" />
                     <div>
                       <p className="text-[13px] font-semibold text-brand-accent">Medical Disclaimer</p>
-                      <p className="text-[11.5px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                      <p className="text-[11.5px] text-gray-600 dark:text-slate-400 mt-1 leading-relaxed">
                         Educational workflow support only — must not replace clinical judgment.
                       </p>
                     </div>
@@ -827,37 +827,37 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                         <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border border-[#1a1a1a]/10 dark:border-white/10 rounded-none">
                           <Network size={13} className="text-brand-accent" />
                         </div>
-                        <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-200">Knowledge Path</p>
+                        <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">Knowledge Path</p>
                         <Pill variant={knowledgePath.path === 'okf' ? 'okf' : 'rag'} className="ml-auto">
                           {knowledgePath.path?.toUpperCase() || 'RAG'}
                         </Pill>
                       </div>
                       {knowledgePath.reason && (
-                        <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">{knowledgePath.reason}</p>
+                        <p className="text-[12px] text-gray-600 dark:text-slate-400 leading-relaxed">{knowledgePath.reason}</p>
                       )}
                     </div>
                     {knowledgePath.okf_concepts && knowledgePath.okf_concepts.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 px-1 font-mono">
+                        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1 font-mono">
                           OKF Concepts Matched
                         </p>
                         {knowledgePath.okf_concepts.map((c, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 rounded-none mb-1.5 transition-all"
+                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 rounded-none mb-1.5 transition-all"
                           >
                             <div className="w-7 h-7 bg-brand-accent/10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
                               <Brain size={12} className="text-brand-accent" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12.5px] font-semibold text-gray-900 dark:text-gray-200 truncate">{c.title}</p>
-                              <p className="text-[10.5px] text-gray-400 dark:text-gray-500 font-mono truncate">{c.source_path}</p>
+                              <p className="text-[12.5px] font-semibold text-gray-900 dark:text-slate-200 truncate">{c.title}</p>
+                              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-mono truncate">{c.source_path}</p>
                             </div>
                             <div className="shrink-0 w-16">
-                              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-none overflow-hidden">
+                              <div className="w-full h-1.5 bg-gray-200 dark:bg-slate-800 rounded-none overflow-hidden">
                                 <div className="h-full bg-brand-accent rounded-none transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
                               </div>
-                              <p className="text-[10px] text-gray-500 dark:text-gray-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
+                              <p className="text-[10px] text-gray-500 dark:text-slate-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
                             </div>
                           </div>
                         ))}
@@ -879,11 +879,11 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
 function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title: string; subtitle?: string }) {
   return (
     <div className="text-center py-12">
-      <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800/60 mx-auto mb-3 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white rounded-none">
-        <Icon size={20} className="text-gray-300 dark:text-gray-600" />
+      <div className="w-12 h-12 bg-gray-100 dark:bg-slate-800/60 mx-auto mb-3 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white rounded-none">
+        <Icon size={20} className="text-gray-300 dark:text-slate-600" />
       </div>
-      <p className="text-gray-700 dark:text-gray-300 text-[13px] font-medium">{title}</p>
-      {subtitle && <p className="text-gray-400 dark:text-gray-500 text-[11px] mt-1 max-w-[200px] mx-auto">{subtitle}</p>}
+      <p className="text-gray-700 dark:text-slate-300 text-[13px] font-medium">{title}</p>
+      {subtitle && <p className="text-gray-400 dark:text-slate-500 text-[11px] mt-1 max-w-[200px] mx-auto">{subtitle}</p>}
     </div>
   )
 }
@@ -904,8 +904,8 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
         <h1 className="font-headline-xl text-3xl font-black text-clinical-black dark:text-white uppercase mb-3">
           How can I help you today?
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-[14px] leading-relaxed mb-10 max-w-lg">
-          Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-gray-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-gray-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-gray-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-gray-300">WHO</span> guidelines — with citations you can verify.
+        <p className="text-gray-500 dark:text-slate-400 text-[14px] leading-relaxed mb-10 max-w-lg">
+          Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-slate-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-slate-300">WHO</span> guidelines — with citations you can verify.
         </p>
 
         {/* Trust strip */}
@@ -916,7 +916,7 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
         </div>
 
         {/* Suggested questions */}
-        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Try asking</p>
+        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">Try asking</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
           {SUGGESTED_QUESTIONS.map((q, i) => (
             <button
@@ -928,10 +928,10 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
                 <q.icon size={15} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5 uppercase tracking-widest leading-none">{q.category}</p>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 mb-0.5 uppercase tracking-widest leading-none">{q.category}</p>
                 <p className="text-[13px] text-clinical-black dark:text-white leading-snug font-bold font-headline-md mt-1">{q.text}</p>
               </div>
-              <ArrowUp size={13} className="text-gray-400 dark:text-gray-500 group-hover:text-brand-accent group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
+              <ArrowUp size={13} className="text-gray-400 dark:text-slate-500 group-hover:text-brand-accent group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
             </button>
           ))}
         </div>
@@ -1581,8 +1581,8 @@ export default function App() {
     <div className={cn(
       'flex h-screen overflow-hidden relative',
       isClinicianMode
-        ? 'bg-stone-50 dark:bg-stone-950'
-        : 'bg-stone-50 dark:bg-stone-950'
+        ? 'bg-stone-50 dark:bg-slate-950'
+        : 'bg-stone-50 dark:bg-slate-950'
     )}>
       {isReliefMode && <BreathingShader />}
 
@@ -1597,7 +1597,7 @@ export default function App() {
       {/* Main Chat Area */}
       <main className="flex flex-col flex-1 min-w-0 relative">
         {/* Header */}
-        <header className="flex items-center gap-2 px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-gray-950 shrink-0 z-10">
+        <header className="flex items-center gap-2 px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-10">
           {!canCollapseLeft && (
             <button
               onClick={() => setSidebarOpen(true)}
@@ -1617,10 +1617,10 @@ export default function App() {
               <Stethoscope size={13} className="text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-gray-900 dark:text-gray-100 font-semibold text-[13.5px] truncate tracking-tight">
+              <h2 className="text-gray-900 dark:text-slate-100 font-semibold text-[13.5px] truncate tracking-tight">
                 {currentConv?.title || 'Clinical Workflows'}
               </h2>
-              <p className="text-[10.5px] text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
+              <p className="text-[10.5px] text-gray-500 dark:text-slate-400 truncate flex items-center gap-1.5">
                 <span className={cn('w-1.5 h-1.5 rounded-none', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent animate-pulse')} />
                 {isClinicianMode ? 'Clinician mode · Workstation' : 'Patient mode · Hypertension AI'}
               </p>
@@ -1645,7 +1645,7 @@ export default function App() {
             <select
               value={caseId}
               onChange={e => setCaseId(e.target.value)}
-              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-gray-300 rounded-none px-2.5 py-1.5 focus:outline-none transition-all max-w-[180px] shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] font-bold uppercase"
+              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 rounded-none px-2.5 py-1.5 focus:outline-none transition-all max-w-[180px] shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] font-bold uppercase"
             >
               {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
@@ -1660,7 +1660,7 @@ export default function App() {
                       ? isClinicianMode
                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-none'
                         : 'bg-brand-accent text-white shadow-none'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-gray-300'
                   )}
                 >
                   {m}
@@ -1704,7 +1704,7 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="px-4 sm:px-6 pb-4 pt-2 bg-stone-50 dark:bg-stone-950/90 shrink-0">
+        <div className="px-4 sm:px-6 pb-4 pt-2 bg-stone-50 dark:bg-slate-950/90 shrink-0">
           <div className="max-w-4xl mx-auto">
             <div className={cn(
               'relative flex items-end gap-2 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 transition-all rounded-none',
@@ -1733,7 +1733,7 @@ export default function App() {
                   'shrink-0 h-9 px-4 rounded-none font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all border-2 border-clinical-black dark:border-white',
                   inputValue.trim() && !isLoading
                     ? 'shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] hover:bg-brand-accent dark:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 cursor-not-allowed'
                 )}
               >
                 {isLoading ? <Spinner size="sm" /> : (
@@ -1745,12 +1745,12 @@ export default function App() {
               </button>
             </div>
             <div className="flex items-center justify-between mt-2.5 px-1">
-              <p className="text-[10.5px] text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 flex items-center gap-1.5">
                 <Kbd>Enter</Kbd> send
-                <span className="text-gray-300 dark:text-gray-700">·</span>
+                <span className="text-gray-300 dark:text-slate-700">·</span>
                 <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> new line
               </p>
-              <p className="text-[10.5px] text-gray-400 dark:text-gray-500 inline-flex items-center gap-1">
+              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 inline-flex items-center gap-1">
                 <Shield size={10} /> Educational purposes only
               </p>
             </div>
@@ -1780,7 +1780,7 @@ export default function App() {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded text-[10px] font-mono text-gray-600 dark:text-gray-400 shadow-sm">
+    <kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded text-[10px] font-mono text-gray-600 dark:text-slate-400 shadow-sm">
       {children}
     </kbd>
   )

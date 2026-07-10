@@ -23,19 +23,19 @@ const mdComponents: Components = {
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-1.5 first:mt-0">
+    <h3 className="text-sm font-semibold text-gray-800 dark:text-slate-200 mt-4 mb-1.5 first:mt-0">
       {children}
     </h3>
   ),
   h4: ({ children }) => (
-    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-3 mb-1 first:mt-0">
+    <h4 className="text-sm font-semibold text-gray-700 dark:text-slate-300 mt-3 mb-1 first:mt-0">
       {children}
     </h4>
   ),
 
   // Paragraphs
   p: ({ children }) => (
-    <p className="text-sm leading-relaxed text-gray-800 dark:text-gray-200 my-2 first:mt-0 last:mb-0">
+    <p className="text-sm leading-relaxed text-gray-800 dark:text-slate-200 my-2 first:mt-0 last:mb-0">
       {children}
     </p>
   ),
@@ -45,7 +45,7 @@ const mdComponents: Components = {
     <strong className="font-bold text-gray-900 dark:text-white bg-brand-accent/10 dark:bg-brand-accent/20 px-0.5">{children}</strong>
   ),
   em: ({ children }) => (
-    <em className="italic text-gray-800 dark:text-gray-200">{children}</em>
+    <em className="italic text-gray-800 dark:text-slate-200">{children}</em>
   ),
 
   // Links — open externally, clinical source style
@@ -65,7 +65,7 @@ const mdComponents: Components = {
     const isBlock = className?.startsWith('language-')
     if (isBlock) {
       return (
-        <code className="block text-xs font-mono text-gray-800 dark:text-gray-200 bg-transparent p-0 whitespace-pre">
+        <code className="block text-xs font-mono text-gray-800 dark:text-slate-200 bg-transparent p-0 whitespace-pre">
           {children}
         </code>
       )
@@ -91,12 +91,12 @@ const mdComponents: Components = {
 
   // Lists
   ul: ({ children }) => (
-    <ul className="my-2 pl-5 space-y-1 list-disc marker:text-brand-accent dark:marker:text-brand-accent text-sm text-gray-800 dark:text-gray-200 font-medium">
+    <ul className="my-2 pl-5 space-y-1 list-disc marker:text-brand-accent dark:marker:text-brand-accent text-sm text-gray-800 dark:text-slate-200 font-medium">
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className="my-2 pl-5 space-y-1 list-decimal marker:text-brand-accent dark:marker:text-brand-accent text-sm text-gray-800 dark:text-gray-200 font-medium">
+    <ol className="my-2 pl-5 space-y-1 list-decimal marker:text-brand-accent dark:marker:text-brand-accent text-sm text-gray-800 dark:text-slate-200 font-medium">
       {children}
     </ol>
   ),
@@ -124,7 +124,7 @@ const mdComponents: Components = {
     </th>
   ),
   td: ({ children }) => (
-    <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 align-top font-mono text-xs font-semibold">
+    <td className="px-3 py-2.5 text-gray-800 dark:text-slate-200 align-top font-mono text-xs font-semibold">
       {children}
     </td>
   ),

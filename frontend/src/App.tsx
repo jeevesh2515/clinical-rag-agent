@@ -26,6 +26,9 @@ interface UserProfile {
   email: string
   roles: string[]
   is_active: boolean
+  full_name?: string
+  date_of_birth?: string
+  notes?: string
 }
 
 interface Citation {
@@ -173,6 +176,56 @@ class ApiClient {
     return res.json()
   }
 
+  async updateProfile(data: { full_name?: string; email?: string; date_of_birth?: string; notes?: string }): Promise<UserProfile> {
+    const res = await fetch(`${API_BASE}/api/auth/users/me`, {
+      method: 'PUT',
+      headers: this.headers(),
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}))
+      throw new Error(e.detail || 'Failed to update profile')
+    }
+    return res.json()
+  }
+
+  async listUploads(): Promise<{ uploads: any[]; total: number }> {
+    const res = await fetch(`${API_BASE}/api/uploads`, { headers: this.headers() })
+    if (!res.ok) throw new Error('Failed to list uploads')
+    return res.json()
+  }
+
+  async createUpload(file: File, category: string, userNote?: string): Promise<any> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('category', category)
+    if (userNote) formData.append('user_note', userNote)
+    
+    // Note: Do not set Content-Type header manually when sending FormData,
+    // browser will set it with the correct boundary parameters automatically.
+    const headers = { ...this.headers() } as any
+    delete headers['Content-Type']
+    
+    const res = await fetch(`${API_BASE}/api/uploads`, {
+      method: 'POST',
+      headers,
+      body: formData
+    })
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}))
+      throw new Error(e.detail || 'Upload failed')
+    }
+    return res.json()
+  }
+
+  async deleteUpload(uploadId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/uploads/${uploadId}`, {
+      method: 'DELETE',
+      headers: this.headers()
+    })
+    if (!res.ok) throw new Error('Failed to delete upload')
+  }
+
   async listConversations(): Promise<ConversationSummary[]> {
     const res = await fetch(`${API_BASE}/api/chat/conversations`, { headers: this.headers() })
     if (!res.ok) throw new Error('Failed to list conversations')
@@ -262,10 +315,10 @@ function CopyButton({ text }: { text: string }) {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, isLoading }: {
+function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, onOpenProfile, isLoading }: {
   isOpen: boolean; onToggle: () => void; user: UserProfile; conversations: ConversationSummary[]
   currentConvId: string | null; onNewChat: () => void; onSelectConv: (id: string) => void
-  onDeleteConv: (id: string) => void; onLogout: () => void; isLoading: boolean
+  onDeleteConv: (id: string) => void; onLogout: () => void; onOpenProfile: () => void; isLoading: boolean
 }) {
   const [search, setSearch] = useState('')
   const [hoveredConv, setHoveredConv] = useState<string | null>(null)
@@ -359,21 +412,30 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       </div>
 
       {/* User card */}
-      <div className="border-t border-gray-200/80 dark:border-gray-800/80 p-3 bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="border-t-2 border-clinical-black p-3 bg-white dark:bg-slate-900">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-[12px] font-bold shrink-0 ring-2 ring-white dark:ring-gray-950">
+          <button 
+            onClick={onOpenProfile}
+            className="w-9 h-9 border-2 border-clinical-black bg-brand-accent flex items-center justify-center text-white text-xs font-bold shrink-0 hover:opacity-90 transition-all"
+            title="Edit Profile"
+          >
             {getInitials(user.username)}
-          </div>
+          </button>
           <div className="flex-1 min-w-0">
-            <p className="text-gray-900 dark:text-white text-[13px] font-semibold truncate">{user.username}</p>
+            <p className="text-gray-900 dark:text-white text-[13px] font-bold truncate uppercase">{user.username}</p>
             <p className="text-gray-500 dark:text-gray-400 text-[11px] truncate capitalize flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               {user.roles[0] || 'patient'}
             </p>
           </div>
-          <button onClick={onLogout} className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="Log out">
-            <LogOut size={14} />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={onOpenProfile} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all" title="Edit Profile">
+              <User size={14} />
+            </button>
+            <button onClick={onLogout} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="Log out">
+              <LogOut size={14} />
+            </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -858,6 +920,330 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
   )
 }
 
+// ─── Profile Modal ──────────────────────────────────────────────────────────
+
+function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
+  isOpen: boolean
+  onClose: () => void
+  user: UserProfile
+  onUpdateUser: (updated: UserProfile) => void
+  onChatAboutDoc: (filename: string) => void
+}) {
+  const [fullName, setFullName] = useState(user.full_name || '')
+  const [dateOfBirth, setDateOfBirth] = useState(user.date_of_birth || '')
+  const [notes, setNotes] = useState(user.notes || '')
+  const [email, setEmail] = useState(user.email || '')
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [profileError, setProfileError] = useState('')
+  const [profileSuccess, setProfileSuccess] = useState(false)
+
+  // Uploads state
+  const [uploads, setUploads] = useState<any[]>([])
+  const [isFetchingUploads, setIsFetchingUploads] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadCategory, setUploadCategory] = useState<string>('other')
+  const [uploadNote, setUploadNote] = useState<string>('')
+
+  // Load uploads
+  useEffect(() => {
+    if (isOpen) {
+      setIsFetchingUploads(true)
+      api.listUploads()
+        .then(data => setUploads(data.uploads))
+        .catch(err => console.error(err))
+        .finally(() => setIsFetchingUploads(false))
+    }
+  }, [isOpen])
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setProfileError('')
+    setProfileSuccess(false)
+    setIsSavingProfile(true)
+    try {
+      const updated = await api.updateProfile({
+        full_name: fullName,
+        email,
+        date_of_birth: dateOfBirth,
+        notes
+      })
+      onUpdateUser(updated)
+      setProfileSuccess(true)
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to update profile')
+    } finally {
+      setIsSavingProfile(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0])
+    }
+  }
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedFile) return
+    setUploadError('')
+    setIsUploading(true)
+    try {
+      const newUpload = await api.createUpload(selectedFile, uploadCategory, uploadNote)
+      setUploads(prev => [newUpload, ...prev])
+      setSelectedFile(null)
+      setUploadNote('')
+      // Clear file input
+      const fileInput = document.getElementById('profile-file-input') as HTMLInputElement
+      if (fileInput) fileInput.value = ''
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDeleteUpload = async (id: string) => {
+    try {
+      await api.deleteUpload(id)
+      setUploads(prev => prev.filter(u => u.id !== id))
+    } catch (err) {
+      alert('Failed to delete file')
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-clinical-black/50 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white text-clinical-black border-4 border-clinical-black w-full max-w-4xl max-h-[90vh] flex flex-col neo-brutal-shadow relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 bg-brand-accent text-white border-2 border-clinical-black flex items-center justify-center neo-brutal-shadow-sm font-bold z-10 hover:bg-brand-accent/80 active:translate-x-[1px] active:translate-y-[1px]"
+        >
+          <X size={16} />
+        </button>
+
+        {/* Modal Header */}
+        <div className="p-6 border-b-4 border-clinical-black bg-surface-container-low flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-headline-xl font-black uppercase tracking-tight">User Clinical Profile</h2>
+            <p className="text-xs text-on-surface-variant font-bold font-code-sm uppercase">Manage details and personalized RAG knowledge base</p>
+          </div>
+          <span className="px-3 py-1 border-2 border-clinical-black font-code-sm font-bold text-xs uppercase tracking-wide bg-brand-accent text-white neo-brutal-shadow-sm">
+            {user.roles[0] || 'patient'}
+          </span>
+        </div>
+
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* Column 1: Profile Details */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider font-headline-lg border-b-2 border-clinical-black pb-1">
+              Personal Information
+            </h3>
+            
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  placeholder="Enter full name"
+                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={e => setDateOfBirth(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
+                  Notes & Description (Clinical Details)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  placeholder="Add details regarding symptoms, medication history, or notes for simulated consultation."
+                  rows={4}
+                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
+                />
+              </div>
+
+              {profileError && (
+                <div className="p-3 bg-rose-50 border-2 border-rose-500 text-rose-700 text-xs font-bold uppercase flex items-center gap-2">
+                  <AlertCircle size={14} />
+                  <span>{profileError}</span>
+                </div>
+              )}
+
+              {profileSuccess && (
+                <div className="p-3 bg-emerald-50 border-2 border-emerald-500 text-emerald-700 text-xs font-bold uppercase flex items-center gap-2">
+                  <CheckCircle2 size={14} />
+                  <span>Profile updated successfully</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSavingProfile}
+                className="py-2.5 px-4 bg-brand-accent text-white font-bold border-2 border-clinical-black neo-brutal-shadow-sm neo-brutal-btn uppercase text-xs tracking-wider flex items-center gap-2"
+              >
+                {isSavingProfile ? <Loader2 size={14} className="animate-spin" /> : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+
+          {/* Column 2: Document Ingestion */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider font-headline-lg border-b-2 border-clinical-black pb-1">
+              Personal Documents (RAG)
+            </h3>
+            
+            {/* Upload form */}
+            <form onSubmit={handleUploadSubmit} className="p-4 border-2 border-clinical-black bg-stone-50 space-y-3">
+              <span className="text-[10px] font-code-sm font-bold uppercase tracking-wider block text-on-surface-variant">
+                Upload prescription / doctor notes / report (PDF or Image)
+              </span>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Category</label>
+                  <select
+                    value={uploadCategory}
+                    onChange={e => setUploadCategory(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
+                  >
+                    <option value="prescription">Prescription</option>
+                    <option value="doctor_note">Doctor's Note</option>
+                    <option value="lab_report">Lab Report</option>
+                    <option value="image">Image</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Select File</label>
+                  <input
+                    id="profile-file-input"
+                    type="file"
+                    onChange={handleFileChange}
+                    accept="application/pdf,image/*"
+                    required
+                    className="w-full text-xs text-clinical-black border border-clinical-black/30 p-1 file:mr-2 file:py-1 file:px-2 file:border-2 file:border-clinical-black file:text-[10px] file:font-bold file:bg-white file:uppercase"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">User Note</label>
+                <input
+                  type="text"
+                  value={uploadNote}
+                  onChange={e => setUploadNote(e.target.value)}
+                  placeholder="Optional brief description of the document"
+                  className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
+                />
+              </div>
+
+              {uploadError && (
+                <div className="text-[10px] text-rose-600 font-bold uppercase">{uploadError}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isUploading || !selectedFile}
+                className="w-full py-2 bg-clinical-black text-white font-bold border-2 border-clinical-black neo-brutal-btn text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isUploading ? <Loader2 size={12} className="animate-spin" /> : 'Ingest Document'}
+              </button>
+            </form>
+
+            {/* List uploads */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase text-clinical-black tracking-wide">
+                Ingested Files ({uploads.length})
+              </h4>
+              
+              {isFetchingUploads ? (
+                <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin" /></div>
+              ) : uploads.length === 0 ? (
+                <p className="text-xs text-on-surface-variant italic">No documents uploaded yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  {uploads.map((up: any) => (
+                    <div key={up.id} className="p-3 bg-white border-2 border-clinical-black flex items-start justify-between gap-3 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <span className="px-1.5 py-0.5 bg-brand-accent/15 text-brand-accent border border-brand-accent/30 font-code-sm text-[9px] font-bold uppercase">
+                            {up.category}
+                          </span>
+                          <span className="text-[9px] font-code-sm text-on-surface-variant font-semibold">
+                            {up.kind} · {(up.size_bytes / 1024).toFixed(1)} KB
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold truncate text-clinical-black" title={up.display_title || up.original_filename}>
+                          {up.display_title || up.original_filename}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => onChatAboutDoc(up.display_title || up.original_filename)}
+                          className="p-1 border border-clinical-black hover:bg-brand-accent hover:text-white transition-colors"
+                          title="Ask follow-up regarding this document"
+                        >
+                          <MessageSquare size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUpload(up.id)}
+                          className="p-1 border border-clinical-black hover:bg-rose-500 hover:text-white transition-colors"
+                          title="Delete document"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -877,6 +1263,8 @@ export default function App() {
   const [panelTools, setPanelTools] = useState<ToolTrace[]>([])
   const [panelSafety, setPanelSafety] = useState<SafetyFlags | null>(null)
   const [panelKnowledge, setPanelKnowledge] = useState<KnowledgePath | null>(null)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { theme, toggle: toggleTheme } = useTheme()
@@ -893,7 +1281,13 @@ export default function App() {
     const savedToken = localStorage.getItem('cw_token')
     if (savedToken) {
       api.setToken(savedToken)
-      api.getCurrentUser().then(u => setUser(u)).catch(() => localStorage.removeItem('cw_token'))
+      api.getCurrentUser()
+        .then(u => {
+          setUser(u)
+          const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
+          setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+        })
+        .catch(() => localStorage.removeItem('cw_token'))
     }
   }, [])
 
@@ -911,6 +1305,8 @@ export default function App() {
     try {
       const u = await api.getCurrentUser()
       setUser(u)
+      const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
+      setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
     } catch {
       throw new Error('Failed to load user profile')
     }
@@ -921,8 +1317,19 @@ export default function App() {
     try {
       const u = await api.getCurrentUser()
       setUser(u)
+      const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
+      setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
     } catch {
       throw new Error('Failed to load user profile')
+    }
+  }
+
+  const handleChatAboutDoc = (filename: string) => {
+    setIsProfileModalOpen(false)
+    const prompt = `Let's review the uploaded document: "${filename}". Can you summarize its key clinical details and check for any recommendations or care gaps?`
+    setInputValue(prompt)
+    if (textareaRef.current) {
+      textareaRef.current.focus()
     }
   }
 
@@ -1034,6 +1441,7 @@ export default function App() {
         isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user}
         conversations={conversations} currentConvId={currentConvId} onNewChat={handleNewChat}
         onSelectConv={handleSelectConv} onDeleteConv={handleDeleteConv} onLogout={handleLogout}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
         isLoading={isFetchingConvs}
       />
 
@@ -1197,6 +1605,14 @@ export default function App() {
         toolTrace={panelTools}
         safetyFlags={panelSafety}
         knowledgePath={panelKnowledge}
+      />
+
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        onUpdateUser={(updated) => setUser(updated)}
+        onChatAboutDoc={handleChatAboutDoc}
       />
     </div>
   )

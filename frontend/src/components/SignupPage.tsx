@@ -27,6 +27,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [role, setRole] = useState<'patient' | 'clinician'>('patient')
 
   const passwordChecks = {
     length: password.length >= 8,
@@ -59,7 +60,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, role }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -131,12 +132,42 @@ export default function SignupPage({ onSignup, onSwitchToLogin }: SignupPageProp
         </div>
 
         <div className="w-full max-w-md border-4 border-clinical-black p-8 bg-white my-8 neo-brutal-shadow">
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="font-headline-xl text-headline-xl font-black text-clinical-black uppercase">Create Account</h2>
-            <p className="text-on-surface-variant text-xs font-bold font-code-sm uppercase mt-1">Get started with a simulated clinician role</p>
+            <p className="text-on-surface-variant text-xs font-bold font-code-sm uppercase mt-1">Get started with a custom clinical account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black mb-1.5">
+                Account Role
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRole('patient')}
+                  className={`py-2 px-3 border-2 border-clinical-black font-code-sm font-bold uppercase text-xs transition-all ${
+                    role === 'patient'
+                      ? 'bg-brand-accent text-white neo-brutal-shadow-sm'
+                      : 'bg-white text-clinical-black'
+                  }`}
+                >
+                  Patient
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('clinician')}
+                  className={`py-2 px-3 border-2 border-clinical-black font-code-sm font-bold uppercase text-xs transition-all ${
+                    role === 'clinician'
+                      ? 'bg-brand-accent text-white neo-brutal-shadow-sm'
+                      : 'bg-white text-clinical-black'
+                  }`}
+                >
+                  Clinician
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black mb-1">
                 Username

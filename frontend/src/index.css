@@ -313,6 +313,16 @@
   border-radius: 32px !important;
 }
 
+/* Relief toggle button — keep teal border in both modes */
+.relief-mode .relief-toggle-btn {
+  border-radius: 32px !important;
+  border-width: 1px !important;
+  border-color: #008080 !important;
+}
+.dark.relief-mode .relief-toggle-btn {
+  border-color: #008080 !important;
+}
+
 .relief-mode .brutal-button:active,
 .relief-mode .neo-brutal-btn:active {
   transform: translate(0, 0) !important;

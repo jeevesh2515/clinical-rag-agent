@@ -1698,9 +1698,9 @@ export default function App() {
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "relative flex items-center gap-1.5 px-3 py-1.5 border-2 transition-all font-semibold text-[11px] uppercase tracking-wider overflow-hidden",
+                "relief-toggle-btn relative flex items-center gap-1.5 px-3 py-1.5 border-2 transition-all font-semibold text-[11px] uppercase tracking-wider overflow-hidden rounded-none",
                 isReliefMode 
-                  ? "bg-[#008080] text-white !border-[#008080] shadow-none"
+                  ? "bg-[#008080] text-white shadow-none"
                   : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
               )}
             >

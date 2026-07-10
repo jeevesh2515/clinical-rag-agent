@@ -59,7 +59,7 @@ function AnimatedCounter({
 }
 
 export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
-  const [canReveal, setCanReveal] = useState(false)
+  const [canReveal, setCanReveal] = useState(true)
   const [activeSection, setActiveSection] = useState('hero')
 
   // Scrollspy to sync navbar links with components
@@ -124,7 +124,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           }
         })
       },
-      { threshold: 0.15 }
+      { threshold: 0.02 }
     )
 
     revealElements.forEach((el) => observer.observe(el))

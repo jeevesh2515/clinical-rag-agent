@@ -64,8 +64,14 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
         body: JSON.stringify({ username, email, password, role }),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail || 'Registration failed')
+        let detail = 'Registration failed'
+        try {
+          const err = await res.json()
+          detail = err.detail || detail
+        } catch {
+          detail = `Registration failed: HTTP ${res.status} ${res.statusText || ''}`
+        }
+        throw new Error(detail)
       }
 
       const loginRes = await fetch(`${API_BASE}/api/auth/token`, {

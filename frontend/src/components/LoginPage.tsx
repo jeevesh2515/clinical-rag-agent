@@ -39,8 +39,14 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
         body: new URLSearchParams({ username, password }),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail || 'Invalid username or password')
+        let detail = 'Invalid username or password'
+        try {
+          const err = await res.json()
+          detail = err.detail || detail
+        } catch {
+          detail = `Login failed: HTTP ${res.status} ${res.statusText || ''}`
+        }
+        throw new Error(detail)
       }
       const data = await res.json()
       if (rememberMe) {

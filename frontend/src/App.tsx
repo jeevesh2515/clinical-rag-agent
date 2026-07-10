@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import {
-  Plus, MessageSquare, LogOut, User,
+  Plus, MessageSquare, LogOut,
   Send, Activity, BookOpen, Shield, Zap, Brain, Heart,
   X, Loader2, AlertCircle, CheckCircle2,
   FileText, ExternalLink, Info, Stethoscope, Search, Trash2,
@@ -334,58 +334,55 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
 
   return (
     <aside className={cn(
-      'flex flex-col h-full bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-r border-gray-200/80 dark:border-gray-800/80 transition-all duration-300 ease-in-out shrink-0',
-      isOpen ? 'w-72' : 'w-0 overflow-hidden'
+      'flex flex-col h-full bg-[#1a1a1a] text-white border-r-2 border-[#1a1a1a] transition-all duration-300 ease-in-out shrink-0 z-10',
+      isOpen ? 'w-sidebar-width' : 'w-0 overflow-hidden'
     )}>
       {/* Brand */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200/80 dark:border-gray-800/80">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+      <div className="flex items-center justify-between px-4 py-6 border-b border-white/20">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-8 h-8 bg-brand-accent flex items-center justify-center text-white border-2 border-white">
             <Stethoscope size={16} className="text-white" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-950" />
           </div>
           <div className="min-w-0">
-            <p className="text-gray-900 dark:text-white font-semibold text-[13px] truncate tracking-tight">Clinical Workflows</p>
-            <p className="text-gray-400 dark:text-gray-500 text-[11px] truncate">Hypertension AI</p>
+            <h1 className="font-label-md text-label-md text-white uppercase tracking-wider leading-none">Clinical Workflows</h1>
+            <p className="font-mono text-[10px] text-white/70 mt-1 uppercase">Hypertension AI</p>
           </div>
         </div>
-        <button onClick={onToggle} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all" title="Collapse sidebar">
-          <PanelLeftClose size={15} />
+        <button onClick={onToggle} className="p-1 rounded text-white/50 hover:text-brand-accent transition-colors" title="Collapse sidebar">
+          <PanelLeftClose size={16} />
         </button>
       </div>
 
       {/* New chat */}
-      <div className="p-3">
+      <div className="px-4 py-4">
         <button onClick={onNewChat}
-          className="group flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold transition-all shadow-sm hover:shadow-md active:scale-[0.98] px-4 py-2.5 text-[13px]">
-          <Plus size={15} className="transition-transform group-hover:rotate-90 duration-300" />
+          className="w-full bg-brand-accent text-white font-label-md text-label-md py-2.5 flex items-center justify-center gap-2 hover:bg-white hover:text-[#1a1a1a] transition-colors border-2 border-white uppercase tracking-wider brutalist-button border-transparent rounded-none">
+          <Plus size={15} />
           <span>New Chat</span>
         </button>
       </div>
 
       {/* Search */}
-      <div className="px-3 pb-2">
+      <div className="px-4 pb-4">
         <div className="relative">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
           <input
             value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search conversations…"
-            className="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400/50 transition-all"
+            placeholder="Search conversations..."
+            className="w-full bg-white/10 border-2 border-white/20 text-white pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-all placeholder-white/30 font-mono rounded-none"
           />
         </div>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-2 space-y-1">
         {isLoading ? (
-          <div className="flex justify-center py-8"><Spinner className="text-gray-400" /></div>
+          <div className="flex justify-center py-8"><Spinner className="text-white/50" /></div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 px-4">
-            <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800/60 mx-auto mb-3 flex items-center justify-center">
-              <MessageSquare size={20} className="text-gray-300 dark:text-gray-600" />
-            </div>
-            <p className="text-gray-500 dark:text-gray-500 text-[12px] font-medium">No conversations yet</p>
-            <p className="text-gray-400 dark:text-gray-600 text-[11px] mt-1">Start one to see it here</p>
+          <div className="text-center py-12 px-4 border border-dashed border-white/20">
+            <MessageSquare size={20} className="text-white/30 mx-auto mb-3" />
+            <p className="text-white/50 text-[12px] font-medium">No conversations yet</p>
+            <p className="text-white/40 text-[11px] mt-1">Start one to see it here</p>
           </div>
         ) : (
           <>
@@ -411,32 +408,27 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
         )}
       </div>
 
-      {/* User card */}
-      <div className="border-t-2 border-clinical-black p-3 bg-white dark:bg-slate-900">
-        <div className="flex items-center gap-2.5">
+      {/* Footer User card */}
+      <div className="p-4 border-t-2 border-white/20 flex items-center justify-between bg-black">
+        <div className="flex items-center gap-3 min-w-0">
           <button 
             onClick={onOpenProfile}
-            className="w-9 h-9 border-2 border-clinical-black bg-brand-accent flex items-center justify-center text-white text-xs font-bold shrink-0 hover:opacity-90 transition-all"
+            className="w-8 h-8 bg-white flex items-center justify-center text-[#1a1a1a] font-bold text-sm border-2 border-white shrink-0"
             title="Edit Profile"
           >
             {getInitials(user.username)}
           </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-gray-900 dark:text-white text-[13px] font-bold truncate uppercase">{user.username}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-[11px] truncate capitalize flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              {user.roles[0] || 'patient'}
-            </p>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <button onClick={onOpenProfile} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all" title="Edit Profile">
-              <User size={14} />
-            </button>
-            <button onClick={onLogout} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all" title="Log out">
-              <LogOut size={14} />
-            </button>
+          <div className="min-w-0">
+            <p className="font-label-md text-label-md leading-tight text-white uppercase truncate">{user.username}</p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <div className="w-1.5 h-1.5 bg-brand-accent"></div>
+              <p className="text-[10px] text-white/70 font-mono capitalize truncate">{user.roles[0] || 'patient'}</p>
+            </div>
           </div>
         </div>
+        <button onClick={onLogout} className="text-white/50 hover:text-brand-accent transition-colors shrink-0" title="Log out">
+          <LogOut size={16} />
+        </button>
       </div>
     </aside>
   )
@@ -444,8 +436,8 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
 
 function SectionLabel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('px-3 py-1.5', className)}>
-      <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{children}</p>
+    <div className={cn('py-1.5', className)}>
+      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest font-mono">{children}</p>
     </div>
   )
 }
@@ -455,35 +447,34 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
   onHover: (id: string | null) => void; onSelect: (id: string) => void; onDelete: (id: string) => void
 }) {
   return (
-    <div
+    <button
       className={cn(
-        'group relative flex items-center rounded-lg transition-all cursor-pointer px-3 py-2.5',
+        'w-full flex items-center gap-2.5 p-2 text-left group transition-all duration-300 relative border-2 rounded-none mb-1.5',
         isActive
-          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200/80 dark:ring-blue-500/30'
-          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/60'
+          ? 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white clinical-shadow'
+          : 'text-white/70 hover:bg-white/10 hover:text-white border-transparent hover:border-white/20'
       )}
       onClick={() => onSelect(conv.id)}
       onMouseEnter={() => onHover(conv.id)}
       onMouseLeave={() => onHover(null)}
     >
-      <MessageSquare size={13} className={cn('shrink-0', isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400')} />
-      <div className="flex-1 min-w-0 ml-2.5">
-        <p className="text-[13px] font-medium truncate leading-tight">{conv.title}</p>
-        <p className="text-[10.5px] text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
-          <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+      <MessageSquare size={13} className={cn('shrink-0', isActive ? 'text-white' : 'text-white/50')} />
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold truncate leading-tight">{conv.title}</p>
+        <p className={cn("text-[10px] mt-0.5 font-mono", isActive ? "text-white/80" : "text-white/50")}>
           {formatRelativeTime(conv.updated_at)}
         </p>
       </div>
       {(hovered || isActive) && (
         <button
           onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-          className="ml-1 p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+          className="p-1 rounded text-white/50 hover:text-white hover:bg-white/10 transition-all shrink-0"
           title="Delete conversation"
         >
           <Trash2 size={12} />
         </button>
       )}
-    </div>
+    </button>
   )
 }
 
@@ -552,85 +543,72 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
 
 // ─── Message Bubble ───────────────────────────────────────────────────────────
 
-function MessageBubble({ message, onCitationClick, mode }: {
-  message: ChatMessage; onCitationClick: (c: Citation[]) => void; mode: 'patient' | 'clinician'
+function MessageBubble({ message, onCitationClick, mode, username }: {
+  message: ChatMessage; onCitationClick: (c: Citation[]) => void; mode: 'patient' | 'clinician'; username: string
 }) {
   const isUser = message.role === 'user'
   const isClinician = mode === 'clinician' && !isUser
 
   return (
-    <div className={cn('flex gap-3 w-full group animate-fade-in', isUser ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('flex gap-4 animate-message w-full mb-8', isUser ? 'flex-row' : 'flex-row')}>
       {/* Avatar */}
-      <div className={cn(
-        'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm',
-        isUser
-          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-          : isClinician
-          ? 'bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-600 dark:to-slate-800 border border-slate-700 dark:border-slate-600'
-          : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700'
-      )}>
-        {isUser ? <User size={14} /> : <Stethoscope size={14} className="text-blue-600 dark:text-blue-400" />}
-      </div>
-
-      <div className={cn('flex flex-col gap-2 max-w-[78%]', isUser ? 'items-end' : 'items-start')}>
-        {/* Name + time */}
-        <div className={cn('flex items-center gap-2 px-1', isUser ? 'flex-row-reverse' : 'flex-row')}>
-          <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">
-            {isUser ? 'You' : isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
-          </span>
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
+      {isUser ? (
+        <div className="w-10 h-10 bg-[#1a1a1a] dark:bg-white text-white dark:text-black flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
+          {username.charAt(0).toUpperCase()}
         </div>
+      ) : (
+        <div className="w-10 h-10 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white flex-shrink-0 flex items-center justify-center clinical-shadow">
+          <span className="material-symbols-outlined text-white text-[24px]">auto_awesome</span>
+        </div>
+      )}
 
-        {/* Bubble */}
-        <div className={cn(
-          'rounded-2xl text-[13.5px] leading-relaxed shadow-sm overflow-hidden',
-          isUser
-            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-sm px-4 py-3 max-w-full'
-            : isClinician
-              ? 'bg-slate-50 dark:bg-slate-900/40 text-gray-900 dark:text-gray-100 border border-slate-200/80 dark:border-slate-700/60 rounded-tl-sm'
-              : 'bg-white dark:bg-gray-900/80 text-gray-900 dark:text-gray-100 border border-gray-200/80 dark:border-gray-800/80 rounded-tl-sm'
-        )}>
-          <div className={cn(isUser ? 'whitespace-pre-wrap break-words' : 'px-4 py-3.5')}>
-            {isUser ? (
-              <span>{message.content}</span>
-            ) : (
-              <Markdown content={message.content} />
+      {/* Content Panel */}
+      {isUser ? (
+        <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-5 clinical-shadow relative">
+          <div className="absolute -top-3 left-4 bg-brand-accent text-white px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
+            {username}
+          </div>
+          <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed mt-2 text-[16px] whitespace-pre-wrap break-words">
+            {message.content}
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-6 clinical-shadow relative">
+          <div className="absolute -top-3 left-4 bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
+            {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
+          </div>
+          <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed space-y-5 mt-2">
+            <Markdown content={message.content} />
+
+            {/* Action Row & Badges */}
+            {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
+              <div className="flex items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white/20">
+                {message.citations && message.citations.length > 0 && (
+                  <button
+                    onClick={() => onCitationClick(message.citations!)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                    <span>{message.citations.length} source{message.citations.length !== 1 ? 's' : ''}</span>
+                  </button>
+                )}
+                {message.knowledge_path?.path && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-accent text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm">
+                    <span className="material-symbols-outlined text-[16px]">verified</span>
+                    <span>{message.knowledge_path.path === 'rag' ? 'RAG' : 'OKF'}</span>
+                  </span>
+                )}
+                {message.safety_flags?.medical_disclaimer && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#f0f0f0] dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm opacity-low">
+                    <span className="material-symbols-outlined text-[16px]">security</span>
+                    <span>Disclaimer</span>
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>
-
-        {/* Action row (citations, tools, knowledge, disclaimer) */}
-        {!isUser && (message.citations?.length || message.tool_trace?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
-          <div className="flex flex-wrap items-center gap-1.5 px-1">
-            {message.citations && message.citations.length > 0 && (
-              <button
-                onClick={() => onCitationClick(message.citations!)}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-gray-900/60 hover:bg-blue-50 dark:hover:bg-blue-500/10 border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-500/40 rounded-lg text-[11px] text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-300 transition-all"
-              >
-                <BookOpen size={11} />
-                <span className="font-semibold">{message.citations.length}</span>
-                <span>source{message.citations.length !== 1 ? 's' : ''}</span>
-              </button>
-            )}
-            {message.tool_trace && message.tool_trace.length > 0 && (
-              <Pill variant="warning" icon={Zap}>
-                {message.tool_trace.map(t => t.name).join(', ')}
-              </Pill>
-            )}
-            {message.knowledge_path?.path && (
-              <Pill variant={message.knowledge_path.path === 'okf' ? 'okf' : message.knowledge_path.path === 'okf_then_rag' ? 'okf' : 'rag'}
-                    icon={message.knowledge_path.path === 'rag' ? Database : Brain}>
-                {message.knowledge_path.path === 'okf' ? 'OKF' : message.knowledge_path.path === 'okf_then_rag' ? 'OKF + RAG' : 'RAG'}
-              </Pill>
-            )}
-            {message.safety_flags?.medical_disclaimer && (
-              <Pill variant="info" icon={Shield}>Disclaimer</Pill>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
@@ -664,6 +642,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
   safetyFlags: SafetyFlags | null; knowledgePath: KnowledgePath | null
 }) {
   const [tab, setTab] = useState<EvidenceTab>('sources')
+  const [lisinoprilDosage, setLisinoprilDosage] = useState(20)
 
   const tabs: { id: EvidenceTab; label: string; icon: IconType; count: number }[] = useMemo(() => [
     { id: 'sources', label: 'Sources', icon: BookOpen, count: citations.length },
@@ -720,11 +699,51 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
           {/* Body */}
           <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
             {tab === 'sources' && (
-              citations.length === 0 ? (
-                <EmptyEvidence icon={BookOpen} title="No citations yet" subtitle="Ask a clinical question to see source material" />
-              ) : (
-                citations.map((c, i) => <CitationCard key={i} citation={c} />)
-              )
+              <>
+                {/* Titration Sandbox */}
+                <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-5 space-y-6 mb-6">
+                  <div className="flex items-center justify-between border-b-2 border-[#1a1a1a] dark:border-white/20 pb-2">
+                    <h3 className="font-headline-md text-sm uppercase text-[#1a1a1a] dark:text-white">Titration Sandbox</h3>
+                    <span className="material-symbols-outlined text-brand-accent">monitoring</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between font-code-sm text-[10px] uppercase font-bold text-[#1a1a1a] dark:text-white">
+                        <span>Lisinopril Dosage</span>
+                        <span className="text-brand-accent">{lisinoprilDosage}mg</span>
+                      </div>
+                      <input 
+                        type="range"
+                        min="0"
+                        max="40"
+                        step="10"
+                        value={lisinoprilDosage}
+                        onChange={e => setLisinoprilDosage(Number(e.target.value))}
+                        className="w-full h-2 bg-[#f0f0f0] dark:bg-slate-800 appearance-none border-2 border-[#1a1a1a] dark:border-white accent-brand-accent cursor-pointer rounded-none"
+                      />
+                    </div>
+                    <div className="p-4 bg-[#1a1a1a] dark:bg-slate-950 text-white space-y-2 border border-transparent dark:border-white/10">
+                      <p className="font-label-md text-[10px] uppercase tracking-widest opacity-70">Predicted Outcome</p>
+                      <div className="flex items-end gap-1.5 h-16 pt-2">
+                        <div className="flex-1 bg-brand-accent/30 border-t-2 border-brand-accent" style={{ height: '100%' }}></div>
+                        <div className="flex-1 bg-brand-accent/40 border-t-2 border-brand-accent" style={{ height: `${Math.max(30, 100 - (lisinoprilDosage / 40) * 20)}%` }}></div>
+                        <div className="flex-1 bg-brand-accent/60 border-t-2 border-brand-accent" style={{ height: `${Math.max(25, 100 - (lisinoprilDosage / 40) * 45)}%` }}></div>
+                        <div className="flex-1 bg-brand-accent border-t-2 border-brand-accent animate-pulse" style={{ height: `${Math.max(20, 100 - (lisinoprilDosage / 40) * 60)}%` }}></div>
+                      </div>
+                      <div className="flex justify-between font-code-sm text-[12px] font-bold">
+                        <span>{145 - Math.round((lisinoprilDosage / 40) * 19)}/{92 - Math.round((lisinoprilDosage / 40) * 12)}</span>
+                        <span className="text-brand-accent">BP Target Goal</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {citations.length === 0 ? (
+                  <EmptyEvidence icon={BookOpen} title="No citations yet" subtitle="Ask a clinical question to see source material" />
+                ) : (
+                  citations.map((c, i) => <CitationCard key={i} citation={c} />)
+                )}
+              </>
             )}
             {tab === 'tools' && (
               toolTrace.length === 0 ? (
@@ -1244,6 +1263,122 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
   )
 }
 
+// ─── Respiratory Rhythm Shader ────────────────────────────────────────────────
+function BreathingShader() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null
+    if (!gl) return
+
+    let animationFrameId: number
+
+    const resizeCanvas = () => {
+      const w = canvas.clientWidth || window.innerWidth
+      const h = canvas.clientHeight || window.innerHeight
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w
+        canvas.height = h
+        gl.viewport(0, 0, w, h)
+      }
+    }
+
+    const ro = new ResizeObserver(() => resizeCanvas())
+    ro.observe(canvas)
+    resizeCanvas()
+
+    const vs = `
+      attribute vec2 a_position;
+      varying vec2 v_texCoord;
+      void main() {
+        v_texCoord = a_position * 0.5 + 0.5;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `
+
+    const fs = `
+      precision highp float;
+      varying vec2 v_texCoord;
+      uniform float u_time;
+
+      void main() {
+          vec2 uv = v_texCoord;
+          float breath = sin(u_time * 0.25) * 0.5 + 0.5;
+          
+          vec3 colorA = vec3(0.95, 0.98, 1.0);
+          vec3 colorB = vec3(0.85, 0.92, 0.95);
+          
+          vec3 baseColor = mix(colorA, colorB, uv.y + breath * 0.1);
+          
+          float dist = distance(uv, vec2(0.5, 0.5));
+          float pulse = exp(-dist * (2.0 - breath * 0.5));
+          
+          vec3 finalColor = mix(baseColor, vec3(1.0), pulse * 0.05);
+          
+          gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `
+
+    const compileShader = (type: number, src: string) => {
+      const shader = gl.createShader(type)
+      if (!shader) return null
+      gl.shaderSource(shader, src)
+      gl.compileShader(shader)
+      return shader
+    }
+
+    const prog = gl.createProgram()
+    if (!prog) return
+
+    const vertexShader = compileShader(gl.VERTEX_SHADER, vs)
+    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fs)
+    if (!vertexShader || !fragmentShader) return
+
+    gl.attachShader(prog, vertexShader)
+    gl.attachShader(prog, fragmentShader)
+    gl.linkProgram(prog)
+    gl.useProgram(prog)
+
+    const buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW)
+
+    const pos = gl.getAttribLocation(prog, 'a_position')
+    gl.enableVertexAttribArray(pos)
+    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+
+    const uTime = gl.getUniformLocation(prog, 'u_time')
+    const uRes = gl.getUniformLocation(prog, 'u_resolution')
+
+    const render = (time: number) => {
+      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+        resizeCanvas()
+      }
+      gl.viewport(0, 0, canvas.width, canvas.height)
+      if (uTime) gl.uniform1f(uTime, time * 0.001)
+      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      animationFrameId = requestAnimationFrame(render)
+    }
+
+    animationFrameId = requestAnimationFrame(render)
+
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+      ro.disconnect()
+    }
+  }, [])
+
+  return (
+    <div className="absolute inset-0 w-full h-full -z-10 pointer-events-none transition-opacity duration-1000">
+      <canvas ref={canvasRef} className="block w-full h-full" />
+    </div>
+  )
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -1264,6 +1399,17 @@ export default function App() {
   const [panelSafety, setPanelSafety] = useState<SafetyFlags | null>(null)
   const [panelKnowledge, setPanelKnowledge] = useState<KnowledgePath | null>(null)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isReliefMode, setIsReliefMode] = useState(false)
+
+  const toggleReliefMode = () => {
+    const next = !isReliefMode
+    setIsReliefMode(next)
+    if (next) {
+      document.body.classList.add('relief-mode')
+    } else {
+      document.body.classList.remove('relief-mode')
+    }
+  }
   
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -1432,11 +1578,13 @@ export default function App() {
 
   return (
     <div className={cn(
-      'flex h-screen overflow-hidden',
+      'flex h-screen overflow-hidden relative',
       isClinicianMode
         ? 'bg-stone-50 dark:bg-stone-950'
         : 'bg-stone-50 dark:bg-stone-950'
     )}>
+      {isReliefMode && <BreathingShader />}
+
       <Sidebar
         isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user}
         conversations={conversations} currentConvId={currentConvId} onNewChat={handleNewChat}
@@ -1477,7 +1625,21 @@ export default function App() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Pressure Relief Toggle */}
+            <button 
+              onClick={toggleReliefMode}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 border-2 border-[#1a1a1a] dark:border-white transition-all font-semibold rounded-none text-[11px] uppercase tracking-wider",
+                isReliefMode 
+                  ? "bg-[#008080] text-white border-teal-600 shadow-none" 
+                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+              )}
+            >
+              <span className="material-symbols-outlined text-[15px]">{isReliefMode ? 'spa' : 'air'}</span>
+              <span>{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
+            </button>
+
             <ThemeToggle />
             <select
               value={caseId}
@@ -1530,6 +1692,7 @@ export default function App() {
                   key={msg.id}
                   message={msg}
                   mode={mode}
+                  username={user?.username || 'You'}
                   onCitationClick={c => { setPanelCitations(c); setEvidencePanelOpen(true) }}
                 />
               ))}

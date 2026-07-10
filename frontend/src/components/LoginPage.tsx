@@ -15,9 +15,10 @@ const FEATURES = [
 interface LoginPageProps {
   onLogin: (token: string) => Promise<void>
   onSwitchToSignup: () => void
+  onBackToHome?: () => void
 }
 
-export default function LoginPage({ onLogin, onSwitchToSignup }: LoginPageProps) {
+export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: LoginPageProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -60,12 +61,15 @@ export default function LoginPage({ onLogin, onSwitchToSignup }: LoginPageProps)
       {/* Left - Brand Side */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-800 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
         <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white neo-brutal-shadow-sm font-bold">
+          <button 
+            onClick={onBackToHome}
+            className="flex items-center gap-4 mb-8 text-left focus:outline-none hover:opacity-80 transition-all w-fit"
+          >
+            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white neo-brutal-shadow-sm font-bold animate-pulse-slow">
               <Stethoscope size={22} className="text-white" />
             </div>
             <span className="text-clinical-black dark:text-white font-headline-md text-headline-md font-bold tracking-tight uppercase">Clinical Workflows</span>
-          </div>
+          </button>
           
           <h1 className="font-headline-xl text-[48px] font-black text-clinical-black dark:text-white leading-tight uppercase mb-6">
             Evidence-Based<br />Care Planning
@@ -93,12 +97,20 @@ export default function LoginPage({ onLogin, onSwitchToSignup }: LoginPageProps)
       </div>
 
       {/* Right - Form Side */}
-      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 transition-colors duration-300">
-        <div className="absolute top-4 right-4 flex items-center justify-end gap-3 z-20">
-          <span className="text-xs text-clinical-black dark:text-white font-code-sm font-bold uppercase select-none">
-            {theme === 'dark' ? 'Dark' : 'Light'}
-          </span>
-          <ThemeToggle />
+      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 transition-colors duration-300 relative pt-20">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
+          <button
+            onClick={onBackToHome}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+          >
+            ← Back to Home
+          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-clinical-black dark:text-white font-code-sm font-bold uppercase select-none">
+              {theme === 'dark' ? 'Dark' : 'Light'}
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
 
         <div className="w-full max-w-md border-4 border-clinical-black dark:border-white p-8 bg-white dark:bg-slate-900 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-colors duration-300">

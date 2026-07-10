@@ -100,8 +100,8 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         return
       }
 
-      const scrollPercent = (scrollTop / maxScroll) * 100
-      if (scrollPercent >= 40) {
+      const scrollPercent = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 100
+      if (scrollPercent >= 10 || scrollTop > 80) {
         setCanReveal(true)
       }
     }
@@ -328,7 +328,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* OKF Spine */}
-              <div className="md:col-span-4 group p-8 bg-tertiary-fixed dark:bg-amber-955/20 border-2 border-clinical-black dark:border-amber-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f59e0b] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '200ms' }}>
+              <div className="md:col-span-4 group p-8 bg-tertiary-fixed dark:bg-amber-950/20 border-2 border-clinical-black dark:border-amber-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f59e0b] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '200ms' }}>
                 <div className="tipped-label dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500">OKF_CORE</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-amber-400">verified</span>
@@ -338,7 +338,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* Safety Guardrails */}
-              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-rose-955/20 border-2 border-clinical-black dark:border-rose-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f43f5e] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
+              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-rose-950/20 border-2 border-clinical-black dark:border-rose-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f43f5e] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
                 <div className="tipped-label dark:bg-rose-500 dark:text-slate-950 dark:border-rose-500">SAFETY_V1</div>
                 <div className="space-y-4">
                   <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-rose-450">security</span>

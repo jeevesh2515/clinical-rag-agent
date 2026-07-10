@@ -178,3 +178,57 @@
   will-change: transform;
 }
 
+/* User-supplied theme definitions */
+.brutal-border {
+  border: 2px solid #1a1a1a;
+}
+.dark .brutal-border {
+  border: 2px solid #ffffff;
+}
+
+.brutal-shadow {
+  box-shadow: 4px 4px 0px 0px #1a1a1a;
+  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+.dark .brutal-shadow {
+  box-shadow: 4px 4px 0px 0px #ffffff;
+}
+
+.brutal-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #1a1a1a;
+  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+}
+.dark .brutal-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #ffffff;
+}
+
+.brutal-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px 0px #1a1a1a;
+}
+.dark .brutal-button:active {
+  box-shadow: 0px 0px 0px 0px #ffffff;
+}
+
+.brutal-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #1a1a1a;
+}
+.dark .brutal-card:hover {
+  box-shadow: 6px 6px 0px 0px #ffffff;
+}
+
+.hover-invert:hover {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+.dark .hover-invert:hover {
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+.hover-invert-accent:hover {
+  background-color: #ff3366;
+  color: #ffffff;
+}
+

@@ -1425,9 +1425,9 @@ export default function App() {
       return <LandingPage onLogin={() => setPage('login')} onRegister={() => setPage('signup')} />
     }
     if (page === 'login') {
-      return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} />
+      return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} onBackToHome={() => setPage('landing')} />
     }
-    return <SignupPage onSignup={handleSignup} onSwitchToLogin={() => setPage('login')} />
+    return <SignupPage onSignup={handleSignup} onSwitchToLogin={() => setPage('login')} onBackToHome={() => setPage('landing')} />
   }
 
   return (

@@ -78,10 +78,28 @@ app.add_middleware(MaxBodySizeMiddleware, max_size=262144)
 
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
+    import time
+
     request_id = request.headers.get("X-Request-ID") or str(uuid4())
     request.state.request_id = request_id
+    start = time.perf_counter()
     response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000.0
     response.headers["X-Request-ID"] = request_id
+
+    import logging as _log_mod
+    _req_logger = _log_mod.getLogger("app.request")
+    _req_logger.info(
+        "http_request",
+        extra={
+            "event": "http_request",
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "duration_ms": round(duration_ms, 2),
+            "request_id": request_id,
+        },
+    )
     return response
 
 

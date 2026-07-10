@@ -1,7 +1,9 @@
 import json
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import StreamingResponse
 from app.auth.routes import router as auth_router
 from app.chat.routes import router as chat_router
 from app.uploads.routes import router as uploads_router
@@ -48,6 +50,53 @@ def health(
         "okf": okf_info or {"available": False},
         "request_id": request_id_from(request),
     }
+
+
+@router.get("/ready", tags=["system"])
+def ready(
+    request: Request,
+    store: HybridStore = Depends(get_store),
+    knowledge: KnowledgeInterface | None = Depends(get_knowledge_interface),
+) -> dict:
+    """Readiness probe for deployment platforms (Vercel, K8s).
+
+    Returns 200 when the DB is initialised and the OKF bundle is loaded.
+    Returns 503 with a details dict when either is unavailable.
+    """
+    from fastapi.responses import JSONResponse
+
+    issues: list[str] = []
+
+    # DB check — confirm we can execute a trivial query
+    try:
+        from app.db import SessionLocal
+        with SessionLocal() as db:
+            db.execute(__import__("sqlalchemy").text("SELECT 1"))
+        db_status = "ok"
+    except Exception as exc:
+        db_status = f"error: {exc}"
+        issues.append("db")
+
+    # OKF check — confirm at least one concept is loaded
+    okf_count = 0
+    if knowledge:
+        try:
+            okf_count = len(knowledge._okf.get_concept_map())
+        except Exception:
+            pass
+    okf_status = okf_count if okf_count else "unavailable"
+    if okf_count == 0:
+        issues.append("okf")
+
+    payload = {
+        "status": "ready" if not issues else "not_ready",
+        "db": db_status,
+        "okf": okf_status,
+        "request_id": request_id_from(request),
+    }
+    if issues:
+        return JSONResponse(status_code=503, content=payload)
+    return payload
 
 
 @router.post("/ingest", response_model=IngestResponse, tags=["ingestion"])
@@ -111,6 +160,84 @@ def query(
         request_id=request_id_from(request),
         user_id=user_id,
     )
+
+@router.post(
+    "/query/stream",
+    tags=["query"],
+    summary="Streaming variant of /query that emits SSE events for progressive UX.",
+    response_class=StreamingResponse,
+)
+def query_stream(
+    payload: QueryRequest,
+    request: Request,
+    agent: ClinicalRAGAgent = Depends(get_agent),
+) -> StreamingResponse:
+    """Run the clinical RAG pipeline and stream the result as Server-Sent Events.
+
+    Event types emitted:
+    - ``status``     — pipeline started
+    - ``token``      — the final answer text (emitted as a single chunk when ready)
+    - ``citation``   — one JSON-serialised Citation per cited source
+    - ``tool_trace`` — tool call summary
+    - ``latency``    — per-node latency breakdown
+    - ``done``       — terminal event with request_id and graph_route
+    """
+    _log = logging.getLogger(__name__)
+    settings = get_settings()
+    user_id = getattr(request.state, "user_id", None)
+    request_id = request_id_from(request)
+
+    def _event(event_type: str, data: object) -> str:
+        return f"event: {event_type}\ndata: {json.dumps(data, default=str)}\n\n"
+
+    def generate():
+        yield _event("status", {"status": "processing", "request_id": request_id})
+        try:
+            response = agent.invoke(
+                payload.question,
+                alpha=payload.alpha if payload.alpha is not None else settings.default_alpha,
+                top_k=payload.top_k if payload.top_k is not None else settings.default_top_k,
+                rerank_top_n=(
+                    payload.rerank_top_n
+                    if payload.rerank_top_n is not None
+                    else settings.default_rerank_top_n
+                ),
+                mode=payload.mode,
+                case_id=payload.case_id,
+                include_patient_education=payload.include_patient_education,
+                request_id=request_id,
+                user_id=user_id,
+            )
+            yield _event("token", {"text": response.answer})
+            for citation in response.citations:
+                yield _event("citation", citation.model_dump())
+            for tool in response.tool_trace:
+                yield _event("tool_trace", tool.model_dump())
+            if response.latency_ms:
+                yield _event("latency", response.latency_ms)
+            yield _event(
+                "done",
+                {
+                    "request_id": response.request_id,
+                    "graph_route": response.graph_route,
+                    "intent": response.intent,
+                    "confidence": response.confidence,
+                },
+            )
+        except Exception as exc:
+            _log.exception("stream_error request_id=%s", request_id)
+            yield _event("error", {"message": str(exc), "request_id": request_id})
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "X-Request-ID": request_id or "",
+        },
+    )
+
 
 
 @router.get("/documents", tags=["documents"])

@@ -2,6 +2,8 @@ import logging
 from typing import Any, Literal, NotRequired, Required, TypedDict, cast
 from uuid import uuid4
 
+from app.core.latency import Timer
+
 from langgraph.graph import END, StateGraph
 
 from app.agents.citation_validator import build_citations, unsupported_claims_detected
@@ -69,6 +71,7 @@ class AgentState(TypedDict, total=False):
     follow_up_plan: NotRequired[list[str]]
     user_id: NotRequired[str | None]
     personal_chunks_used: NotRequired[list[str]]
+    latency_ms: NotRequired[dict[str, float]]
 
 
 class ClinicalRAGAgent:
@@ -220,22 +223,30 @@ class ClinicalRAGAgent:
         return {"care_gaps": gap_dicts, "follow_up_plan": plan}
 
     def _classify(self, state: AgentState) -> dict[str, Any]:
-        classification = classify_query(state["question"])
+        latency = dict(state.get("latency_ms") or {})
+        with Timer() as t:
+            classification = classify_query(state["question"])
+        latency["classify"] = t.elapsed_ms
+        route = self._route_after_classification({
+            "refusal_reason": classification.refusal_reason,
+            "intent": classification.intent,
+        })
         logger.info(
-            "query_classified request_id=%s intent=%s refusal_reason=%s prompt_injection=%s",
-            state.get("request_id"),
-            classification.intent,
-            classification.refusal_reason,
-            classification.prompt_injection_detected,
+            "query_classified",
+            extra={
+                "event": "query_classified",
+                "request_id": state.get("request_id"),
+                "intent": classification.intent,
+                "graph_route": route,
+                "duration_ms": t.elapsed_ms,
+            },
         )
         return {
             "intent": classification.intent,
             "refusal_reason": classification.refusal_reason,
             "prompt_injection_detected": classification.prompt_injection_detected,
-            "graph_route": self._route_after_classification({
-                "refusal_reason": classification.refusal_reason,
-                "intent": classification.intent,
-            }),
+            "graph_route": route,
+            "latency_ms": latency,
         }
 
     def _route_after_classification(self, state: dict) -> GraphRoute:
@@ -267,12 +278,15 @@ class ClinicalRAGAgent:
         }
 
     def _retrieve(self, state: AgentState) -> dict[str, Any]:
+        latency = dict(state.get("latency_ms") or {})
         if self.knowledge:
-            result = self.knowledge.search(
-                state["question"],
-                alpha=state["alpha"],
-                top_k=state["top_k"],
-            )
+            with Timer() as t:
+                result = self.knowledge.search(
+                    state["question"],
+                    alpha=state["alpha"],
+                    top_k=state["top_k"],
+                )
+            latency["retrieve"] = t.elapsed_ms
             candidates = [
                 {
                     "chunk_id": chunk.source_path,
@@ -308,34 +322,43 @@ class ClinicalRAGAgent:
                 candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
                 candidates = candidates[: state["top_k"] + len(personal)]
             logger.info(
-                "knowledge_retrieved request_id=%s path=%s okf=%d rag=%d personal=%d",
-                state.get("request_id"),
-                result.decision.path if result.decision else "unknown",
-                len(result.okf_docs),
-                len(result.rag_chunks),
-                len(personal),
+                "knowledge_retrieved",
+                extra={
+                    "event": "knowledge_retrieved",
+                    "request_id": state.get("request_id"),
+                    "chunk_count": len(candidates),
+                    "duration_ms": t.elapsed_ms,
+                },
             )
             return {
                 "candidates": candidates,
                 "knowledge_result": result,
                 "personal_chunks_used": [c["chunk_id"] for c in personal],
+                "latency_ms": latency,
             }
-        candidates = cast(
-            list[dict[str, Any]],
-            self.store.query(state["question"], alpha=state["alpha"], top_k=state["top_k"]),
-        )
+        with Timer() as t:
+            candidates = cast(
+                list[dict[str, Any]],
+                self.store.query(state["question"], alpha=state["alpha"], top_k=state["top_k"]),
+            )
+        latency["retrieve"] = t.elapsed_ms
         personal = self._personal_retrieve(state, limit=4)
         if personal:
             candidates.extend(personal)
             candidates.sort(key=lambda x: x["hybrid_score"], reverse=True)
         logger.info(
-            "retrieved_chunks=%s personal=%d",
-            [c["chunk_id"] for c in candidates],
-            len(personal),
+            "store_retrieved",
+            extra={
+                "event": "store_retrieved",
+                "request_id": state.get("request_id"),
+                "chunk_count": len(candidates),
+                "duration_ms": t.elapsed_ms,
+            },
         )
         return {
             "candidates": candidates,
             "personal_chunks_used": [c["chunk_id"] for c in personal],
+            "latency_ms": latency,
         }
 
     def _personal_retrieve(
@@ -416,38 +439,58 @@ class ClinicalRAGAgent:
         return {"tools_used": tools_used, "tool_notes": tool_notes, "tool_trace": tool_trace}
 
     def _rerank(self, state: AgentState) -> dict[str, Any]:
+        latency = dict(state.get("latency_ms") or {})
         candidates = state.get("candidates", [])
         if not candidates:
-            return {"reranked": []}
+            return {"reranked": [], "latency_ms": latency}
 
         rag_only = [c for c in candidates if c.get("metadata", {}).get("source_type") != "okf"]
         okf_only = [c for c in candidates if c.get("metadata", {}).get("source_type") == "okf"]
 
-        if rag_only:
-            reranked = self.reranker.rerank(
-                state["question"],
-                rag_only,
-                top_n=state["rerank_top_n"],
-            )
-        else:
-            reranked = []
+        with Timer() as t:
+            if rag_only:
+                reranked = self.reranker.rerank(
+                    state["question"],
+                    rag_only,
+                    top_n=state["rerank_top_n"],
+                )
+            else:
+                reranked = []
+        latency["rerank"] = t.elapsed_ms
 
         okf_only.sort(key=lambda x: x["hybrid_score"], reverse=True)
-
         merged = okf_only + reranked
         logger.info(
-            "reranked_chunks okf=%d rag=%d",
-            len(okf_only),
-            len(reranked),
+            "reranked",
+            extra={
+                "event": "reranked",
+                "request_id": state.get("request_id"),
+                "chunk_count": len(merged),
+                "duration_ms": t.elapsed_ms,
+            },
         )
-        return {"reranked": merged}
+        return {"reranked": merged, "latency_ms": latency}
 
     def _generate(self, state: AgentState) -> dict[str, Any]:
-        if self._cohere and state.get("reranked"):
-            answer = self._generate_with_cohere(state)
-        else:
-            answer = self._generate_extractive(state)
-        return {"answer": self._with_required_notice(answer, state.get("mode", "patient"))}
+        latency = dict(state.get("latency_ms") or {})
+        with Timer() as t:
+            if self._cohere and state.get("reranked"):
+                answer = self._generate_with_cohere(state)
+            else:
+                answer = self._generate_extractive(state)
+        latency["generate"] = t.elapsed_ms
+        logger.info(
+            "generated",
+            extra={
+                "event": "generated",
+                "request_id": state.get("request_id"),
+                "duration_ms": t.elapsed_ms,
+            },
+        )
+        return {
+            "answer": self._with_required_notice(answer, state.get("mode", "patient")),
+            "latency_ms": latency,
+        }
 
     def _generate_with_cohere(self, state: AgentState) -> str:
         if not self._cohere:
@@ -534,17 +577,24 @@ Include a reminder to consult a licensed clinician.
             return self._generate_extractive(state)
 
     def _validate_claims(self, state: AgentState) -> dict[str, Any]:
+        latency = dict(state.get("latency_ms") or {})
         if state.get("refusal_reason"):
-            return {"unsupported_claims": False}
-        citations = build_citations(state.get("reranked", []))
-        answer = state.get("answer", "I could not find enough evidence in the indexed sources.")
-        unsupported = unsupported_claims_detected(answer, citations)
+            return {"unsupported_claims": False, "latency_ms": latency}
+        with Timer() as t:
+            citations = build_citations(state.get("reranked", []))
+            answer = state.get("answer", "I could not find enough evidence in the indexed sources.")
+            unsupported = unsupported_claims_detected(answer, citations)
+        latency["validate_claims"] = t.elapsed_ms
         logger.info(
-            "claims_validated request_id=%s unsupported=%s",
-            state.get("request_id"),
-            unsupported,
+            "claims_validated",
+            extra={
+                "event": "claims_validated",
+                "request_id": state.get("request_id"),
+                "citation_count": len(citations),
+                "duration_ms": t.elapsed_ms,
+            },
         )
-        return {"unsupported_claims": unsupported}
+        return {"unsupported_claims": unsupported, "latency_ms": latency}
 
     def _generate_extractive(self, state: AgentState) -> str:
         notes = state.get("tool_notes", [])
@@ -704,6 +754,7 @@ Include a reminder to consult a licensed clinician.
             knowledge_path=knowledge_path,
             request_id=state.get("request_id"),
             graph_route=state.get("graph_route"),
+            latency_ms=state.get("latency_ms") or {},
         )
         return {"response": response}
 

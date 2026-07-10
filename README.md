@@ -17,7 +17,7 @@ Evidence-based clinical workflow assistant — combining hybrid retrieval, curat
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
-[![Tests](https://img.shields.io/badge/tests-199%20passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](https://github.com/)
+[![Tests](https://img.shields.io/badge/tests-205%20passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](https://github.com/)
 [![Ruff](https://img.shields.io/badge/linting-ruff-ffb703?style=flat-square&logo=ruff&logoColor=white)]()
 [![Pyright](https://img.shields.io/badge/type%20check-pyright-3178C6?style=flat-square&logo=python&logoColor=white)]()
 [![OKF](https://img.shields.io/badge/OKF-27%20concepts-8b5cf6?style=flat-square&logo=markdown&logoColor=white)]()
@@ -101,7 +101,7 @@ Client / Frontend (React + Vite + Tailwind)
 | Evaluation | Deterministic metrics + CI threshold gates |
 | Frontend | React 18 + TypeScript + Tailwind CSS + Lucide icons |
 | Auth | JWT + OAuth2 + bcrypt |
-| CI | pytest (199 tests), ruff, pyright, make okf-check |
+| CI | pytest (205 tests), ruff, pyright, make okf-check (GitHub Actions) |
 | Deployment | Vercel (Python serverless + static frontend) |
 
 ---
@@ -161,6 +161,19 @@ Multi-dataset evaluation with deterministic proxy metrics and CI quality gates:
 
 **55 evaluation questions** across 6 datasets. Run with `python -m app.evaluation.run`.
 
+### Observability & Structured Logging
+
+Every request is fully observable with no third-party tracing library required:
+
+- **Structured JSON logs** — every log record emitted as a single JSON line:
+  ```json
+  {"timestamp":"...","level":"INFO","event":"store_retrieved","request_id":"abc","duration_ms":0.33,"chunk_count":6}
+  {"timestamp":"...","level":"INFO","event":"http_request","method":"POST","path":"/api/query","status_code":200,"duration_ms":24.96}
+  ```
+- **Per-node latency tracking** — every `QueryResponse` includes `latency_ms` with a breakdown per LangGraph node (`classify`, `retrieve`, `rerank`, `generate`, `validate_claims`).
+- **SSE streaming** — `POST /api/query/stream` emits progressive Server-Sent Events (`status`, `token`, `citation`, `tool_trace`, `latency`, `done`) for long-running queries.
+- **Readiness probe** — `GET /ready` returns `{"status":"ready", "db":"ok", "okf":27}` (200) or 503 with details when the system is not ready.
+
 ---
 
 ## Environment Variables
@@ -184,8 +197,10 @@ JWT_SECRET_KEY=             # Strong random key for production
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | System health, document/chunk counts, OKF status |
+| GET | `/ready` | Readiness probe: DB + OKF check, 200 or 503 |
 | POST | `/ingest` | Ingest guideline sources |
-| POST | `/query` | Ask a clinical question (supports mode, case_id) |
+| POST | `/query` | Ask a clinical question (returns full response + `latency_ms`) |
+| POST | `/query/stream` | Streaming SSE variant of `/query` |
 | GET | `/documents` | List indexed documents |
 | GET | `/sources` | Source registry with provenance metadata |
 | POST | `/eval/run` | Run evaluation suite |
@@ -231,10 +246,10 @@ JWT_SECRET_KEY=             # Strong random key for production
 │   ├── auth/                  # JWT auth, RBAC
 │   ├── cases/                 # Synthetic patient cases
 │   ├── chat/                  # Chat history, conversations
-│   ├── core/                  # Config, logging
+│   ├── core/                  # Config, structured logging, latency utilities
 │   ├── evaluation/            # Evaluation harness, metrics
 │   ├── ingestion/             # PDF loader, chunker, manifest, source registry
-│   ├── models.py              # Pydantic schemas
+│   ├── models.py              # Pydantic schemas (QueryResponse includes latency_ms)
 │   ├── okf/                   # Open Knowledge Format module
 │   ├── retrieval/             # Hybrid store, embeddings, reranker
 │   ├── safety/                # Intent classifier, refusals
@@ -246,7 +261,7 @@ JWT_SECRET_KEY=             # Strong random key for production
 │       ├── hooks/             # API, auth, chat hooks
 │       └── types/             # TypeScript type definitions
 ├── hypertension-okf/          # 27 OKF concept files with wikilinks
-├── tests/                     # 199 passing tests
+├── tests/                     # 205 passing tests
 ├── .env.example               # Environment variable template
 ├── vercel.json                # Vercel deployment config
 └── Makefile                   # Common commands (run-backend, okf-check, etc.)

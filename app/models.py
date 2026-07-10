@@ -312,6 +312,10 @@ class QueryResponse(BaseModel):
         default=None,
         description="LangGraph routing path taken for this request (refuse, insufficient, retrieve, calculator_fast_path).",
     )
+    latency_ms: dict[str, float] = Field(
+        default_factory=dict,
+        description="Per-node latency breakdown in milliseconds (e.g. classify, retrieve, generate, validate_claims).",
+    )
 
 
 class ApiErrorDetail(BaseModel):

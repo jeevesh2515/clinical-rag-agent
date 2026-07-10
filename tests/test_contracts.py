@@ -31,6 +31,7 @@ QUERY_CONTRACT_KEYS = {
     "personal_chunks_used",
     "request_id",
     "graph_route",
+    "latency_ms",
 }
 
 

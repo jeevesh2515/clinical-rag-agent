@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import ThemeToggle from './ThemeToggle'
 
 interface LandingPageProps {
   onLogin: () => void
@@ -59,6 +60,31 @@ function AnimatedCounter({
 
 export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   const [canReveal, setCanReveal] = useState(false)
+  const [activeSection, setActiveSection] = useState('hero')
+
+  // Scrollspy to sync navbar links with components
+  useEffect(() => {
+    const handleScrollspy = () => {
+      const sections = ['hero', 'retrieval', 'safety', 'provenance', 'demo']
+      const scrollPosition = window.scrollY + 140 // offset for navbar height + buffer
+
+      for (const section of sections) {
+        const element = document.getElementById(section)
+        if (element) {
+          const top = element.offsetTop
+          const height = element.offsetHeight
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section)
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScrollspy)
+    handleScrollspy()
+    return () => window.removeEventListener('scroll', handleScrollspy)
+  }, [])
 
   // Track scroll position to trigger reveal only after 40% scroll
   useEffect(() => {
@@ -136,12 +162,49 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <span className="font-headline-md text-headline-md font-bold text-primary dark:text-white">Clinical Workflows</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            <a href="#retrieval" className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white transition-colors duration-200">Retrieval</a>
-            <a href="#safety" className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white transition-colors duration-200">Safety</a>
-            <a href="#provenance" className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white transition-colors duration-200">Provenance</a>
-            <span className="font-label-md text-label-md text-primary dark:text-white font-bold border-b-2 border-primary dark:border-white py-1 cursor-pointer">Demo</span>
+            <a
+              href="#retrieval"
+              className={`font-label-md text-label-md transition-all py-1 border-b-2 ${
+                activeSection === 'retrieval'
+                  ? 'text-primary dark:text-white font-bold border-primary dark:border-white'
+                  : 'text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white border-transparent'
+              }`}
+            >
+              Retrieval
+            </a>
+            <a
+              href="#safety"
+              className={`font-label-md text-label-md transition-all py-1 border-b-2 ${
+                activeSection === 'safety'
+                  ? 'text-primary dark:text-white font-bold border-primary dark:border-white'
+                  : 'text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white border-transparent'
+              }`}
+            >
+              Safety
+            </a>
+            <a
+              href="#provenance"
+              className={`font-label-md text-label-md transition-all py-1 border-b-2 ${
+                activeSection === 'provenance'
+                  ? 'text-primary dark:text-white font-bold border-primary dark:border-white'
+                  : 'text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white border-transparent'
+              }`}
+            >
+              Provenance
+            </a>
+            <a
+              href="#demo"
+              className={`font-label-md text-label-md transition-all py-1 border-b-2 ${
+                activeSection === 'demo'
+                  ? 'text-primary dark:text-white font-bold border-primary dark:border-white'
+                  : 'text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-white border-transparent'
+              }`}
+            >
+              Demo
+            </a>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <button 
               onClick={onLogin} 
               className="px-4 py-2 font-label-md text-label-md border-2 border-primary dark:border-white neo-brutal-btn hover:bg-stone-100 dark:hover:bg-slate-800 transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
@@ -160,7 +223,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
 
       <main className="pt-16 flex-grow">
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-gutter py-20 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-colors duration-300">
+        <section id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-gutter py-20 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-colors duration-300">
           <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 parallax-element" data-speed="0.05">
               <div className="inline-block px-3 py-1 bg-brand-accent text-white font-code-sm text-code-sm uppercase tracking-widest neo-brutal-shadow-sm font-bold">
@@ -308,7 +371,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
         </section>
 
         {/* Initialize Interface Section */}
-        <section className="py-32 bg-white dark:bg-slate-950 relative overflow-hidden border-y-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
+        <section id="demo" className="py-32 bg-white dark:bg-slate-950 relative overflow-hidden border-y-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
           <div className="relative z-10 max-w-4xl mx-auto text-center px-gutter">
             <div className="flex justify-center mb-8">
               <div className="w-20 h-20 border-4 border-clinical-black dark:border-white flex items-center justify-center bg-white dark:bg-slate-900 neo-brutal-shadow dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] rotate-12">

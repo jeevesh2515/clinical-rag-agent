@@ -104,7 +104,7 @@ const SUGGESTED_QUESTIONS = [
   { icon: FlaskRound, text: 'Calculate MAP for blood pressure 140/90', category: 'Calculator', tone: 'text-violet-500' },
   { icon: Brain, text: 'What are the first-line medications for hypertension?', category: 'Treatment', tone: 'text-emerald-500' },
   { icon: Stethoscope, text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-500' },
-  { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-blue-500' },
+  { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-brand-accent' },
 ]
 
 const CASES = [
@@ -283,9 +283,9 @@ function Pill({
     success: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
     warning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
     danger:  'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30',
-    info:    'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30',
-    okf:     'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30',
-    rag:     'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30',
+    info:    'bg-stone-100 text-[#1a1a1a] border-[#1a1a1a] dark:bg-slate-800 dark:text-white dark:border-white',
+    okf:     'bg-[#ffddb8] text-[#1a1a1a] border-[#1a1a1a] dark:bg-amber-955/40 dark:text-amber-200 dark:border-amber-500',
+    rag:     'bg-[#6ffbbe] text-[#1a1a1a] border-[#1a1a1a] dark:bg-emerald-955/40 dark:text-emerald-200 dark:border-emerald-500',
     neutral: 'bg-white/80 text-gray-600 border-gray-200 dark:bg-gray-800/60 dark:text-gray-300 dark:border-gray-700/60',
   }
   return (
@@ -486,7 +486,7 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
   const year = citation.publication_year
 
   return (
-    <div className="bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/80 rounded-xl overflow-hidden hover:border-blue-300/60 dark:hover:border-blue-500/30 transition-colors">
+    <div className="bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/80 rounded-xl overflow-hidden hover:border-brand-accent/60 dark:hover:border-brand-accent/30 transition-colors">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-start gap-2.5 p-3 text-left"
@@ -517,7 +517,7 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
               <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
                 <Quote size={10} /> Quoted
               </p>
-              <blockquote className="border-l-2 border-blue-400/70 dark:border-blue-500/60 pl-2.5 text-[12px] italic text-gray-600 dark:text-gray-400 leading-relaxed">
+              <blockquote className="border-l-2 border-brand-accent/70 dark:border-brand-accent/60 pl-2.5 text-[12px] italic text-gray-600 dark:text-gray-400 leading-relaxed">
                 {citation.quote}
               </blockquote>
             </div>
@@ -531,7 +531,7 @@ function CitationCard({ citation, defaultOpen = false }: { citation: Citation; d
           )}
           {citation.source_url && (
             <a href={citation.source_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[12px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+              className="inline-flex items-center gap-1 text-[12px] text-brand-accent dark:text-brand-accent hover:underline font-medium">
               <ExternalLink size={11} /> View source
             </a>
           )}
@@ -617,14 +617,15 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
 
 function TypingIndicator() {
   return (
-    <div className="flex gap-3 animate-fade-in">
-      <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-center shrink-0 shadow-sm">
-        <Stethoscope size={14} className="text-blue-600 dark:text-blue-400" />
+    <div className="flex gap-4 animate-fade-in mb-4">
+      <div className="w-10 h-10 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white flex-shrink-0 flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+        <Sparkles size={20} className="text-white" />
       </div>
-      <div className="bg-white dark:bg-gray-900/80 border border-gray-200/80 dark:border-gray-800/80 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
-        <div className="flex items-center gap-1.5">
+      <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-5 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none relative">
+        <div className="absolute -top-3 left-4 bg-[#1a1a1a] text-white px-2 py-0.5 border-2 border-[#1a1a1a] font-label-md text-xs uppercase tracking-wider">Hypertension AI</div>
+        <div className="flex items-center gap-1.5 mt-2">
           {[0, 150, 300].map(d => (
-            <div key={d} className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+            <div key={d} className="w-2.5 h-2.5 bg-brand-accent dark:bg-white rounded-none border border-clinical-black dark:border-transparent animate-bounce" style={{ animationDelay: `${d}ms` }} />
           ))}
         </div>
       </div>
@@ -670,26 +671,26 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-gray-200/80 dark:border-gray-800/80 px-2 pt-2 gap-0.5 overflow-x-auto scrollbar-thin">
+          <div className="flex border-b-2 border-[#1a1a1a] dark:border-white/20 bg-[#f0f0f0] dark:bg-slate-950 p-0 overflow-x-auto scrollbar-thin">
             {tabs.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 text-[11.5px] font-semibold rounded-t-lg transition-all whitespace-nowrap',
+                  'flex-1 flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold transition-all whitespace-nowrap rounded-none border-b-4',
                   tab === t.id
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border border-b-0 border-blue-200/80 dark:border-blue-500/30'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                    ? 'text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 border-t-2'
+                    : 'text-[#1a1a1a]/60 dark:text-white/60 hover:text-[#1a1a1a] dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 border-transparent border-t-2 border-t-transparent'
                 )}
               >
-                <t.icon size={12} />
-                {t.label}
+                <t.icon size={14} />
+                <span className="uppercase tracking-wider text-xs font-headline-md">{t.label}</span>
                 {t.count > 0 && (
                   <span className={cn(
-                    'px-1.5 py-0.5 rounded-full text-[10px] font-bold',
+                    'px-1.5 py-0.5 text-[10px] font-bold border rounded-none',
                     tab === t.id
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      ? 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white'
+                      : 'bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-[#1a1a1a]/20 dark:border-white/20'
                   )}>{t.count}</span>
                 )}
               </button>
@@ -804,10 +805,10 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   </div>
                 </div>
                 {safetyFlags?.medical_disclaimer && (
-                  <div className="flex items-start gap-3 p-3.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl">
-                    <Info size={18} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3.5 bg-stone-50 dark:bg-slate-900 border border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
+                    <Info size={18} className="text-brand-accent shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[13px] font-semibold text-blue-700 dark:text-blue-300">Medical Disclaimer</p>
+                      <p className="text-[13px] font-semibold text-brand-accent">Medical Disclaimer</p>
                       <p className="text-[11.5px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
                         Educational workflow support only — must not replace clinical judgment.
                       </p>
@@ -821,10 +822,10 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               <div className="space-y-3">
                 {knowledgePath ? (
                   <>
-                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200/80 dark:border-blue-500/30 rounded-xl p-3.5">
+                    <div className="bg-stone-50 dark:bg-slate-900 border border-[#1a1a1a]/20 dark:border-white/20 rounded-none p-3.5">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                          <Network size={13} className="text-blue-600 dark:text-blue-400" />
+                        <div className="w-7 h-7 rounded-lg bg-brand-accent/20 flex items-center justify-center">
+                          <Network size={13} className="text-brand-accent" />
                         </div>
                         <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-200">Knowledge Path</p>
                         <Pill variant={knowledgePath.path === 'okf' ? 'okf' : 'rag'} className="ml-auto">
@@ -837,24 +838,24 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                     </div>
                     {knowledgePath.okf_concepts && knowledgePath.okf_concepts.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 px-1">
+                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 px-1 font-mono">
                           OKF Concepts Matched
                         </p>
                         {knowledgePath.okf_concepts.map((c, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border border-gray-200/80 dark:border-gray-800/60 hover:border-blue-300/60 dark:hover:border-blue-500/30 rounded-lg mb-1.5 transition-colors"
+                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-gray-900/60 border border-[#1a1a1a]/20 dark:border-white/20 hover:border-brand-accent/60 dark:hover:border-brand-accent/30 rounded-none mb-1.5 transition-colors"
                           >
-                            <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center shrink-0">
-                              <Brain size={12} className="text-violet-600 dark:text-violet-400" />
+                            <div className="w-7 h-7 rounded-none bg-brand-accent/10 flex items-center justify-center shrink-0 border border-[#1a1a1a]/10 dark:border-white/10">
+                              <Brain size={12} className="text-brand-accent" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-[12.5px] font-semibold text-gray-900 dark:text-gray-200 truncate">{c.title}</p>
                               <p className="text-[10.5px] text-gray-400 dark:text-gray-500 font-mono truncate">{c.source_path}</p>
                             </div>
                             <div className="shrink-0 w-16">
-                              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
+                              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-none overflow-hidden">
+                                <div className="h-full bg-brand-accent rounded-none transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
                               </div>
                               <p className="text-[10px] text-gray-500 dark:text-gray-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
                             </div>
@@ -894,13 +895,13 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
     <div className="flex-1 overflow-y-auto">
       <div className="flex flex-col items-center justify-center min-h-full text-center px-6 py-12 max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="relative mb-7">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/10">
-            <Sparkles size={32} className="text-white" />
+        <div className="relative mb-8">
+          <div className="w-16 h-16 bg-brand-accent flex items-center justify-center text-white border-2 border-clinical-black dark:border-white clinical-shadow">
+            <Sparkles size={28} className="text-white" />
           </div>
         </div>
 
-        <h1 className="text-[28px] sm:text-[32px] font-bold text-gray-900 dark:text-white tracking-tight mb-3">
+        <h1 className="font-headline-xl text-3xl font-black text-clinical-black dark:text-white uppercase mb-3">
           How can I help you today?
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-[14px] leading-relaxed mb-10 max-w-lg">
@@ -916,21 +917,21 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
 
         {/* Suggested questions */}
         <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Try asking</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
           {SUGGESTED_QUESTIONS.map((q, i) => (
             <button
               key={i}
               onClick={() => onQuestionClick(q.text)}
-              className="group flex items-start gap-3 p-4 bg-white dark:bg-gray-900/60 hover:bg-blue-50/80 dark:hover:bg-blue-500/10 border border-gray-200/80 dark:border-gray-800/80 hover:border-blue-300 dark:hover:border-blue-500/40 rounded-xl text-left transition-all hover:shadow-md"
+              className="group flex items-start gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white hover:bg-stone-50 dark:hover:bg-slate-800 text-left transition-all shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none rounded-none"
             >
-              <div className={cn('w-9 h-9 rounded-lg bg-gray-50 dark:bg-gray-800/60 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform', q.tone)}>
+              <div className={cn('w-9 h-9 border-2 border-clinical-black dark:border-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform bg-stone-100 dark:bg-slate-800 rounded-none', q.tone)}>
                 <q.icon size={15} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5 uppercase tracking-widest">{q.category}</p>
-                <p className="text-[13px] text-gray-800 dark:text-gray-200 leading-snug font-medium">{q.text}</p>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5 uppercase tracking-widest leading-none">{q.category}</p>
+                <p className="text-[13px] text-clinical-black dark:text-white leading-snug font-bold font-headline-md mt-1">{q.text}</p>
               </div>
-              <ArrowUp size={13} className="text-gray-300 dark:text-gray-600 group-hover:text-blue-500 group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-2" />
+              <ArrowUp size={13} className="text-gray-400 dark:text-gray-500 group-hover:text-brand-accent group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
             </button>
           ))}
         </div>
@@ -1608,10 +1609,10 @@ export default function App() {
           )}
           <div className="flex-1 min-w-0 flex items-center gap-2.5">
             <div className={cn(
-              'w-7 h-7 rounded-lg flex items-center justify-center shrink-0',
+              'w-7 h-7 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a] dark:border-white rounded-none',
               isClinicianMode
-                ? 'bg-gradient-to-br from-slate-700 to-slate-900'
-                : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                ? 'bg-slate-900'
+                : 'bg-brand-accent'
             )}>
               <Stethoscope size={13} className="text-white" />
             </div>
@@ -1620,7 +1621,7 @@ export default function App() {
                 {currentConv?.title || 'Clinical Workflows'}
               </h2>
               <p className="text-[10.5px] text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
-                <span className={cn('w-1.5 h-1.5 rounded-full', isClinicianMode ? 'bg-slate-500' : 'bg-emerald-500 animate-pulse')} />
+                <span className={cn('w-1.5 h-1.5 rounded-none', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent animate-pulse')} />
                 {isClinicianMode ? 'Clinician mode · Workstation' : 'Patient mode · Hypertension AI'}
               </p>
             </div>
@@ -1644,21 +1645,21 @@ export default function App() {
             <select
               value={caseId}
               onChange={e => setCaseId(e.target.value)}
-              className="text-[12px] bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/40 transition-all max-w-[180px]"
+              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-gray-300 rounded-none px-2.5 py-1.5 focus:outline-none transition-all max-w-[180px] shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] font-bold uppercase"
             >
               {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
-            <div className="flex bg-gray-100 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 p-0.5 rounded-lg">
+            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 rounded-none shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff]">
               {(['patient', 'clinician'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    'px-3 py-1 text-[11.5px] font-semibold rounded-md transition-all capitalize',
+                    'px-3 py-1.5 text-[11.5px] font-bold transition-all uppercase',
                     mode === m
                       ? isClinicianMode
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'bg-white text-gray-900 shadow-sm dark:bg-blue-600 dark:text-white'
+                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-none'
+                        : 'bg-brand-accent text-white shadow-none'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   )}
                 >
@@ -1669,10 +1670,10 @@ export default function App() {
             <button
               onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
               className={cn(
-                'p-2 rounded-lg transition-all',
+                'p-2 rounded-none border-2 border-[#1a1a1a] dark:border-white transition-all',
                 evidencePanelOpen
-                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
-                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent'
+                  ? 'bg-brand-accent text-white shadow-none'
+                  : 'bg-white dark:bg-slate-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none'
               )}
               title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
             >
@@ -1706,29 +1707,25 @@ export default function App() {
         <div className="px-4 sm:px-6 pb-4 pt-2 bg-stone-50 dark:bg-stone-950/90 shrink-0">
           <div className="max-w-4xl mx-auto">
             <div className={cn(
-              'relative flex items-end gap-2 bg-white dark:bg-gray-900/80 border rounded-2xl p-2 transition-all shadow-sm',
-              'border-gray-200 dark:border-gray-800',
-              'focus-within:border-blue-400 dark:focus-within:border-blue-500/50',
-              'focus-within:ring-4 focus-within:ring-blue-500/10',
+              'relative flex items-end gap-2 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 transition-all rounded-none',
+              'shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]',
             )}>
               <textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={handleInput}
                 onKeyDown={handleKeyDown}
-                placeholder={isClinicianMode ? 'Ask a clinician-grade clinical question…' : 'Ask a clinical question about hypertension management…'}
+                placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION MANAGEMENT…'}
                 rows={1}
-                className="flex-1 bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-[14px] resize-none focus:outline-none leading-relaxed px-2 py-2 min-h-[36px] max-h-[200px]"
+                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-[14px] font-bold uppercase tracking-wide resize-none focus:outline-none focus:ring-0 leading-relaxed px-2 py-2 min-h-[36px] max-h-[200px]"
               />
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isLoading}
                 className={cn(
-                  'shrink-0 h-9 px-3 rounded-xl font-semibold text-[12px] flex items-center justify-center gap-1.5 transition-all shadow-sm',
+                  'shrink-0 h-9 px-4 rounded-none font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all border-2 border-clinical-black dark:border-white',
                   inputValue.trim() && !isLoading
-                    ? isClinicianMode
-                      ? 'bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white'
+                    ? 'shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] hover:bg-brand-accent dark:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                 )}
               >

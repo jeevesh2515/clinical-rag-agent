@@ -54,7 +54,7 @@ const mdComponents: Components = {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline decoration-blue-300/60 dark:decoration-blue-500/40 underline-offset-2 transition-colors"
+      className="text-brand-accent dark:text-brand-accent hover:underline decoration-brand-accent/60 underline-offset-2 transition-colors font-medium"
     >
       {children}
     </a>
@@ -84,7 +84,7 @@ const mdComponents: Components = {
 
   // Blockquote — for disclaimers / source notes
   blockquote: ({ children }) => (
-    <blockquote className="my-3 pl-3 border-l-2 border-blue-400/70 dark:border-blue-500/60 text-gray-600 dark:text-gray-400 italic">
+    <blockquote className="my-3 pl-3 border-l-2 border-brand-accent/70 dark:border-brand-accent/60 text-gray-600 dark:text-gray-400 italic">
       {children}
     </blockquote>
   ),

@@ -8,7 +8,7 @@ const API_BASE = ''
 const FEATURES = [
   { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600 dark:text-rose-400' },
   { icon: Activity, text: 'Hypertension management', color: 'text-emerald-600 dark:text-emerald-400' },
-  { icon: Shield, text: 'Safety-first AI', color: 'text-brand-accent dark:text-blue-400' },
+  { icon: Shield, text: 'Safety-first AI', color: 'text-brand-accent' },
   { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-600 dark:text-violet-400' },
 ]
 

@@ -6,7 +6,7 @@ import {
   FileText, ExternalLink, Info, Stethoscope, Search, Trash2,
   BarChart3, Network, Database, Copy, Check, PanelLeftClose,
   PanelLeft, Sparkles, ChevronDown, ChevronRight,
-  Quote, ArrowUp, FlaskRound, type LucideIcon
+  ArrowUp, FlaskRound, type LucideIcon
 } from 'lucide-react'
 import LoginPage from './components/LoginPage'
 import SignupPage from './components/SignupPage'
@@ -290,7 +290,7 @@ function Pill({
   }
   return (
     <span className={cn(
-      'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border tracking-tight',
+      'inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold border-2 tracking-tight uppercase',
       v[variant],
       className,
     )}>
@@ -305,10 +305,10 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors rounded-none border border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
+      className="w-8 h-8 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-all brutalist-button bg-white dark:bg-slate-800"
       title={copied ? 'Copied!' : 'Copy'}
     >
-      {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} className="text-gray-400" />}
+      {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} className="text-inherit text-gray-400" />}
     </button>
   )
 }
@@ -338,7 +338,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       isOpen ? 'w-sidebar-width' : 'w-0 overflow-hidden'
     )}>
       {/* Brand */}
-      <div className="flex items-center justify-between px-4 py-6 border-b border-white/20">
+      <div className="flex items-center justify-between px-4 py-6 border-b-2 border-white/20">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-8 h-8 bg-brand-accent flex items-center justify-center text-white border-2 border-white">
             <Stethoscope size={16} className="text-white" />
@@ -348,7 +348,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
             <p className="font-mono text-[10px] text-white/70 mt-1 uppercase">Hypertension AI</p>
           </div>
         </div>
-        <button onClick={onToggle} className="p-1 text-white/50 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30 rounded-none" title="Collapse sidebar">
+        <button onClick={onToggle} className="p-1 text-white/50 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30" title="Collapse sidebar">
           <PanelLeftClose size={16} />
         </button>
       </div>
@@ -356,7 +356,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       {/* New chat */}
       <div className="px-4 py-4">
         <button onClick={onNewChat}
-          className="w-full bg-brand-accent text-white font-label-md text-label-md py-2.5 flex items-center justify-center gap-2 hover:bg-white hover:text-[#1a1a1a] transition-colors border-2 border-white uppercase tracking-wider brutalist-button border-transparent rounded-none">
+          className="w-full bg-brand-accent text-white font-label-md text-label-md py-2.5 flex items-center justify-center gap-2 hover:bg-white hover:text-[#1a1a1a] transition-colors border-2 border-white uppercase tracking-wider brutalist-button">
           <Plus size={15} />
           <span>New Chat</span>
         </button>
@@ -369,7 +369,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full bg-white/10 border-2 border-white/20 text-white pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-all placeholder-white/30 font-mono rounded-none"
+            className="w-full bg-white/10 border-2 border-white/20 text-white pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-all placeholder-white/30 font-mono"
           />
         </div>
       </div>
@@ -413,7 +413,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
         <div className="flex items-center gap-3 min-w-0">
           <button 
             onClick={onOpenProfile}
-            className="w-8 h-8 bg-white flex items-center justify-center text-[#1a1a1a] font-bold text-sm border-2 border-white shrink-0"
+            className="w-8 h-8 bg-white flex items-center justify-center text-[#1a1a1a] font-bold text-sm border-2 border-white shrink-0 clinical-shadow"
             title="Edit Profile"
           >
             {getInitials(user.username)}
@@ -449,9 +449,9 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
   return (
     <button
       className={cn(
-        'w-full flex items-center gap-2.5 p-2 text-left group transition-all duration-300 relative border-2 rounded-none mb-1.5',
+        'w-full flex items-center gap-2.5 p-2 text-left group transition-all duration-300 relative border-2 mb-1.5',
         isActive
-          ? 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white clinical-shadow'
+          ? 'bg-brand-accent text-white border-[#1a1a1a] clinical-shadow'
           : 'text-white/70 hover:bg-white/10 hover:text-white border-transparent hover:border-white/20'
       )}
       onClick={() => onSelect(conv.id)}
@@ -468,7 +468,7 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
       {(hovered || isActive) && (
         <button
           onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-          className="p-1 rounded text-white/50 hover:text-white hover:bg-white/10 transition-all shrink-0"
+          className="p-1 text-white/50 hover:text-white hover:bg-white/10 transition-all shrink-0"
           title="Delete conversation"
         >
           <Trash2 size={12} />
@@ -480,63 +480,45 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
 
 // ─── Citation Card (collapsible) ──────────────────────────────────────────────
 
-function CitationCard({ citation, defaultOpen = false }: { citation: Citation; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen)
-  const org = citation.organization
-  const year = citation.publication_year
+function CitationCard({ citation }: { citation: Citation }) {
+  const [open, setOpen] = useState(true)
 
   return (
-    <div className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden hover:border-brand-accent/60 dark:hover:border-brand-accent/30 transition-all rounded-none">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-start gap-2.5 p-3 text-left"
-      >
-        <div className="mt-0.5 text-gray-400 shrink-0">
-          {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+    <div className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden clinical-shadow relative transition-all duration-1000">
+      <div className="absolute -top-2 -left-2 w-4 h-4 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white z-10 transition-all duration-1000"></div>
+      <div className="p-3 border-b-2 border-[#1a1a1a] dark:border-white/20 flex items-center justify-between bg-[#f0f0f0] dark:bg-slate-900">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-[#1a1a1a] dark:bg-white text-white dark:text-black border-2 border-[#1a1a1a] dark:border-white">0</span>
+          <Pill variant={citation.source_type === 'okf' ? 'okf' : 'rag'} icon={citation.source_type === 'okf' ? Brain : Database}>
+            {citation.source_type?.toUpperCase() || 'RAG'}
+          </Pill>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-100 leading-snug">{citation.title}</p>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
-            <Pill variant={citation.source_type === 'okf' ? 'okf' : 'rag'} icon={citation.source_type === 'okf' ? Brain : Database}>
-              {citation.source_type?.toUpperCase() || 'RAG'}
-            </Pill>
-            {org && <span className="text-[11px] text-gray-500 dark:text-slate-400">{org}</span>}
-            {year && <span className="text-[11px] text-gray-400 dark:text-slate-500">· {year}</span>}
-            {citation.page && (
-              <span className="inline-flex items-center gap-0.5 text-[11px] text-gray-500 dark:text-slate-400">
-                <FileText size={10} /> p.{citation.page}
-              </span>
-            )}
+        <button onClick={() => setOpen(!open)} className="text-[#1a1a1a] dark:text-white">
+          {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+        </button>
+      </div>
+      <div className="p-5 space-y-4">
+        <div className="flex items-center gap-1 text-[10px] font-bold text-[#1a1a1a] dark:text-white tracking-widest uppercase font-code-sm bg-yellow-200 dark:bg-yellow-900/60 inline-block px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
+          <span className="material-symbols-outlined text-[14px] align-text-bottom">format_quote</span>
+          QUOTED
+        </div>
+        <p className="text-sm text-[#1a1a1a] dark:text-white font-code-sm leading-relaxed bg-[#f0f0f0] dark:bg-slate-900 p-4 border-2 border-[#1a1a1a] dark:border-white font-medium opacity-low">
+          {citation.quote || citation.title}
+        </p>
+        <div className="flex items-center justify-between pt-4 border-t-2 border-[#1a1a1a] dark:border-white/20 border-dashed">
+          <div className="flex items-center gap-2 text-xs text-[#1a1a1a] dark:text-white font-code-sm truncate font-bold bg-[#1a1a1a] dark:bg-white dark:text-black text-white px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
+            <FileText size={14} />
+            <span className="truncate">{citation.source_id || 'source'}</span>
           </div>
+          <CopyButton text={citation.quote || citation.source_id || ''} />
         </div>
-      </button>
-      {open && (citation.quote || citation.source_url || citation.chunk_id) && (
-        <div className="border-t border-gray-100 dark:border-slate-800/80 p-3 space-y-2.5 bg-gray-50/50 dark:bg-slate-900/40">
-          {citation.quote && (
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                <Quote size={10} /> Quoted
-              </p>
-              <blockquote className="border-l-2 border-brand-accent/70 dark:border-brand-accent/60 pl-2.5 text-[12px] italic text-gray-600 dark:text-slate-400 leading-relaxed">
-                {citation.quote}
-              </blockquote>
-            </div>
-          )}
-          {citation.chunk_id && (
-            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono bg-white dark:bg-slate-950/60 rounded-md px-2 py-1.5 border border-gray-200/80 dark:border-slate-800/60">
-              <Database size={11} className="shrink-0" />
-              <span className="truncate flex-1">{citation.chunk_id}</span>
-              <CopyButton text={citation.chunk_id} />
-            </div>
-          )}
-          {citation.source_url && (
-            <a href={citation.source_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[12px] text-brand-accent dark:text-brand-accent hover:underline font-medium">
-              <ExternalLink size={11} /> View source
-            </a>
-          )}
-        </div>
-      )}
+        {citation.source_url && (
+          <a href={citation.source_url} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[12px] text-brand-accent dark:text-brand-accent hover:underline font-medium">
+            <ExternalLink size={11} /> View source
+          </a>
+        )}
+      </div>
     </div>
   )
 }
@@ -550,64 +532,62 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
   const isClinician = mode === 'clinician' && !isUser
 
   return (
-    <div className={cn('flex gap-4 animate-message w-full mb-8', isUser ? 'flex-row' : 'flex-row')}>
-      {/* Avatar */}
+    <div className={cn('flex gap-4 animate-message w-full mb-8')}>
       {isUser ? (
-        <div className="w-10 h-10 bg-[#1a1a1a] dark:bg-white text-white dark:text-black flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
-          {username.charAt(0).toUpperCase()}
-        </div>
+        <>
+          <div className="w-10 h-10 bg-[#1a1a1a] dark:bg-white text-white dark:text-black flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
+            {username.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-5 clinical-shadow relative">
+            <div className="absolute -top-3 left-4 bg-brand-accent text-white px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
+              {username}
+            </div>
+            <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed mt-2 text-[16px] whitespace-pre-wrap break-words">
+              {message.content}
+            </div>
+          </div>
+        </>
       ) : (
-        <div className="w-10 h-10 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white flex-shrink-0 flex items-center justify-center clinical-shadow">
-          <span className="material-symbols-outlined text-white text-[24px]">auto_awesome</span>
-        </div>
-      )}
+        <>
+          <div className="w-10 h-10 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white flex-shrink-0 flex items-center justify-center clinical-shadow">
+            <span className="material-symbols-outlined text-white text-[24px]">auto_awesome</span>
+          </div>
+          <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-6 clinical-shadow relative">
+            <div className="absolute -top-3 left-4 bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
+              {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
+            </div>
+            <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed space-y-5 mt-2">
+              <Markdown content={message.content} />
 
-      {/* Content Panel */}
-      {isUser ? (
-        <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-5 clinical-shadow relative">
-          <div className="absolute -top-3 left-4 bg-brand-accent text-white px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
-            {username}
+              {/* Badges row */}
+              {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
+                <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white">
+                  {message.citations && message.citations.length > 0 && (
+                    <button
+                      onClick={() => onCitationClick(message.citations!)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                      <span>{message.citations.length} source{message.citations.length !== 1 ? 's' : ''}</span>
+                    </button>
+                  )}
+                  {message.knowledge_path?.path && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-accent text-white border-2 border-[#1a1a1a] clinical-shadow uppercase font-code-sm">
+                      <span className="material-symbols-outlined text-[16px]">verified</span>
+                      <span>{message.knowledge_path.path === 'rag' ? 'RAG' : 'OKF'}</span>
+                    </span>
+                  )}
+                  {message.safety_flags?.medical_disclaimer && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#f0f0f0] dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white uppercase font-code-sm opacity-low">
+                      <span className="material-symbols-outlined text-[16px]">security</span>
+                      <span>Disclaimer</span>
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed mt-2 text-[16px] whitespace-pre-wrap break-words">
-            {message.content}
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-6 clinical-shadow relative">
-          <div className="absolute -top-3 left-4 bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
-            {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
-          </div>
-          <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed space-y-5 mt-2">
-            <Markdown content={message.content} />
-
-            {/* Action Row & Badges */}
-            {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
-              <div className="flex items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white">
-                {message.citations && message.citations.length > 0 && (
-                  <button
-                    onClick={() => onCitationClick(message.citations!)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">menu_book</span>
-                    <span>{message.citations.length} source{message.citations.length !== 1 ? 's' : ''}</span>
-                  </button>
-                )}
-                {message.knowledge_path?.path && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-accent text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm">
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    <span>{message.knowledge_path.path === 'rag' ? 'RAG' : 'OKF'}</span>
-                  </span>
-                )}
-                {message.safety_flags?.medical_disclaimer && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#f0f0f0] dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm opacity-low">
-                    <span className="material-symbols-outlined text-[16px]">security</span>
-                    <span>Disclaimer</span>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
@@ -655,16 +635,16 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
   return (
     <aside className={cn(
       'flex flex-col h-full bg-white dark:bg-slate-950 border-l-2 border-[#1a1a1a] dark:border-white transition-all duration-300 ease-in-out shrink-0',
-      isOpen ? 'w-96' : 'w-0 overflow-hidden'
+      isOpen ? 'w-evidence-panel-width' : 'w-0 overflow-hidden'
     )}>
       {isOpen && (
         <>
           {/* Header */}
-          <div className="px-6 py-6 border-b-2 border-[#1a1a1a] dark:border-white bg-brand-accent text-white transition-colors">
-            <div className="flex justify-between items-center mb-1">
+          <div className="px-6 py-6 border-b-2 border-[#1a1a1a] dark:border-white bg-brand-accent text-white transition-all duration-1000">
+            <div className="flex justify-between items-center mb-2">
               <h3 className="font-headline-md text-headline-md font-bold uppercase tracking-wide">Evidence & Context</h3>
-              <button onClick={onClose} className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 transition-all rounded-none border-2 border-transparent hover:border-white/30" title="Close">
-                <X size={16} />
+              <button onClick={onClose} className="text-white/70 hover:text-white hover:bg-white/10 transition-all p-1.5 border-2 border-transparent hover:border-white/30" title="Close">
+                <X size={18} />
               </button>
             </div>
             <p className="font-code-sm text-xs font-bold uppercase opacity-low">Sources, tools, and safety</p>
@@ -677,17 +657,17 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold transition-all whitespace-nowrap rounded-none border-b-4',
+                  'flex-1 flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold transition-all whitespace-nowrap',
                   tab === t.id
-                    ? 'text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 border-t-2'
-                    : 'text-[#1a1a1a]/60 dark:text-white/60 hover:text-[#1a1a1a] dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 border-transparent border-t-2 border-t-transparent'
+                    ? 'text-[#1a1a1a] dark:text-white border-b-4 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 border-t-2 border-t-[#1a1a1a] dark:border-t-white'
+                    : 'text-[#1a1a1a]/60 dark:text-white/60 hover:text-[#1a1a1a] dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 border-b-4 border-transparent border-t-2 border-t-transparent opacity-low'
                 )}
               >
                 <t.icon size={14} />
                 <span className="uppercase tracking-wider text-xs font-headline-md">{t.label}</span>
                 {t.count > 0 && (
                   <span className={cn(
-                    'px-1.5 py-0.5 text-[10px] font-bold border rounded-none',
+                    'px-1.5 py-0.5 text-[10px] font-bold border-2',
                     tab === t.id
                       ? 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white'
                       : 'bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-[#1a1a1a]/20 dark:border-white/20'
@@ -698,11 +678,11 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6 bg-[#fafafa] dark:bg-slate-950">
+          <div className="flex-1 overflow-y-auto scroll-premium p-6 space-y-6 bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
             {tab === 'sources' && (
               <>
                 {/* Titration Sandbox */}
-                <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-5 space-y-6 mb-6">
+                <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-5 space-y-6 mb-8 transition-all duration-1000">
                   <div className="flex items-center justify-between border-b-2 border-[#1a1a1a] dark:border-white/20 pb-2">
                     <h3 className="font-headline-md text-sm uppercase text-[#1a1a1a] dark:text-white">Titration Sandbox</h3>
                     <span className="material-symbols-outlined text-brand-accent">monitoring</span>
@@ -720,16 +700,16 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                         step="10"
                         value={lisinoprilDosage}
                         onChange={e => setLisinoprilDosage(Number(e.target.value))}
-                        className="w-full h-2 bg-[#f0f0f0] dark:bg-slate-800 appearance-none border-2 border-[#1a1a1a] dark:border-white accent-brand-accent cursor-pointer rounded-none"
+                        className="w-full h-2 bg-[#f0f0f0] dark:bg-slate-800 appearance-none border-2 border-[#1a1a1a] dark:border-white accent-brand-accent cursor-pointer"
                       />
                     </div>
-                    <div className="p-4 bg-[#1a1a1a] dark:bg-slate-950 text-white space-y-2 border border-transparent dark:border-white/10">
+                    <div className="p-4 bg-[#1a1a1a] dark:bg-slate-950 text-white space-y-2">
                       <p className="font-label-md text-[10px] uppercase tracking-widest opacity-70">Predicted Outcome</p>
-                      <div className="flex items-end gap-1.5 h-16 pt-2">
+                      <div className="flex items-end gap-1 h-16 pt-2">
                         <div className="flex-1 bg-brand-accent/30 border-t-2 border-brand-accent" style={{ height: '100%' }}></div>
                         <div className="flex-1 bg-brand-accent/40 border-t-2 border-brand-accent" style={{ height: `${Math.max(30, 100 - (lisinoprilDosage / 40) * 20)}%` }}></div>
                         <div className="flex-1 bg-brand-accent/60 border-t-2 border-brand-accent" style={{ height: `${Math.max(25, 100 - (lisinoprilDosage / 40) * 45)}%` }}></div>
-                        <div className="flex-1 bg-brand-accent border-t-2 border-brand-accent animate-pulse" style={{ height: `${Math.max(20, 100 - (lisinoprilDosage / 40) * 60)}%` }}></div>
+                        <div className="flex-1 bg-brand-accent border-t-2 border-brand-accent" style={{ height: `${Math.max(20, 100 - (lisinoprilDosage / 40) * 60)}%` }}></div>
                       </div>
                       <div className="flex justify-between font-code-sm text-[12px] font-bold">
                         <span>{145 - Math.round((lisinoprilDosage / 40) * 19)}/{92 - Math.round((lisinoprilDosage / 40) * 12)}</span>
@@ -750,11 +730,11 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               toolTrace.length === 0 ? (
                 <EmptyEvidence icon={Zap} title="No tools used" subtitle="Tools will appear here if the agent called them" />
               ) : toolTrace.map((t, i) => (
-                  <div key={i} className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white p-3.5 space-y-2.5 rounded-none">
+                <div key={i} className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center border border-[#1a1a1a]/10 dark:border-white/10 rounded-none">
-                          <Zap size={13} className="text-amber-600 dark:text-amber-400" />
-                        </div>
+                    <div className="w-7 h-7 bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20">
+                      <Zap size={13} className="text-amber-600 dark:text-amber-400" />
+                    </div>
                     <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">{t.name}</p>
                     {typeof t.duration_ms === 'number' && (
                       <span className="ml-auto text-[11px] text-gray-400 dark:text-slate-500 font-mono">{t.duration_ms}ms</span>
@@ -763,7 +743,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   {(t.input_summary || t.inputs) && (
                     <div>
                       <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Input</p>
-                        <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-950/60 border-2 border-[#1a1a1a] dark:border-white p-2.5 overflow-x-auto whitespace-pre-wrap break-all rounded-none">
+                      <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-950/60 border-2 border-[#1a1a1a] dark:border-white p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
                         {t.input_summary || JSON.stringify(t.inputs, null, 2)}
                       </pre>
                     </div>
@@ -771,7 +751,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   {(t.output_summary || t.output !== undefined) && (
                     <div>
                       <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1.5">Output</p>
-                        <pre className="text-[11.5px] leading-relaxed text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-200 dark:border-emerald-500/20 p-2.5 overflow-x-auto whitespace-pre-wrap break-all rounded-none">
+                      <pre className="text-[11.5px] leading-relaxed text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-200 dark:border-emerald-500/20 p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
                         {t.output_summary || JSON.stringify(t.output, null, 2)}
                       </pre>
                     </div>
@@ -780,9 +760,9 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               ))
             )}
             {tab === 'safety' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className={cn(
-                    'flex items-start gap-3 p-3.5 border-2 border-[#1a1a1a] dark:border-white rounded-none',
+                  'flex items-start gap-3 p-4 border-2 border-[#1a1a1a] dark:border-white clinical-shadow',
                   safetyFlags?.unsupported_claims_detected
                     ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
                     : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
@@ -805,7 +785,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                   </div>
                 </div>
                 {safetyFlags?.medical_disclaimer && (
-                  <div className="flex items-start gap-3 p-3.5 bg-stone-50 dark:bg-slate-900 border border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
+                  <div className="flex items-start gap-3 p-4 bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
                     <Info size={18} className="text-brand-accent shrink-0 mt-0.5" />
                     <div>
                       <p className="text-[13px] font-semibold text-brand-accent">Medical Disclaimer</p>
@@ -819,12 +799,12 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
               </div>
             )}
             {tab === 'knowledge' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {knowledgePath ? (
                   <>
-                    <div className="bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white rounded-none p-3.5 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
+                    <div className="bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
+                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20">
                           <Network size={13} className="text-brand-accent" />
                         </div>
                         <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">Knowledge Path</p>
@@ -844,9 +824,9 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                         {knowledgePath.okf_concepts.map((c, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 rounded-none mb-1.5 transition-all"
+                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 mb-1.5 transition-all"
                           >
-                            <div className="w-7 h-7 bg-brand-accent/10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a]/20 dark:border-white/20 rounded-none">
+                            <div className="w-7 h-7 bg-brand-accent/10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a]/20 dark:border-white/20">
                               <Brain size={12} className="text-brand-accent" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -854,8 +834,8 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                               <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-mono truncate">{c.source_path}</p>
                             </div>
                             <div className="shrink-0 w-16">
-                              <div className="w-full h-1.5 bg-gray-200 dark:bg-slate-800 rounded-none overflow-hidden">
-                                <div className="h-full bg-brand-accent rounded-none transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
+                              <div className="w-full h-1.5 bg-gray-200 dark:bg-slate-800 overflow-hidden">
+                                <div className="h-full bg-brand-accent transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
                               </div>
                               <p className="text-[10px] text-gray-500 dark:text-slate-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
                             </div>
@@ -879,7 +859,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
 function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title: string; subtitle?: string }) {
   return (
     <div className="text-center py-12">
-      <div className="w-12 h-12 bg-gray-100 dark:bg-slate-800/60 mx-auto mb-3 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white rounded-none">
+      <div className="w-12 h-12 bg-gray-100 dark:bg-slate-800/60 mx-auto mb-3 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white">
         <Icon size={20} className="text-gray-300 dark:text-slate-600" />
       </div>
       <p className="text-gray-700 dark:text-slate-300 text-[13px] font-medium">{title}</p>
@@ -1662,46 +1642,44 @@ export default function App() {
       />
 
       {/* Main Chat Area */}
-      <main className="flex flex-col flex-1 min-w-0 relative">
+      <main className="flex flex-col flex-1 min-w-0 relative bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
         {/* Header */}
-        <header className="flex items-center gap-2 px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-10">
-          {!canCollapseLeft && (
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all rounded-none border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
-              title="Open sidebar"
-            >
-              <PanelLeft size={16} />
-            </button>
-          )}
-          <div className="flex-1 min-w-0 flex items-center gap-2.5">
+        <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
+          <div className="flex items-center gap-3 min-w-0">
+            {!canCollapseLeft && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
+                title="Open sidebar"
+              >
+                <PanelLeft size={16} />
+              </button>
+            )}
             <div className={cn(
-              'w-7 h-7 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a] dark:border-white rounded-none',
-              isClinicianMode
-                ? 'bg-slate-900'
-                : 'bg-brand-accent'
+              'w-10 h-10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a] dark:border-white clinical-shadow',
+              isClinicianMode ? 'bg-slate-900' : 'bg-brand-accent'
             )}>
-              <Stethoscope size={13} className="text-white" />
+              <Stethoscope size={18} className="text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-gray-900 dark:text-slate-100 font-semibold text-[13.5px] truncate tracking-tight">
+              <h2 className="font-headline-md text-headline-md font-bold truncate max-w-md text-[#1a1a1a] dark:text-white">
                 {currentConv?.title || 'Clinical Workflows'}
               </h2>
-              <p className="text-[10.5px] text-gray-500 dark:text-slate-400 truncate flex items-center gap-1.5">
-                <span className={cn('w-1.5 h-1.5 rounded-none', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent animate-pulse')} />
+              <p className="font-code-sm text-body-sm text-[#1a1a1a]/70 dark:text-white/70 flex items-center gap-1 uppercase tracking-wider mt-1 opacity-low">
+                <span className={cn('w-2 h-2', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent')}></span>
                 {isClinicianMode ? 'Clinician mode · Workstation' : 'Patient mode · Hypertension AI'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-4">
             {/* Pressure Relief Toggle */}
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "relief-toggle-btn relative flex items-center gap-1.5 px-3 py-1.5 border-2 transition-all font-semibold text-[11px] uppercase tracking-wider overflow-hidden rounded-none",
+                "relief-toggle-btn relative flex items-center gap-2 px-4 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden",
                 isReliefMode 
-                  ? "bg-[#008080] text-white shadow-none"
-                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                  ? "bg-[#008080] text-white shadow-none border-[#008080]"
+                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
               )}
             >
               {isReliefMode && (
@@ -1713,30 +1691,30 @@ export default function App() {
                   </span>
                 </>
               )}
-              <span className="material-symbols-outlined text-[15px] relative">{isReliefMode ? 'spa' : 'air'}</span>
-              <span className="relative">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
+              <span className="material-symbols-outlined text-[20px] relative">{isReliefMode ? 'spa' : 'air'}</span>
+              <span className="relative font-label-md">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
             </button>
 
             <ThemeToggle />
             <select
               value={caseId}
               onChange={e => setCaseId(e.target.value)}
-              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 rounded-none px-2.5 py-1.5 focus:outline-none transition-all max-w-[180px] shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] font-bold uppercase"
+              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none transition-all max-w-[200px] clinical-shadow font-code-sm uppercase font-bold text-[#1a1a1a] dark:text-white"
             >
               {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
-            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 rounded-none shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff]">
+            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow">
               {(['patient', 'clinician'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    'px-3 py-1.5 text-[11.5px] font-bold transition-all uppercase',
+                    'px-4 py-1.5 text-sm font-label-md transition-all uppercase',
                     mode === m
                       ? isClinicianMode
-                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-none'
-                        : 'bg-brand-accent text-white shadow-none'
-                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                        : 'bg-brand-accent text-white'
+                      : 'text-[#1a1a1a]/70 dark:text-white/70 hover:text-[#1a1a1a] dark:hover:text-white opacity-low'
                   )}
                 >
                   {m}
@@ -1746,24 +1724,37 @@ export default function App() {
             <button
               onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
               className={cn(
-                'p-2 rounded-none border-2 border-[#1a1a1a] dark:border-white transition-all',
+                'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white transition-all',
                 evidencePanelOpen
                   ? 'bg-brand-accent text-white shadow-none'
-                  : 'bg-white dark:bg-slate-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shadow-[2px_2px_0px_0px_#1a1a1a] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none'
+                  : 'bg-white dark:bg-slate-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none opacity-low'
               )}
               title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
             >
-              <BarChart3 size={15} />
+              <BarChart3 size={18} />
             </button>
           </div>
         </header>
 
+        {/* Mobile header */}
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setSidebarOpen(true)} className="text-[#1a1a1a] dark:text-white">
+              <PanelLeft size={20} />
+            </button>
+            <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white uppercase">Clinical Workflows</span>
+          </div>
+          <button onClick={() => setEvidencePanelOpen(!evidencePanelOpen)} className="text-[#1a1a1a] dark:text-white">
+            <Info size={18} />
+          </button>
+        </header>
+
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
           {messages.length === 0 ? (
             <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
           ) : (
-            <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 max-w-4xl mx-auto">
+            <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto pb-32 animate-message transition-all duration-1000">
               {messages.map(msg => (
                 <MessageBubble
                   key={msg.id}
@@ -1780,54 +1771,55 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="px-4 sm:px-6 pb-4 pt-2 bg-white dark:bg-slate-950/90 shrink-0">
-          <div className="max-w-4xl mx-auto">
+        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-6 pb-6 px-4 md:px-8 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
+          <div className="max-w-3xl mx-auto">
             <div className={cn(
-              'relative flex items-end gap-2 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 transition-all rounded-none',
-              'shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]',
+              'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 pr-4 flex items-end gap-2 clinical-shadow',
             )}>
               <textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={handleInput}
                 onKeyDown={handleKeyDown}
-                placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION MANAGEMENT…'}
+                placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION…'}
                 rows={1}
-                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-[14px] font-bold uppercase tracking-wide resize-none focus:outline-none focus:ring-0 leading-relaxed px-2 py-2 min-h-[36px] max-h-[200px]"
+                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-[16px] font-bold resize-none focus:outline-none focus:ring-0 leading-relaxed px-3 py-3 min-h-[52px] max-h-32 scrollbar-thin"
               />
-              <button
-                onClick={() => setIsProfileModalOpen(true)}
-                className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-2 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white rounded-none shrink-0"
-                title="Upload documents"
-              >
-                <span className="material-symbols-outlined text-[22px]">add_circle</span>
-              </button>
-              <button
-                onClick={handleSend}
-                disabled={!inputValue.trim() || isLoading}
-                className={cn(
-                  'shrink-0 h-9 px-4 rounded-none font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all border-2 border-clinical-black dark:border-white',
-                  inputValue.trim() && !isLoading
-                    ? 'shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none bg-[#1a1a1a] hover:bg-brand-accent dark:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
-                    : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 cursor-not-allowed'
-                )}
-              >
-                {isLoading ? <Spinner size="sm" /> : (
-                  <>
-                    <Send size={13} />
-                    <span>Send</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2 pb-1">
+                <button
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-2 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white brutalist-button shrink-0"
+                  title="Upload documents"
+                >
+                  <span className="material-symbols-outlined text-[24px]">add_circle</span>
+                </button>
+                <button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || isLoading}
+                  className={cn(
+                    'shrink-0 h-10 px-6 font-label-md text-xs uppercase tracking-wider flex items-center gap-2 transition-all border-2 border-clinical-black dark:border-white brutalist-button',
+                    inputValue.trim() && !isLoading
+                      ? 'bg-[#1a1a1a] dark:bg-brand-accent hover:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 cursor-not-allowed'
+                  )}
+                >
+                  {isLoading ? <Spinner size="sm" /> : (
+                    <>
+                      <Send size={16} />
+                      <span>Send</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="flex items-center justify-between mt-2.5 px-1">
-              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 flex items-center gap-1.5">
+            <div className="flex items-center justify-between mt-4 px-2">
+              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low flex items-center gap-1.5">
                 <Kbd>Enter</Kbd> send
                 <span className="text-gray-300 dark:text-slate-700">·</span>
                 <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> new line
               </p>
-              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 inline-flex items-center gap-1">
-                <Shield size={10} /> Educational purposes only
+              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low inline-flex items-center gap-1.5 bg-yellow-200 dark:bg-yellow-900/60 px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
+                <Shield size={12} /> Educational purposes only
               </p>
             </div>
           </div>

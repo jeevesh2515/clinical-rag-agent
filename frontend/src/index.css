@@ -178,17 +178,61 @@
   will-change: transform;
 }
 
-/* User-supplied theme definitions */
-.brutal-border {
+/* ─── Clinical Shadow (Base + Relief) ──────────── */
+.clinical-shadow {
+  box-shadow: 4px 4px 0px 0px #1a1a1a;
+  transition: all 200ms ease;
+}
+.dark .clinical-shadow {
+  box-shadow: 4px 4px 0px 0px #ffffff;
+}
+
+/* ─── Brutalist Design System ─────────────────── */
+.brutalist-border {
   border: 2px solid #1a1a1a;
 }
-.dark .brutal-border {
+.dark .brutalist-border {
   border: 2px solid #ffffff;
 }
 
+.brutalist-divider {
+  border-right: 2px solid #1a1a1a;
+}
+.dark .brutalist-divider {
+  border-right-color: #ffffff;
+}
+
+.brutalist-button {
+  border: 2px solid #1a1a1a;
+  box-shadow: 2px 2px 0px 0px #1a1a1a;
+  transition: all 200ms ease;
+}
+.dark .brutalist-button {
+  border-color: #ffffff;
+  box-shadow: 2px 2px 0px 0px #ffffff;
+}
+.brutalist-button:active {
+  box-shadow: 0px 0px 0px 0px #1a1a1a;
+  transform: translate(2px, 2px);
+}
+.dark .brutalist-button:active {
+  box-shadow: 0px 0px 0px 0px #ffffff;
+}
+
+.brutalist-input {
+  border: 2px solid #1a1a1a;
+}
+.dark .brutalist-input {
+  border-color: #ffffff;
+}
+
+/* ─── Legacy aliases (backward compat) ────────── */
+.brutal-border { border: 2px solid #1a1a1a; }
+.dark .brutal-border { border: 2px solid #ffffff; }
+
 .brutal-shadow {
   box-shadow: 4px 4px 0px 0px #1a1a1a;
-  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+  transition: all 200ms ease;
 }
 .dark .brutal-shadow {
   box-shadow: 4px 4px 0px 0px #ffffff;
@@ -196,7 +240,7 @@
 
 .brutal-shadow-sm {
   box-shadow: 2px 2px 0px 0px #1a1a1a;
-  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+  transition: all 200ms ease;
 }
 .dark .brutal-shadow-sm {
   box-shadow: 2px 2px 0px 0px #ffffff;
@@ -257,11 +301,29 @@
   border-top-color: #ffffff;
 }
 
+/* ─── 1000ms transition utility ───────────────── */
+.transition-1000 {
+  transition: all 1000ms ease !important;
+}
+
 /* ─── Pressure Relief Mode ───────────────────────
  *  Toggled via js — softens all brutalist edges,
  *  swaps brand-accent to teal, adds glassmorphism.
  * ─────────────────────────────────────────────── */
-.relief-mode .clinical-shadow {
+.relief-mode .clinical-shadow,
+.relief-mode .brutal-shadow,
+.relief-mode .brutal-shadow-sm,
+.relief-mode .brutalist-button,
+.relief-mode .shadow-\[4px_4px_0px_0px_\#1a1a1a\],
+.relief-mode .shadow-\[2px_2px_0px_0px_\#1a1a1a\],
+.relief-mode .shadow-\[4px_4px_0px_0px_rgba\(26\,26\,26\,1\)\],
+.relief-mode .shadow-\[2px_2px_0px_0px_rgba\(26\,26\,26\,1\)\] {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+.dark.relief-mode .clinical-shadow,
+.dark.relief-mode .brutal-shadow,
+.dark.relief-mode .brutal-shadow-sm,
+.dark.relief-mode .brutalist-button {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -276,34 +338,31 @@
 .dark.relief-mode .bg-\[#fafafa\],
 .dark.relief-mode .bg-\[#f0f0f0\],
 .dark.relief-mode .bg-slate-900,
+.dark.relief-mode .bg-slate-950,
 .dark.relief-mode .bg-gray-950 {
   background-color: rgba(15, 23, 42, 0.7) !important;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
 
-.relief-mode .neo-brutal-shadow,
-.relief-mode .brutal-shadow,
-.relief-mode .brutal-shadow-sm,
-.relief-mode .shadow-\[4px_4px_0px_0px_\#1a1a1a\],
-.relief-mode .shadow-\[2px_2px_0px_0px_\#1a1a1a\],
-.relief-mode .shadow-\[4px_4px_0px_0px_rgba\(26\,26\,26\,1\)\],
-.relief-mode .shadow-\[2px_2px_0px_0px_rgba\(26\,26\,26\,1\)\] {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
-}
-
 .relief-mode .border-2,
 .relief-mode .border-4,
-.relief-mode .brutal-border,
-.relief-mode .neo-brutal-shadow {
+.relief-mode .brutalist-border,
+.relief-mode .brutal-border {
   border-radius: 32px !important;
   border-width: 1px !important;
   border-color: rgba(26, 26, 26, 0.1) !important;
 }
 .dark.relief-mode .border-2,
 .dark.relief-mode .border-4,
+.dark.relief-mode .brutalist-border,
 .dark.relief-mode .brutal-border {
   border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.relief-mode .brutalist-divider {
+  border-right-width: 1px !important;
+  border-right-color: rgba(26, 26, 26, 0.1) !important;
 }
 
 .relief-mode .rounded-none,
@@ -324,7 +383,8 @@
 }
 
 .relief-mode .brutal-button:active,
-.relief-mode .neo-brutal-btn:active {
+.relief-mode .neo-brutal-btn:active,
+.relief-mode .brutalist-button:active {
   transform: translate(0, 0) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
 }
@@ -354,10 +414,15 @@
 .relief-mode .accent-brand-accent {
   accent-color: #008080 !important;
 }
+.relief-mode .ring-brand-accent {
+  --tw-ring-color: #008080 !important;
+}
 
 .relief-mode .opacity-low {
   opacity: 0.6;
 }
+
+
 
 /* ─── Custom thin scrollbar (premium) ─────────── */
 .scroll-premium::-webkit-scrollbar { width: 6px; height: 6px; }

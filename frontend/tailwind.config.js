@@ -76,6 +76,9 @@ export default {
         'gutter': '1.5rem',
         'component-gap': '0.5rem',
         'container-padding': '2rem',
+        'sidebar-width': '280px',
+        'evidence-panel-width': '320px',
+        'stack-gap': '1rem',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

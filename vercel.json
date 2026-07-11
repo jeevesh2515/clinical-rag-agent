@@ -43,7 +43,7 @@
   "crons": [
     {
       "path": "/api/warmup",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 8 * * *"
     }
   ],
   "env": {

@@ -19,6 +19,9 @@ dist/
 !frontend/dist/
 build/
 
+# Alembic cache
+app/db/migrations/versions/__pycache__/
+
 # Local OS/editor files
 .DS_Store
 

@@ -1,9 +1,16 @@
 import { useState } from 'react'
-import { Eye, EyeOff, AlertCircle, ArrowRight, Stethoscope, Check } from 'lucide-react'
+import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, Stethoscope, Heart, Activity, Shield, Brain } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 import ThemeToggle from './ThemeToggle'
-import { Button, cn } from './ui/primitives'
 
 const API_BASE = ''
+
+const FEATURES = [
+  { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600 dark:text-rose-400' },
+  { icon: Activity, text: 'Hypertension management', color: 'text-emerald-600 dark:text-emerald-400' },
+  { icon: Shield, text: 'Safety-first AI', color: 'text-brand-accent' },
+  { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-600 dark:text-violet-400' },
+]
 
 interface SignupPageProps {
   onSignup: (token: string) => Promise<void>
@@ -11,14 +18,8 @@ interface SignupPageProps {
   onBackToHome?: () => void
 }
 
-const ROLES = [
-  { id: 'patient',           label: 'Patient',          desc: 'Personal questions and guidance' },
-  { id: 'clinician',         label: 'Clinician',        desc: 'Care-team summaries and citations' },
-  { id: 'care_coordinator',  label: 'Care coordinator', desc: 'Operations and follow-ups' },
-  { id: 'admin',             label: 'Admin',            desc: 'System and audit control' },
-] as const
-
 export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: SignupPageProps) {
+  const { theme } = useTheme()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,7 +28,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [role, setRole] = useState<typeof ROLES[number]['id']>('patient')
+  const [role, setRole] = useState<'patient' | 'clinician' | 'admin' | 'care_coordinator'>('patient')
 
   const passwordChecks = {
     length: password.length >= 8,
@@ -36,13 +37,24 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
     number: /[0-9]/.test(password),
     match: password && confirmPassword && password === confirmPassword,
   }
+
   const strength = Object.values(passwordChecks).filter(Boolean).length
+  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'][strength]
+  const strengthColor = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-emerald-500'][strength]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (password !== confirmPassword) { setError('Passwords do not match'); return }
-    if (password.length < 8) { setError('Password must be at least 8 characters'); return }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -53,9 +65,15 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
       })
       if (!res.ok) {
         let detail = 'Registration failed'
-        try { const err = await res.json(); detail = err.detail || detail } catch { /* */ }
+        try {
+          const err = await res.json()
+          detail = err.detail || detail
+        } catch {
+          detail = `Registration failed: HTTP ${res.status} ${res.statusText || ''}`
+        }
         throw new Error(detail)
       }
+
       const loginRes = await fetch(`${API_BASE}/api/auth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -73,221 +91,217 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
   }
 
   return (
-    <div className="min-h-screen flex bg-ink-50 dark:bg-ink-950 text-ink-900 dark:text-white font-sans">
-      {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-calm-500 via-calm-600 to-ink-900" />
-        <div className="absolute inset-0 bg-mesh-brand opacity-50" />
-        <div className="absolute inset-0 bg-grid-soft-dark [background-size:32px_32px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_60%)] opacity-30" />
-
-        <div className="relative z-10 flex flex-col justify-between px-12 py-12 w-full">
-          <button onClick={onBackToHome} className="flex items-center gap-2.5 group w-fit">
-            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/20 group-hover:bg-white/25 transition-all">
-              <Stethoscope size={18} className="text-white" />
+    <div className="min-h-screen flex bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md transition-colors duration-300">
+      {/* Left - Brand Side */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-880 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
+        <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
+          <button 
+            onClick={onBackToHome}
+            className="flex items-center gap-4 mb-8 text-left focus:outline-none hover:opacity-80 transition-all w-fit"
+          >
+            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white neo-brutal-shadow-sm font-bold animate-pulse-slow">
+              <Stethoscope size={22} className="text-white" />
             </div>
-            <span className="font-display text-base font-bold text-white tracking-tight">CardioCompass</span>
+            <span className="text-clinical-black dark:text-white font-headline-md text-headline-md font-bold tracking-tight uppercase">Clinical Workflows</span>
           </button>
-
-          <div className="space-y-8 max-w-md">
-            <div>
-              <h1 className="font-display text-4xl xl:text-5xl font-bold text-white leading-[1.05] tracking-tight">
-                Start your
-                <br />
-                <span className="text-white/80">clinical journey.</span>
-              </h1>
-              <p className="mt-4 text-white/80 leading-relaxed">
-                Create an account to access grounded hypertension answers with citations you can verify.
-              </p>
-            </div>
-
-            <div className="space-y-2.5">
-              {[
-                'Cited answers, no hallucinated doses',
-                'OKF + RAG hybrid retrieval',
-                'Pressure Relief mode for acute stress',
-                'Personal documents and case context',
-              ].map((b) => (
-                <div key={b} className="flex items-center gap-3 text-white/85">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                    <Check size={12} className="text-white" />
-                  </div>
-                  <span className="text-sm">{b}</span>
+          
+          <h1 className="font-headline-xl text-[48px] font-black text-clinical-black dark:text-white leading-tight uppercase mb-6">
+            Start Your<br />Clinical Journey
+          </h1>
+          
+          <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 leading-relaxed mb-12 border-l-4 border-outline-variant dark:border-slate-700 pl-6">
+            Create an account to access the precision clinical hybrid retrieval engine with grounded guidelines.
+          </p>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {FEATURES.map((f, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow-sm dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)]">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                  <f.icon size={20} className={f.color} />
                 </div>
-              ))}
-            </div>
+                <span className="text-clinical-black dark:text-white font-bold text-xs uppercase tracking-wide">{f.text}</span>
+              </div>
+            ))}
           </div>
-
-          <p className="text-xs text-white/60">Educational use only · Not a substitute for clinical care.</p>
+          
+          <div className="mt-16">
+            <p className="text-on-surface-variant dark:text-slate-500 font-code-sm text-[10px] uppercase font-bold">For educational purposes only. Not for clinical use.</p>
+          </div>
         </div>
       </div>
 
-      {/* Right form */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        <div className="flex items-center justify-between p-6 lg:p-8">
+      {/* Right - Form Side */}
+      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 overflow-y-auto transition-colors duration-300 relative pt-20">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
           <button
             onClick={onBackToHome}
-            className="text-sm text-ink-500 hover:text-ink-900 dark:text-ink-400 dark:hover:text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
           >
-            ← Back home
+            ← Back to Home
           </button>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-clinical-black dark:text-white font-code-sm font-bold uppercase select-none">
+              {theme === 'dark' ? 'Dark' : 'Light'}
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-6 lg:p-8">
-          <div className="w-full max-w-md">
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-ink-900 dark:text-white tracking-tight">
-              Create your account
-            </h2>
-            <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">
-              Free during the open beta. Educational use only.
-            </p>
-
-            <form onSubmit={handleSubmit} className="mt-7 space-y-4">
-              {/* Role selector */}
-              <div>
-                <label className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-2">
-                  I am a&hellip;
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {ROLES.map((r) => {
-                    const selected = r.id === role
-                    return (
-                      <button
-                        type="button"
-                        key={r.id}
-                        onClick={() => setRole(r.id)}
-                        className={cn(
-                          'text-left p-3 rounded-xl border transition-all duration-200',
-                          selected
-                            ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 dark:border-brand-500/50'
-                            : 'border-ink-200 dark:border-ink-800 hover:border-ink-300 dark:hover:border-ink-700 hover:bg-ink-50 dark:hover:bg-ink-900/50'
-                        )}
-                      >
-                        <p className={cn('text-sm font-semibold', selected ? 'text-brand-700 dark:text-brand-300' : 'text-ink-900 dark:text-white')}>
-                          {r.label}
-                        </p>
-                        <p className="text-[11px] text-ink-500 dark:text-ink-400 mt-0.5">{r.desc}</p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-1.5">Username</label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    placeholder="Choose a username"
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-1.5">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="you@example.com"
-                    className="input"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-1.5">Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="At least 8 characters"
-                    className="input pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-ink-400 hover:text-ink-700 dark:hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                {password && (
-                  <div className="mt-2 flex gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          'h-1 flex-1 rounded-full transition-all duration-300',
-                          strength >= i * 1.25
-                            ? strength >= 4
-                              ? 'bg-emerald-500'
-                              : strength >= 3
-                              ? 'bg-amber-500'
-                              : 'bg-rose-500'
-                            : 'bg-ink-200 dark:bg-ink-800'
-                        )}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-1.5">Confirm password</label>
-                <div className="relative">
-                  <input
-                    type={showConfirm ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    placeholder="Repeat your password"
-                    className="input pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-ink-400 hover:text-ink-700 dark:hover:text-white transition-colors"
-                  >
-                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 animate-fade-up">
-                  <AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                fullWidth
-                loading={isLoading}
-                iconRight={!isLoading && <ArrowRight size={16} />}
-              >
-                {isLoading ? 'Creating account…' : 'Create account'}
-              </Button>
-            </form>
-
-            <p className="mt-6 text-center text-sm text-ink-500 dark:text-ink-400">
-              Already have an account?{' '}
-              <button
-                onClick={onSwitchToLogin}
-                className="text-brand-500 hover:text-brand-600 font-semibold transition-colors"
-              >
-                Sign in
-              </button>
-            </p>
+        <div className="w-full max-w-md border-4 border-clinical-black dark:border-white p-8 bg-white dark:bg-slate-900 my-8 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-colors duration-300">
+          <div className="mb-6">
+            <h2 className="font-headline-xl text-headline-xl font-black text-clinical-black dark:text-white uppercase">Create Account</h2>
+            <p className="text-on-surface-variant dark:text-slate-400 text-xs font-bold font-code-sm uppercase mt-1">Get started with a custom clinical account</p>
           </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
+                Account Scope / Role
+              </label>
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value as any)}
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
+              >
+                <option value="patient">Patient (Normal User)</option>
+                <option value="clinician">Clinician (Medical Staff)</option>
+                <option value="admin">Administrator (System Control)</option>
+                <option value="care_coordinator">Care Coordinator (Operations)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+                placeholder="Choose a username"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-955 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                placeholder="Enter your email"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-955 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="Create a password"
+                  className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-955 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder="Repeat your password"
+                  className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-955 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                >
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {password && (
+              <div className="p-3 bg-stone-50 dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold font-code-sm uppercase">
+                  <span>Strength: {strengthLabel}</span>
+                  <div className="w-24 h-2 bg-stone-200 dark:bg-slate-800 border border-clinical-black dark:border-slate-700 flex">
+                    <div className={`h-full ${strengthColor}`} style={{ width: `${(strength / 5) * 100}%` }} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-code-sm uppercase font-bold text-clinical-black/70 dark:text-slate-400">
+                  <div className="flex items-center gap-1">
+                    {passwordChecks.length ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                    <span>Min 8 chars</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {passwordChecks.upper ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                    <span>1 Upper</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {passwordChecks.lower ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                    <span>1 Lower</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {passwordChecks.number ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                    <span>1 Number</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 dark:bg-rose-955/30 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold text-xs uppercase animate-fade-in-up">
+                <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+                <p>{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white neo-brutal-shadow dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] neo-brutal-btn uppercase font-bold tracking-wider hover:bg-brand-accent/90 transition-all flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <><Loader2 size={16} className="animate-spin" /> Registering&hellip;</>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-xs font-bold text-on-surface-variant dark:text-slate-400 font-code-sm uppercase">
+            Already have an account?{' '}
+            <button
+              onClick={onSwitchToLogin}
+              className="font-bold text-brand-accent hover:underline hover:text-brand-accent/80 transition-colors"
+            >
+              Sign in
+            </button>
+          </p>
         </div>
       </div>
     </div>

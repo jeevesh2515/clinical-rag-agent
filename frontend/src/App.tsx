@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import {
   Plus, MessageSquare, LogOut,
   Send, Activity, BookOpen, Shield, Zap, Brain, Heart,
@@ -2145,6 +2146,7 @@ export default function App() {
         onUpdateUser={(updated) => setUser(updated)}
         onChatAboutDoc={handleChatAboutDoc}
       />
+      <SpeedInsights />
     </div>
   )
 }

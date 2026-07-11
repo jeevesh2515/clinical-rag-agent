@@ -1658,6 +1658,7 @@ function BreathingShader() {
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [page, setPage] = useState<'landing' | 'login' | 'signup'>('landing')
+  const [isRestoringSession, setIsRestoringSession] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [evidencePanelOpen, setEvidencePanelOpen] = useState(false)
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
@@ -1711,7 +1712,28 @@ export default function App() {
           const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
           setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
         })
-        .catch(() => localStorage.removeItem('cw_token'))
+        .catch(() => {
+          // Token may be expired or this is a cold start — retry once
+          setTimeout(() => {
+            api.getCurrentUser()
+              .then(u => {
+                setUser(u)
+                const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
+                setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+              })
+              .catch(() => {
+                localStorage.removeItem('cw_token')
+                localStorage.removeItem('cw_remember')
+              })
+              .finally(() => setIsRestoringSession(false))
+          }, 1500)
+        })
+        .finally(() => {
+          // Mark done after initial attempt too (but retry may still finish)
+          setTimeout(() => setIsRestoringSession(false), 2000)
+        })
+    } else {
+      setIsRestoringSession(false)
     }
   }, [])
 
@@ -1735,6 +1757,7 @@ export default function App() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, isLoading])
 
   const handleLogin = async (token: string) => {
+    localStorage.setItem('cw_token', token)
     api.setToken(token)
     try {
       const u = await api.getCurrentUser()
@@ -1747,6 +1770,7 @@ export default function App() {
   }
 
   const handleSignup = async (token: string) => {
+    localStorage.setItem('cw_token', token)
     api.setToken(token)
     try {
       const u = await api.getCurrentUser()
@@ -1855,6 +1879,20 @@ export default function App() {
   const isClinicianMode = mode === 'clinician'
 
   if (!user) {
+    if (isRestoringSession) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-[#1a1a1a] dark:border-white bg-brand-accent flex items-center justify-center animate-pulse">
+              <Stethoscope size={20} className="text-white" />
+            </div>
+            <p className="text-sm font-bold text-[#1a1a1a] dark:text-white uppercase tracking-wider animate-pulse">
+              Restoring session&hellip;
+            </p>
+          </div>
+        </div>
+      )
+    }
     if (page === 'landing') {
       return <LandingPage onLogin={() => setPage('login')} onRegister={() => setPage('signup')} />
     }

@@ -49,10 +49,12 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
         throw new Error(detail)
       }
       const data = await res.json()
+      localStorage.setItem('cw_token', data.access_token)
       if (rememberMe) {
-        localStorage.setItem('cw_token', data.access_token)
+        // Persistent session — stored for 30 days (token expiry)
+        localStorage.setItem('cw_remember', 'true')
       } else {
-        sessionStorage.setItem('cw_token', data.access_token)
+        localStorage.removeItem('cw_remember')
       }
       await onLogin(data.access_token)
     } catch (err) {

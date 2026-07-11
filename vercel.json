@@ -40,6 +40,12 @@
       "dest": "frontend/dist/index.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/warmup",
+      "schedule": "*/5 * * * *"
+    }
+  ],
   "env": {
     "CORS_ORIGINS": "https://clinical-workflows.vercel.app,https://clinical-workflows-*.vercel.app"
   }

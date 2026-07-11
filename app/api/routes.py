@@ -32,6 +32,16 @@ def request_id_from(request: Request) -> str | None:
     return getattr(request.state, "request_id", None)
 
 
+@router.get("/warmup", tags=["system"])
+async def warmup(request: Request):
+    """Vercel CRON keep-warm endpoint.
+
+    Pinging this periodically keeps the serverless function from cold-starting
+    as often, which means the SQLite database stays alive longer.
+    """
+    return {"status": "warm", "request_id": request_id_from(request)}
+
+
 @router.get("/health", tags=["system"])
 def health(
     request: Request,

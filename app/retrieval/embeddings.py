@@ -17,19 +17,25 @@ class EmbeddingClient:
             except Exception:
                 self._cohere = None
 
+    _COHERE_BATCH_SIZE = 96  # Cohere API limit per request
+
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         if self._cohere:
-            response = cast(
-                Any,
-                self._cohere.embed(
-                    texts=texts,
-                    model=self.settings.embedding_model,
-                    input_type="search_document",
-                    embedding_types=["float"],
-                    output_dimension=self.settings.embedding_dim,
-                ),
-            )
-            return [list(item) for item in response.embeddings.float]
+            all_embeddings: list[list[float]] = []
+            for i in range(0, len(texts), self._COHERE_BATCH_SIZE):
+                batch = texts[i : i + self._COHERE_BATCH_SIZE]
+                response = cast(
+                    Any,
+                    self._cohere.embed(
+                        texts=batch,
+                        model=self.settings.embedding_model,
+                        input_type="search_document",
+                        embedding_types=["float"],
+                        output_dimension=self.settings.embedding_dim,
+                    ),
+                )
+                all_embeddings.extend(list(item) for item in response.embeddings.float)
+            return all_embeddings
         return [deterministic_embedding(text, self.settings.embedding_dim) for text in texts]
 
     def embed_query(self, text: str) -> list[float]:

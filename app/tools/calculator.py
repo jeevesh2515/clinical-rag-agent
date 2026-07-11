@@ -59,6 +59,28 @@ def calculate_pulse_pressure(question: str) -> str | None:
     return f"Pulse Pressure = {pp:.0f} mmHg"
 
 
+def _ckd_epi(scr: float, age: float, female: bool) -> float:
+    """Compute eGFR using the CKD-EPI 2009 formula.
+
+    scr must be in mg/dL.
+    """
+    if female:
+        kappa = 0.7
+        alpha = -0.329
+        sex_factor = 1.018
+    else:
+        kappa = 0.9
+        alpha = -0.411
+        sex_factor = 1.0
+
+    ratio = scr / kappa
+    if ratio <= 1:
+        egfr = 141 * (ratio ** alpha) * (0.993 ** age) * sex_factor
+    else:
+        egfr = 141 * (ratio ** -1.209) * (0.993 ** age) * sex_factor
+    return round(egfr, 1)
+
+
 def calculate_egfr(question: str) -> str | None:
     creat_m = re.search(
         r"(\d+(?:\.\d+)?)\s*(mg/dL|mg/dl|umol/L|umol/l|µmol/L)",
@@ -69,17 +91,21 @@ def calculate_egfr(question: str) -> str | None:
         return None
     raw = float(creat_m.group(1))
     unit = creat_m.group(2)
+    # Convert to mg/dL if needed
     if "mg" in unit:
         if raw < 0.2 or raw > 50:
             return None
+        scr_mgdl = raw
     else:
         if raw < 18 or raw > 4420:
             return None
-    age_m = re.search(r"(\d+)\s*(?:years?|yrs?|yo|year-old)", question, flags=re.I)
+        scr_mgdl = raw / 88.42  # Convert µmol/L to mg/dL
+
+    age_m = re.search(r"(\d+)\s*[-]?\s*(?:years?|yrs?|yo|year[ -]old)", question, flags=re.I)
     age_val = _try_float(age_m.group(1), _MIN_AGE, _MAX_AGE) if age_m else None
+    if age_val is None:
+        return None  # eGFR requires age
     is_female = bool(re.search(r"\bfemale\b|\bwoman\b|\b[Ff]\b", question, flags=re.I))
-    parts = [f"Creatinine = {raw:.1f} {unit}"]
-    if age_val is not None:
-        parts.append(f"Age = {age_val:.0f}y")
-    parts.append("Sex = " + ("Female" if is_female else "Male/Unknown"))
-    return f"eGFR (CKD-EPI, estimated): {' | '.join(parts)}"
+
+    egfr = _ckd_epi(scr_mgdl, age_val, is_female)
+    return f"eGFR (CKD-EPI) = {egfr:.0f} mL/min/1.73m²"

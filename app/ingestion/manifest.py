@@ -61,7 +61,7 @@ def load_manifest(
     data = json.loads(path.read_text())
     return IngestionManifest(
         manifest_id=data["manifest_id"],
-        ingested_at=data["ingested_at"],
+        ingested_at=data.get("ingested_at", ""),
         entries=[ManifestEntry(**e) for e in data["entries"]],
         total_chunks=data["total_chunks"],
         total_documents=data["total_documents"],

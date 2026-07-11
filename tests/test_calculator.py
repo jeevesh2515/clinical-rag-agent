@@ -81,13 +81,15 @@ def test_pulse_pressure_no_match():
 def test_egfr_with_age_and_sex():
     result = calculate_egfr("Creatinine 88.4 umol/L, 65 years old male")
     assert result is not None
-    assert "Creatinine" in result
+    assert "eGFR" in result
+    assert "mL/min" in result
 
 
 def test_egfr_mgdl():
     result = calculate_egfr("Cr 1.0 mg/dL, 50yo female")
     assert result is not None
-    assert "Female" in result
+    assert "eGFR" in result
+    assert "mL/min" in result
 
 
 def test_egfr_no_match_returns_none():

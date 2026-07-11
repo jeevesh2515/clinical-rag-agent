@@ -864,7 +864,7 @@ class ClinicalRAGAgent:
             graph_route=state.get("graph_route"),
             latency_ms=state.get("latency_ms") or {},
             rephrased_question=state.get("rephrased_question"),
-            model_used=get_spec(state.get("model_id")).label if state.get("model_id") else None,
+            model_used=get_spec(state.get("model_id")).label,
         )
         return {"response": response}
 

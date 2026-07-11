@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -5,9 +6,17 @@ from typing import Optional
 import bcrypt
 from jose import JWTError, jwt
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-production-use-a-strong-random-key")
+_DEFAULT_KEY = "change-me-in-production-use-a-strong-random-key"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", _DEFAULT_KEY)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+if SECRET_KEY == _DEFAULT_KEY and os.getenv("APP_ENV", "local") != "local":
+    logging.getLogger(__name__).warning(
+        "JWT_SECRET_KEY is set to the insecure default. "
+        "Generate a strong key with: python3 -c \"import secrets; print(secrets.token_urlsafe(48))\" "
+        "and set it as the JWT_SECRET_KEY environment variable."
+    )
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(

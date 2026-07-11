@@ -95,45 +95,45 @@ MODELS: list[ModelSpec] = [
         description="Fast, cheap, very long context",
         model_param="gemini-1.5-flash",
     ),
-    # ── OpenRouter free-tier models ───────────────────────────────────────────
+    # ── OpenRouter free-tier models (verified working Jul 2026) ───────────────
+    # These models are free (prompt=0, completion=0) via OpenRouter.
     ModelSpec(
-        id="openrouter-llama-3.1-8b",
-        label="Llama 3.1 8B (Free)",
+        id="openrouter-nemotron-ultra-550b",
+        label="Nemotron Ultra 550B (Free)",
         provider="openrouter",
-        description="Meta Llama 3.1 8B — OpenRouter free tier, no cost",
-        model_param="meta-llama/llama-3.1-8b-instruct:free",
+        description="Nvidia Nemotron-3 550B — best clinical accuracy, 1M context, free",
+        model_param="nvidia/nemotron-3-ultra-550b-a55b:free",
         badge="Free",
     ),
     ModelSpec(
-        id="openrouter-mistral-7b",
-        label="Mistral 7B (Free)",
+        id="openrouter-nemotron-nano-30b",
+        label="Nemotron Nano 30B (Free)",
         provider="openrouter",
-        description="Mistral 7B Instruct — OpenRouter free tier, no cost",
-        model_param="mistralai/mistral-7b-instruct:free",
+        description="Nvidia Nemotron-3 Nano 30B — fast, accurate, great for RAG",
+        model_param="nvidia/nemotron-3-nano-30b-a3b:free",
         badge="Free",
     ),
     ModelSpec(
-        id="openrouter-gemma-3-12b",
-        label="Gemma 3 12B (Free)",
+        id="openrouter-gemma-4-26b",
+        label="Gemma 4 26B (Free)",
         provider="openrouter",
-        description="Google Gemma 3 12B — OpenRouter free tier, no cost",
-        model_param="google/gemma-3-12b-it:free",
+        description="Google Gemma 4 26B — latest Google model, excellent reasoning",
+        model_param="google/gemma-4-26b-a4b-it:free",
         badge="Free",
     ),
     ModelSpec(
-        id="openrouter-deepseek-r1",
-        label="DeepSeek R1 (Free)",
+        id="openrouter-llama-3.3-70b",
+        label="Llama 3.3 70B (Free)",
         provider="openrouter",
-        description="DeepSeek R1 reasoning model — OpenRouter free tier",
-        model_param="deepseek/deepseek-r1:free",
+        description="Meta Llama 3.3 70B — strong reasoning, 131K context",
+        model_param="meta-llama/llama-3.3-70b-instruct:free",
         badge="Free",
     ),
 ]
 
 
-# Default to the first OpenRouter free model so the app works out of the box
-# without any paid API key. Falls back to cohere-command-a if openrouter key set.
-DEFAULT_MODEL_ID = "openrouter-llama-3.1-8b"
+# Default to the most capable verified free model — best clinical RAG at zero cost.
+DEFAULT_MODEL_ID = "openrouter-nemotron-nano-30b"
 
 
 def get_spec(model_id: str | None) -> ModelSpec:

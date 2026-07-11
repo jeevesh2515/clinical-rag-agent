@@ -17,6 +17,10 @@ class Settings(BaseSettings):
 
     cohere_api_key: str | None = Field(default=None, repr=False)
     tavily_api_key: str | None = Field(default=None, repr=False)
+    openrouter_api_key: str | None = Field(default=None, repr=False)
+    openai_api_key: str | None = Field(default=None, repr=False)
+    anthropic_api_key: str | None = Field(default=None, repr=False)
+    google_api_key: str | None = Field(default=None, repr=False)
     database_url: str = Field(default="sqlite:///./clinical_demo.db", repr=False)
 
     embedding_model: str = "embed-v4.0"

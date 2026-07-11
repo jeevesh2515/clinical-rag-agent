@@ -69,29 +69,29 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
         <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
           <button 
             onClick={onBackToHome}
-            className="flex items-center gap-4 mb-8 text-left focus:outline-none hover:opacity-80 transition-all w-fit"
+            className="group flex items-center gap-4 mb-8 text-left focus:outline-none w-fit transition-all duration-150"
           >
-            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white neo-brutal-shadow-sm font-bold animate-pulse-slow">
-              <Stethoscope size={22} className="text-white" />
+            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold">
+              <Stethoscope size={22} className="text-white transition-transform group-hover:rotate-[15deg]" />
             </div>
-            <span className="text-clinical-black dark:text-white font-headline-md text-headline-md font-bold tracking-tight uppercase">Clinical Workflows</span>
+            <span className="text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors font-headline-md text-headline-md font-bold tracking-tight uppercase">Clinical Workflows</span>
           </button>
           
           <h1 className="font-headline-xl text-[48px] font-black text-clinical-black dark:text-white leading-tight uppercase mb-6">
             Evidence-Based<br />Care Planning
           </h1>
           
-          <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 leading-relaxed mb-12 border-l-4 border-outline-variant dark:border-slate-700 pl-6">
+          <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 leading-relaxed mb-12 border-l-4 border-outline-variant dark:border-slate-700 pl-6 hover:border-brand-accent dark:hover:border-brand-accent hover:text-clinical-black dark:hover:text-white transition-all duration-300">
             Hybrid retrieval, grounded citations, and safety-first AI for hypertension management.
           </p>
           
           <div className="grid grid-cols-2 gap-4">
             {FEATURES.map((f, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow-sm dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)]">
-                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+              <div key={i} className="group/item flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,51,102,1)] hover:border-brand-accent dark:hover:border-brand-accent transition-all duration-200 cursor-pointer">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0 group-hover/item:scale-110 transition-transform">
                   <f.icon size={20} className={f.color} />
                 </div>
-                <span className="text-clinical-black dark:text-white font-bold text-xs uppercase tracking-wide">{f.text}</span>
+                <span className="text-clinical-black dark:text-white font-bold text-xs uppercase tracking-wide group-hover/item:text-brand-accent transition-colors">{f.text}</span>
               </div>
             ))}
           </div>
@@ -107,7 +107,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
           <button
             onClick={onBackToHome}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all"
           >
             ← Back to Home
           </button>
@@ -195,7 +195,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white neo-brutal-shadow dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] neo-brutal-btn uppercase font-bold tracking-wider hover:bg-brand-accent/90 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <><Loader2 size={16} className="animate-spin" /> Signing in&hellip;</>

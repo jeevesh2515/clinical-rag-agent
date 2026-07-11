@@ -110,6 +110,7 @@
   border: 1px solid #1a1a1a;
   transform: rotate(-3deg);
   z-index: 10;
+  white-space: nowrap;
 }
 
 .scanline-effect {

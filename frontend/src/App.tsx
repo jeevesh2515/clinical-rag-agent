@@ -78,6 +78,17 @@ interface ChatMessage {
   tool_trace?: ToolTrace[]
   safety_flags?: SafetyFlags
   knowledge_path?: KnowledgePath
+  rephrased_question?: string | null
+  model_used?: string | null
+}
+
+interface ModelSpec {
+  id: string
+  label: string
+  provider: string
+  description: string
+  badge?: string
+  is_configured: boolean
 }
 
 interface ConversationSummary {
@@ -251,12 +262,24 @@ class ApiClient {
     await fetch(`${API_BASE}/api/chat/conversations/${id}`, { method: 'DELETE', headers: this.headers() })
   }
 
-  async sendMessage(conversationId: string, question: string, mode: string, caseId?: string): Promise<ChatMessage> {
+  async sendMessage(
+    conversationId: string,
+    question: string,
+    mode: string,
+    caseId?: string,
+    modelId?: string,
+  ): Promise<ChatMessage> {
     const res = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/message`, {
       method: 'POST', headers: this.headers(),
-      body: JSON.stringify({ question, mode, case_id: caseId }),
+      body: JSON.stringify({ question, mode, case_id: caseId, model_id: modelId }),
     })
     if (!res.ok) throw new Error('Failed to send message')
+    return res.json()
+  }
+
+  async listModels(): Promise<{ default_model: string; models: ModelSpec[] }> {
+    const res = await fetch(`${API_BASE}/api/models`, { headers: this.headers() })
+    if (!res.ok) return { default_model: 'openrouter-llama-3.1-8b', models: [] }
     return res.json()
   }
 }
@@ -284,8 +307,8 @@ function Pill({
     warning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
     danger:  'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30',
     info:    'bg-stone-100 text-[#1a1a1a] border-[#1a1a1a] dark:bg-slate-800 dark:text-white dark:border-white',
-    okf:     'bg-[#ffddb8] text-[#1a1a1a] border-[#1a1a1a] dark:bg-amber-955/40 dark:text-amber-200 dark:border-amber-500',
-    rag:     'bg-[#6ffbbe] text-[#1a1a1a] border-[#1a1a1a] dark:bg-emerald-955/40 dark:text-emerald-200 dark:border-emerald-500',
+    okf:     'bg-[#ffddb8] text-[#1a1a1a] border-[#1a1a1a] dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-500',
+    rag:     'bg-[#6ffbbe] text-[#1a1a1a] border-[#1a1a1a] dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500',
     neutral: 'bg-white/80 text-gray-600 border-gray-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700/60',
   }
   return (
@@ -339,15 +362,19 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
     )}>
       {/* Brand */}
       <div className="flex items-center justify-between px-4 py-6 border-b-2 border-white/20">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="w-8 h-8 bg-brand-accent flex items-center justify-center text-white border-2 border-white">
-            <Stethoscope size={16} className="text-white" />
+        <button 
+          onClick={onLogout}
+          className="group flex items-center gap-3 min-w-0 flex-1 text-left focus:outline-none"
+          title="Back to Homepage (Logout)"
+        >
+          <div className="w-8 h-8 border-2 border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
+            <Stethoscope size={16} className="text-white transition-transform group-hover:rotate-[15deg]" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-label-md text-label-md text-white uppercase tracking-wider leading-none">Clinical Workflows</h1>
+            <h1 className="font-label-md text-label-md text-white group-hover:text-brand-accent transition-colors uppercase tracking-wider leading-none">Clinical Workflows</h1>
             <p className="font-mono text-[10px] text-white/70 mt-1 uppercase">Hypertension AI</p>
           </div>
-        </div>
+        </button>
         <button onClick={onToggle} className="p-1 text-white/50 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30" title="Collapse sidebar">
           <PanelLeftClose size={16} />
         </button>
@@ -449,10 +476,10 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
   return (
     <button
       className={cn(
-        'w-full flex items-center gap-2.5 p-2 text-left group transition-all duration-300 relative border-2 mb-1.5',
+        'w-full flex items-center gap-2.5 p-2.5 text-left group transition-all duration-200 relative border-2 mb-1.5 focus:outline-none',
         isActive
-          ? 'bg-brand-accent text-white border-[#1a1a1a] clinical-shadow'
-          : 'text-white/70 hover:bg-white/10 hover:text-white border-transparent hover:border-white/20'
+          ? 'bg-brand-accent text-white border-white shadow-[3px_3px_0px_0px_rgba(255,255,255,0.9)] -translate-x-0.5 -translate-y-0.5'
+          : 'text-white/70 hover:bg-white/10 hover:text-white border-transparent hover:border-white hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.8)] hover:-translate-x-0.5 hover:-translate-y-0.5'
       )}
       onClick={() => onSelect(conv.id)}
       onMouseEnter={() => onHover(conv.id)}
@@ -565,7 +592,7 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
                   {message.citations && message.citations.length > 0 && (
                     <button
                       onClick={() => onCitationClick(message.citations!)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all"
                     >
                       <span className="material-symbols-outlined text-[16px]">menu_book</span>
                       <span>{message.citations.length} source{message.citations.length !== 1 ? 's' : ''}</span>
@@ -873,9 +900,9 @@ function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title:
 function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) => void }) {
   return (
     <div className="flex-1 overflow-y-auto scroll-premium">
-      <div className="flex flex-col items-center justify-center min-h-full text-center px-6 py-12 max-w-3xl mx-auto">
+      <div className="flex flex-col items-center justify-center min-h-full text-center px-6 pt-12 pb-36 max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="relative mb-8">
+        <div className="relative mb-4">
           <div className="w-16 h-16 bg-brand-accent flex items-center justify-center text-white border-2 border-clinical-black dark:border-white clinical-shadow">
             <Sparkles size={28} className="text-white" />
           </div>
@@ -884,12 +911,12 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
         <h1 className="font-headline-xl text-3xl font-black text-clinical-black dark:text-white uppercase mb-3">
           How can I help you today?
         </h1>
-        <p className="text-gray-500 dark:text-slate-400 text-[14px] leading-relaxed mb-10 max-w-lg">
+        <p className="text-gray-500 dark:text-slate-400 text-[14px] leading-relaxed mb-4 max-w-lg">
           Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-slate-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-slate-300">WHO</span> guidelines — with citations you can verify.
         </p>
 
         {/* Trust strip */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
           <Pill variant="info" icon={Shield}>Educational only — not medical advice</Pill>
           <Pill variant="success" icon={CheckCircle2}>Every claim cited</Pill>
           <Pill variant="okf" icon={Brain}>OKF + RAG hybrid</Pill>
@@ -902,7 +929,7 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
             <button
               key={i}
               onClick={() => onQuestionClick(q.text)}
-              className="group flex items-start gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white hover:bg-stone-50 dark:hover:bg-slate-800 text-left transition-all shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none rounded-none"
+              className="group flex items-start gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white hover:bg-stone-50 dark:hover:bg-slate-800 text-left transition-all shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none rounded-none"
             >
               <div className={cn('w-9 h-9 border-2 border-clinical-black dark:border-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform bg-stone-100 dark:bg-slate-800 rounded-none', q.tone)}>
                 <q.icon size={15} />
@@ -1244,6 +1271,135 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
   )
 }
 
+// ─── 2D Cat Follower (Pressure Relief Pet) ──────────────────────────────────
+function ClinicalCatPet() {
+  const [catPos, setCatPos] = useState({ x: 200, y: 200 })
+  const [mousePos, setMousePos] = useState({ x: 200, y: 200 })
+  const [state, setState] = useState<'idle' | 'chasing' | 'happy'>('idle')
+  const [flip, setFlip] = useState(false)
+  const [bubble, setBubble] = useState<string | null>(null)
+
+  // Listen to mouse movement
+  useEffect(() => {
+    const updateMouse = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY })
+    }
+    window.addEventListener('mousemove', updateMouse)
+    return () => window.removeEventListener('mousemove', updateMouse)
+  }, [])
+
+  // Interpolate cat position (lerp)
+  useEffect(() => {
+    let animFrame: number
+    const speed = 0.05
+    const follow = () => {
+      setCatPos(prev => {
+        const dx = mousePos.x - prev.x
+        const dy = mousePos.y - prev.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
+        if (dist < 45) {
+          setState('happy')
+          return prev
+        }
+
+        setState('chasing')
+        setFlip(dx < 0)
+        return {
+          x: prev.x + dx * speed,
+          y: prev.y + dy * speed
+        }
+      })
+      animFrame = requestAnimationFrame(follow)
+    }
+    animFrame = requestAnimationFrame(follow)
+    return () => cancelAnimationFrame(animFrame)
+  }, [mousePos])
+
+  // Speech bubble phrase rotation
+  useEffect(() => {
+    const phrases = ['Purr...', 'Meow 🐾', 'Hypertension relief active!', 'Chase the laser dot!', 'Sleepy...', 'Mew? ✨']
+    const interval = setInterval(() => {
+      if (Math.random() > 0.4) {
+        setBubble(phrases[Math.floor(Math.random() * phrases.length)])
+        setTimeout(() => setBubble(null), 2500)
+      }
+    }, 8000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <>
+      {/* Laser target pointer under cursor */}
+      <div 
+        className="fixed pointer-events-none z-50 mix-blend-screen w-3 h-3 bg-rose-500 rounded-full shadow-[0_0_8px_4px_rgba(244,63,94,0.8)] animate-pulse"
+        style={{ left: `${mousePos.x - 6}px`, top: `${mousePos.y - 6}px` }}
+      />
+      
+      {/* Cat */}
+      <div
+        className="fixed pointer-events-none z-50 select-none transition-transform duration-100 ease-out"
+        style={{
+          left: `${catPos.x - 24}px`,
+          top: `${catPos.y - 36}px`,
+        }}
+      >
+        {/* Speech bubble */}
+        {bubble && (
+          <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-teal-400 px-3 py-1.5 text-[11px] font-black rounded-xl shadow-[3px_3px_0px_0px_#008080] whitespace-nowrap animate-bounce font-code-sm uppercase">
+            {bubble}
+            <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-2 h-2 bg-white dark:bg-slate-800 border-r-2 border-b-2 border-clinical-black dark:border-teal-400 rotate-45" />
+          </div>
+        )}
+
+        {/* Cat Sprite wrapper with wiggle/walk animations */}
+        <div 
+          className={cn(
+            "relative flex flex-col items-center",
+            state === 'chasing' ? "animate-pulse" : "animate-bounce"
+          )}
+          style={{ 
+            transform: `scaleX(${flip ? -1 : 1})`,
+            transition: 'transform 0.15s ease'
+          }}
+        >
+          {/* Animated Cat SVG */}
+          <svg width="48" height="48" viewBox="0 0 60 60" className="drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)]">
+            {/* Tail */}
+            <path 
+              d="M 12 40 Q 2 30 8 18" 
+              fill="none" 
+              stroke="#008080" 
+              strokeWidth="5" 
+              strokeLinecap="round"
+            />
+            {/* Body */}
+            <ellipse cx="28" cy="40" rx="16" ry="11" fill="#008080" />
+            {/* Head */}
+            <circle cx="38" cy="28" r="10" fill="#00a3a3" />
+            {/* Ears */}
+            <polygon points="32,20 35,26 29,26" fill="#006666" />
+            <polygon points="44,20 43,26 47,26" fill="#006666" />
+            {/* Eyes */}
+            <circle cx="36" cy="26" r="1.5" fill={state === 'happy' ? '#ffffff' : '#003333'} />
+            <circle cx="42" cy="26" r="1.5" fill={state === 'happy' ? '#ffffff' : '#003333'} />
+            {/* Nose & Whiskers */}
+            <polygon points="39,28 38,29 40,29" fill="#ff3366" />
+            <line x1="39" y1="29" x2="33" y2="30" stroke="#004d4d" strokeWidth="1" />
+            <line x1="39" y1="29" x2="34" y2="32" stroke="#004d4d" strokeWidth="1" />
+            <line x1="39" y1="29" x2="45" y2="30" stroke="#004d4d" strokeWidth="1" />
+            <line x1="39" y1="29" x2="44" y2="32" stroke="#004d4d" strokeWidth="1" />
+            {/* Paws */}
+            <circle cx="24" cy="48" r="4" fill="#006666" />
+            <circle cx="32" cy="48" r="4" fill="#006666" />
+          </svg>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ─── Respiratory Rhythm Shader (Enhanced) ─────────────────────────────────────
 function BreathingShader() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -1427,14 +1583,18 @@ export default function App() {
   const [panelKnowledge, setPanelKnowledge] = useState<KnowledgePath | null>(null)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isReliefMode, setIsReliefMode] = useState(false)
+  const [models, setModels] = useState<ModelSpec[]>([])
+  const [selectedModelId, setSelectedModelId] = useState<string>(
+    () => localStorage.getItem('cw_model_id') || 'openrouter-llama-3.1-8b'
+  )
 
   const toggleReliefMode = () => {
     const next = !isReliefMode
     setIsReliefMode(next)
     if (next) {
-      document.body.classList.add('relief-mode')
+      document.documentElement.classList.add('relief-mode')
     } else {
-      document.body.classList.remove('relief-mode')
+      document.documentElement.classList.remove('relief-mode')
     }
   }
   
@@ -1468,6 +1628,16 @@ export default function App() {
     if (user) {
       setIsFetchingConvs(true)
       api.listConversations().then(setConversations).catch(() => {}).finally(() => setIsFetchingConvs(false))
+      // Load available models
+      api.listModels().then(({ models: mods, default_model }) => {
+        setModels(mods)
+        // If stored model not in list, fall back to default
+        const stored = localStorage.getItem('cw_model_id')
+        if (!stored || !mods.find((m: ModelSpec) => m.id === stored)) {
+          setSelectedModelId(default_model)
+          localStorage.setItem('cw_model_id', default_model)
+        }
+      }).catch(() => {})
     }
   }, [user])
 
@@ -1560,7 +1730,7 @@ export default function App() {
         setCurrentConvId(convId)
         setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
-      const assistantMsg = await api.sendMessage(convId, question, mode, caseId || undefined)
+      const assistantMsg = await api.sendMessage(convId, question, mode, caseId || undefined, selectedModelId)
       setMessages(prev => [...prev, assistantMsg])
       setPanelCitations(assistantMsg.citations || [])
       setPanelTools(assistantMsg.tool_trace || [])
@@ -1608,6 +1778,7 @@ export default function App() {
       {isReliefMode && (
         <>
           <BreathingShader />
+          <ClinicalCatPet />
           {/* Breath Guide */}
           <div className="relief-breath-guide">
             <div className="breath-ring" />
@@ -1644,77 +1815,110 @@ export default function App() {
       {/* Main Chat Area */}
       <main className="flex flex-col flex-1 min-w-0 relative bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
         {/* Header */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="hidden lg:flex items-center justify-between px-6 py-3.5 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
+          <div className="flex items-center gap-3 min-w-0 mr-4">
             {!canCollapseLeft && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white shrink-0"
                 title="Open sidebar"
               >
                 <PanelLeft size={16} />
               </button>
             )}
-            <div className={cn(
-              'w-10 h-10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a] dark:border-white clinical-shadow',
-              isClinicianMode ? 'bg-slate-900' : 'bg-brand-accent'
-            )}>
-              <Stethoscope size={18} className="text-white" />
-            </div>
+            <button 
+              onClick={handleLogout}
+              className="group flex items-center justify-center shrink-0 focus:outline-none"
+              title="Back to Homepage (Logout)"
+            >
+              <div className={cn(
+                'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150',
+                isClinicianMode ? 'bg-slate-900' : 'bg-brand-accent'
+              )}>
+                <Stethoscope size={18} className="text-white transition-transform group-hover:rotate-[15deg]" />
+              </div>
+            </button>
             <div className="min-w-0">
-              <h2 className="font-headline-md text-headline-md font-bold truncate max-w-md text-[#1a1a1a] dark:text-white">
+              <h2 className="font-headline-md text-headline-md font-bold truncate max-w-xs sm:max-w-sm md:max-w-md text-[#1a1a1a] dark:text-white whitespace-nowrap">
                 {currentConv?.title || 'Clinical Workflows'}
               </h2>
-              <p className="font-code-sm text-body-sm text-[#1a1a1a]/70 dark:text-white/70 flex items-center gap-1 uppercase tracking-wider mt-1 opacity-low">
-                <span className={cn('w-2 h-2', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent')}></span>
+              <p className={cn(
+                "font-code-sm text-body-sm text-[#1a1a1a]/70 dark:text-white/70 items-center gap-1 uppercase tracking-wider mt-1 opacity-low truncate whitespace-nowrap",
+                evidencePanelOpen ? "hidden xl:flex" : "flex"
+              )}>
+                <span className={cn('w-2 h-2 shrink-0', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent')}></span>
                 {isClinicianMode ? 'Clinician mode · Workstation' : 'Patient mode · Hypertension AI'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 xl:gap-4 shrink-0">
             {/* Pressure Relief Toggle */}
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "relief-toggle-btn relative flex items-center gap-2 px-4 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden",
+                "relief-toggle-btn relative flex items-center gap-2 px-3 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden shrink-0",
                 isReliefMode 
                   ? "bg-[#008080] text-white shadow-none border-[#008080]"
-                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
+                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none"
               )}
             >
               {isReliefMode && (
                 <>
                   <span className="absolute inset-0 bg-gradient-to-r from-[#008080]/0 via-[#40c0c0]/20 to-[#008080]/0 animate-[shimmer_3s_ease-in-out_infinite]" />
-                  <span className="relative flex w-1.5 h-1.5 mr-0.5">
+                  <span className="relative flex w-1.5 h-1.5 mr-0.5 shrink-0">
                     <span className="absolute inset-0 rounded-full bg-teal-200 animate-ping opacity-40" />
                     <span className="relative rounded-full bg-teal-100 w-1.5 h-1.5" />
                   </span>
                 </>
               )}
-              <span className="material-symbols-outlined text-[20px] relative">{isReliefMode ? 'spa' : 'air'}</span>
-              <span className="relative font-label-md">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
+              <span className="material-symbols-outlined text-[20px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
+              <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
             </button>
+
+            {/* Model Picker */}
+            {models.length > 0 && (
+              <div className="relative shrink-0 hidden sm:block">
+                <select
+                  value={selectedModelId}
+                  onChange={e => {
+                    setSelectedModelId(e.target.value)
+                    localStorage.setItem('cw_model_id', e.target.value)
+                  }}
+                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-2.5 py-1.5 pr-7 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[160px] cursor-pointer"
+                  title="Select AI model"
+                >
+                  {models.map(m => (
+                    <option key={m.id} value={m.id} disabled={!m.is_configured}>
+                      {m.label}{m.badge ? ` [${m.badge}]` : ''}{!m.is_configured ? ' ✗' : ''}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
+                  <ChevronDown size={10} className="text-[#1a1a1a] dark:text-white" />
+                </div>
+              </div>
+            )}
 
             <ThemeToggle />
             <select
               value={caseId}
               onChange={e => setCaseId(e.target.value)}
-              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none transition-all max-w-[200px] clinical-shadow font-code-sm uppercase font-bold text-[#1a1a1a] dark:text-white"
+              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none transition-all max-w-[110px] sm:max-w-[150px] xl:max-w-[200px] clinical-shadow font-code-sm uppercase font-bold text-[#1a1a1a] dark:text-white shrink-0"
             >
               {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
-            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow">
+            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow shrink-0">
               {(['patient', 'clinician'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    'px-4 py-1.5 text-sm font-label-md transition-all uppercase',
+                    'px-2.5 xl:px-4 py-1.5 text-xs xl:text-sm font-label-md transition-all uppercase font-bold',
                     mode === m
                       ? isClinicianMode
                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                         : 'bg-brand-accent text-white'
-                      : 'text-[#1a1a1a]/70 dark:text-white/70 hover:text-[#1a1a1a] dark:hover:text-white opacity-low'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-[#1a1a1a] dark:hover:text-white opacity-60 hover:opacity-100'
                   )}
                 >
                   {m}
@@ -1724,10 +1928,10 @@ export default function App() {
             <button
               onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
               className={cn(
-                'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white transition-all',
+                'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white transition-all shrink-0',
                 evidencePanelOpen
                   ? 'bg-brand-accent text-white shadow-none'
-                  : 'bg-white dark:bg-slate-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none opacity-low'
+                  : 'bg-white dark:bg-slate-900 text-clinical-black dark:text-white hover:text-brand-accent dark:hover:text-brand-accent clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none'
               )}
               title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
             >
@@ -1742,7 +1946,16 @@ export default function App() {
             <button onClick={() => setSidebarOpen(true)} className="text-[#1a1a1a] dark:text-white">
               <PanelLeft size={20} />
             </button>
-            <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white uppercase">Clinical Workflows</span>
+            <button
+              onClick={handleLogout}
+              className="group flex items-center gap-2 text-left focus:outline-none"
+              title="Back to Homepage (Logout)"
+            >
+              <div className="w-7 h-7 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
+                <Stethoscope size={13} className="text-white transition-transform group-hover:rotate-[15deg]" />
+              </div>
+              <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white group-hover:text-brand-accent transition-colors uppercase">Clinical Workflows</span>
+            </button>
           </div>
           <button onClick={() => setEvidencePanelOpen(!evidencePanelOpen)} className="text-[#1a1a1a] dark:text-white">
             <Info size={18} />
@@ -1750,11 +1963,11 @@ export default function App() {
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:24px_24px] [background-position:center] transition-all duration-1000">
           {messages.length === 0 ? (
             <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
           ) : (
-            <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto pb-32 animate-message transition-all duration-1000">
+            <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto pb-44 animate-message transition-all duration-1000">
               {messages.map(msg => (
                 <MessageBubble
                   key={msg.id}
@@ -1771,10 +1984,10 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-6 pb-6 px-4 md:px-8 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
+        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-3 pb-3 px-4 md:px-6 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
           <div className="max-w-3xl mx-auto">
             <div className={cn(
-              'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 pr-4 flex items-end gap-2 clinical-shadow',
+              'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-1 pr-3 pl-2 flex items-end gap-2 clinical-shadow',
             )}>
               <textarea
                 ref={textareaRef}
@@ -1783,21 +1996,21 @@ export default function App() {
                 onKeyDown={handleKeyDown}
                 placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION…'}
                 rows={1}
-                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-[16px] font-bold resize-none focus:outline-none focus:ring-0 leading-relaxed px-3 py-3 min-h-[52px] max-h-32 scrollbar-thin"
+                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-sm font-bold resize-none focus:outline-none focus:ring-0 leading-relaxed px-2 py-2 min-h-[42px] max-h-32 scrollbar-thin"
               />
-              <div className="flex items-center gap-2 pb-1">
+              <div className="flex items-center gap-2 pb-1.5">
                 <button
                   onClick={() => setIsProfileModalOpen(true)}
-                  className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-2 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white brutalist-button shrink-0"
+                  className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-1.5 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white brutalist-button shrink-0"
                   title="Upload documents"
                 >
-                  <span className="material-symbols-outlined text-[24px]">add_circle</span>
+                  <span className="material-symbols-outlined text-[20px]">add_circle</span>
                 </button>
                 <button
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isLoading}
                   className={cn(
-                    'shrink-0 h-10 px-6 font-label-md text-xs uppercase tracking-wider flex items-center gap-2 transition-all border-2 border-clinical-black dark:border-white brutalist-button',
+                    'shrink-0 h-9 px-4 font-label-md text-xs uppercase tracking-wider flex items-center gap-2 transition-all border-2 border-clinical-black dark:border-white brutalist-button',
                     inputValue.trim() && !isLoading
                       ? 'bg-[#1a1a1a] dark:bg-brand-accent hover:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
                       : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 cursor-not-allowed'

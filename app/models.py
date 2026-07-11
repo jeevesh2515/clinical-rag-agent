@@ -189,6 +189,16 @@ class QueryRequest(BaseModel):
         le=20,
         description="Optional number of results to keep after reranking. Uses service default when omitted.",
     )
+    model_id: str | None = Field(
+        default=None,
+        max_length=120,
+        description=(
+            "Optional model identifier. Supported values include 'cohere-command-a', "
+            "'openai-gpt-4o', 'anthropic-claude-3.5-sonnet', 'google-gemini-1.5-pro', etc. "
+            "If the provider's API key is not configured, the request falls back to the "
+            "default model and the response surfaces a 'model_fallback' note."
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_rerank_limit(self) -> "QueryRequest":
@@ -315,6 +325,14 @@ class QueryResponse(BaseModel):
     latency_ms: dict[str, float] = Field(
         default_factory=dict,
         description="Per-node latency breakdown in milliseconds (e.g. classify, retrieve, generate, validate_claims).",
+    )
+    rephrased_question: str | None = Field(
+        default=None,
+        description="Query after query-analyzer normalization/expansion. None if unchanged from user input.",
+    )
+    model_used: str | None = Field(
+        default=None,
+        description="Model identifier that was actually used for generation (label or id).",
     )
 
 

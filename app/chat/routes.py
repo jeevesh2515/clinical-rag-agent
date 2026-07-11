@@ -112,6 +112,7 @@ async def add_message_to_conversation(
         case_id=query_request.case_id,
         include_patient_education=query_request.include_patient_education,
         user_id=current_user.id,
+        model_id=query_request.model_id,
     )
 
     citations_list: List[dict[str, Any]] = [

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { Stethoscope } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
 interface LandingPageProps {
@@ -59,8 +60,25 @@ function AnimatedCounter({
 }
 
 export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
-  const [canReveal, setCanReveal] = useState(true)
   const [activeSection, setActiveSection] = useState('hero')
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [scrollOffset, setScrollOffset] = useState(0)
+
+  // Track scroll position for progress bar and scroll-driven animation tickers
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
+      
+      setScrollProgress(progress)
+      setScrollOffset(scrollTop)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Initial check
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Scrollspy to sync navbar links with components
   useEffect(() => {
@@ -86,50 +104,56 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
     return () => window.removeEventListener('scroll', handleScrollspy)
   }, [])
 
-  // Track scroll position to trigger reveal only after 40% scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop
-      const scrollHeight = document.documentElement.scrollHeight
-      const clientHeight = document.documentElement.clientHeight
-      const maxScroll = scrollHeight - clientHeight
-      
-      // If page is not scrollable (e.g. huge screen), allow reveal immediately
-      if (maxScroll <= 0) {
-        setCanReveal(true)
-        return
-      }
 
-      const scrollPercent = maxScroll > 0 ? (scrollTop / maxScroll) * 100 : 100
-      if (scrollPercent >= 10 || scrollTop > 80) {
-        setCanReveal(true)
-      }
+  // Scroll-Linked Animations (Smooth Direct-Scroll coupled transitions)
+  useEffect(() => {
+    const handleScrollAnimation = () => {
+      const revealElements = document.querySelectorAll(
+        '.reveal-on-scroll, .reveal-left, .reveal-right, .reveal-bottom'
+      )
+      const viewportHeight = window.innerHeight
+
+      revealElements.forEach((el) => {
+        const htmlEl = el as HTMLElement
+        const rect = htmlEl.getBoundingClientRect()
+        const elementTop = rect.top
+        
+        // startReveal: element enters the bottom of the viewport
+        const startReveal = viewportHeight
+        // endReveal: element is 50% into the viewport from the bottom (middle of screen)
+        const endReveal = viewportHeight * 0.50
+        
+        let progress = 0
+        if (elementTop < startReveal) {
+          progress = (startReveal - elementTop) / (startReveal - endReveal)
+          progress = Math.max(0, Math.min(1, progress))
+        }
+
+        // Apply smooth linear mapping
+        const easeProgress = progress
+
+        htmlEl.style.transition = 'none'
+        htmlEl.style.opacity = `${easeProgress}`
+        
+        if (htmlEl.classList.contains('reveal-left')) {
+          const shift = (1 - easeProgress) * -40
+          htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
+        } else if (htmlEl.classList.contains('reveal-right')) {
+          const shift = (1 - easeProgress) * 40
+          htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
+        } else {
+          // reveal-bottom or reveal-on-scroll
+          const shift = (1 - easeProgress) * 30
+          htmlEl.style.transform = `translate3d(0px, ${shift}px, 0px)`
+        }
+      })
     }
 
-    window.addEventListener('scroll', handleScroll)
-    handleScroll() // Initial check
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScrollAnimation, { passive: true })
+    handleScrollAnimation() // Initial execution
+
+    return () => window.removeEventListener('scroll', handleScrollAnimation)
   }, [])
-
-  // Scroll Reveal Observer
-  useEffect(() => {
-    if (!canReveal) return
-
-    const revealElements = document.querySelectorAll('.reveal-on-scroll, .reveal-left, .reveal-right, .reveal-bottom')
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active')
-          }
-        })
-      },
-      { threshold: 0.02 }
-    )
-
-    revealElements.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
-  }, [canReveal])
 
   // Parallax Mouse Effect
   useEffect(() => {
@@ -155,12 +179,16 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-b border-clinical-black dark:border-slate-800 shadow-sm transition-colors duration-300">
         <div className="flex justify-between items-center px-gutter py-3 max-w-screen-2xl mx-auto w-full">
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 bg-primary flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-lg">medical_services</span>
+          <button 
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="group flex items-center gap-3 text-left focus:outline-none"
+            title="Back to Top"
+          >
+            <div className="w-8 h-8 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
+              <Stethoscope size={16} className="text-white transition-transform group-hover:rotate-[15deg]" />
             </div>
-            <span className="font-headline-md text-headline-md font-bold text-primary dark:text-white">Clinical Workflows</span>
-          </div>
+            <span className="font-headline-md text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight">Clinical Workflows</span>
+          </button>
           <div className="hidden md:flex items-center gap-8">
             <a
               href="#retrieval"
@@ -207,17 +235,24 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <ThemeToggle />
             <button 
               onClick={onLogin} 
-              className="px-4 py-2 font-label-md text-label-md border-2 border-primary dark:border-white neo-brutal-btn hover:bg-stone-100 dark:hover:bg-slate-800 transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
+              className="px-4 py-2 font-label-md text-label-md border-2 border-clinical-black dark:border-white bg-white dark:bg-slate-900 text-clinical-black dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150"
             >
               Login
             </button>
             <button 
               onClick={onRegister} 
-              className="px-4 py-2 font-label-md text-label-md bg-primary dark:bg-brand-accent text-white border-2 border-primary dark:border-white neo-brutal-shadow dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] neo-brutal-btn"
+              className="px-4 py-2 font-label-md text-label-md bg-clinical-black dark:bg-brand-accent text-white border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150"
             >
               Register
             </button>
           </div>
+        </div>
+        {/* Scroll Progress Bar */}
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-stone-100 dark:bg-slate-900 overflow-hidden">
+          <div 
+            className="h-full bg-brand-accent"
+            style={{ width: `${scrollProgress}%` }}
+          />
         </div>
       </nav>
 
@@ -227,7 +262,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 parallax-element" data-speed="0.05">
               <div className="inline-block px-3 py-1 bg-brand-accent text-white font-code-sm text-code-sm uppercase tracking-widest neo-brutal-shadow-sm font-bold">
-                Enterprise Grade V3.0
+                Precision Hypertension RAG
               </div>
               <h1 className="font-headline-xl text-[64px] leading-tight font-black text-clinical-black dark:text-white uppercase">
                 Clinical Precision.<br />
@@ -239,14 +274,14 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               <div className="flex flex-wrap gap-4 pt-4">
                 <button 
                   onClick={onLogin}
-                  className="group relative px-8 py-4 bg-primary dark:bg-brand-accent text-white font-headline-md border-2 border-primary dark:border-white neo-brutal-shadow dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] neo-brutal-btn flex items-center gap-2 overflow-hidden"
+                  className="group relative px-8 py-4 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center gap-2 overflow-hidden"
                 >
                   <span className="relative z-10 uppercase font-bold tracking-wide">Initialize Interface</span>
                   <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">terminal</span>
                 </button>
                 <button 
                   onClick={() => window.open('https://github.com', '_blank')}
-                  className="px-8 py-4 bg-white dark:bg-slate-900 text-primary dark:text-white border-2 border-primary dark:border-white neo-brutal-shadow dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] neo-brutal-btn uppercase font-bold tracking-wide"
+                  className="px-8 py-4 bg-white dark:bg-slate-900 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
                 >
                   View Whitepaper
                 </button>
@@ -256,7 +291,7 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <div className="relative parallax-element" data-speed="-0.03">
               {/* CORE_ENGINE_V3 Visual Block */}
               <div className="relative w-full aspect-square border-2 border-clinical-black dark:border-white bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-8 scanline-effect overflow-hidden">
-                <div className="tipped-label dark:border-white dark:text-white">CORE_ENGINE_V3_LIVE</div>
+                <div className="tipped-label dark:border-white dark:text-white" style={{ right: '48px' }}>CORE_ENGINE_V3_LIVE</div>
                 <div className="h-full flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div className="space-y-2">
@@ -338,20 +373,20 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </div>
 
               {/* Safety Guardrails */}
-              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-rose-950/20 border-2 border-clinical-black dark:border-rose-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f43f5e] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
-                <div className="tipped-label dark:bg-rose-500 dark:text-slate-950 dark:border-rose-500">SAFETY_V1</div>
+              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-emerald-950/20 border-2 border-clinical-black dark:border-emerald-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#10b981] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
+                <div className="tipped-label dark:bg-emerald-500 dark:text-slate-950 dark:border-emerald-500">SAFETY_V1</div>
                 <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-rose-450">security</span>
+                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-emerald-400">security</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Safety Guardrails</h3>
                   <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Multi-layer verification protocols that prevent off-label advice and maintain strict clinical boundaries.</p>
                 </div>
               </div>
 
               {/* Full Provenance */}
-              <div id="provenance" className="md:col-span-4 group p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-brand-accent/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ff3366] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
-                <div className="tipped-label dark:bg-brand-accent dark:text-white dark:border-brand-accent">AUDIT_TRACE</div>
+              <div id="provenance" className="md:col-span-4 group p-8 bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-clinical-black dark:border-indigo-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#6366f1] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
+                <div className="tipped-label bg-indigo-600 dark:bg-indigo-500 text-white dark:text-slate-950 border-indigo-600 dark:border-indigo-500">AUDIT_TRACE</div>
                 <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-brand-accent">menu_book</span>
+                  <span className="material-symbols-outlined text-4xl text-indigo-600 dark:text-indigo-400">menu_book</span>
                   <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Full Provenance</h3>
                   <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Complete chain of custody for every data point used in the clinical inference process.</p>
                 </div>
@@ -384,13 +419,25 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             </p>
             <button 
               onClick={onLogin}
-              className="group relative px-12 py-6 bg-brand-accent text-white font-headline-lg border-4 border-clinical-black dark:border-white neo-brutal-shadow dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] neo-brutal-btn flex items-center gap-4 mx-auto overflow-hidden"
+              className="group relative px-12 py-6 bg-brand-accent text-white font-headline-lg border-4 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-150 flex items-center gap-4 mx-auto overflow-hidden"
             >
               <span className="relative z-10 uppercase tracking-widest font-bold">Launch Fidelity Simulator</span>
               <span className="material-symbols-outlined relative z-10 group-hover:translate-x-2 transition-transform">arrow_forward_ios</span>
             </button>
           </div>
         </section>
+
+        {/* Scroll-Linked Horizontal Marquee Divider */}
+        <div className="w-full overflow-hidden border-b-4 border-clinical-black dark:border-slate-800 bg-brand-accent py-5 text-white uppercase font-headline-xl tracking-widest text-xl select-none z-10 relative">
+          <div 
+            className="flex whitespace-nowrap gap-16"
+            style={{ transform: `translate3d(-${scrollOffset * 0.4}px, 0px, 0px)` }}
+          >
+            {Array(10).fill("CLINICAL RAG • OKF SPINE • ZERO HALLUCINATION • HIPAA COMPLIANT • CORE ENGINE V3").map((text, i) => (
+              <span key={i} className="flex-shrink-0 font-bold">{text}</span>
+            ))}
+          </div>
+        </div>
 
         {/* Stats Section */}
         <section className="grid grid-cols-1 md:grid-cols-3 border-b-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
@@ -410,16 +457,46 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <p className="font-body-sm text-on-surface-variant dark:text-slate-400">Across 14 tertiary care networks</p>
           </div>
         </section>
+        {/* Next Step Section */}
+        <section className="py-24 bg-stone-50 dark:bg-slate-900 border-b-4 border-clinical-black dark:border-slate-800 px-gutter relative overflow-hidden transition-colors duration-300">
+          <div className="max-w-4xl mx-auto text-center space-y-6 reveal-bottom">
+            <h3 className="font-headline-xl text-[40px] font-black uppercase text-clinical-black dark:text-white">Ready for the Next Step?</h3>
+            <p className="text-on-surface-variant dark:text-slate-400 font-body-md max-w-lg mx-auto leading-relaxed border-l-4 border-brand-accent pl-6 text-left md:text-center md:border-l-0 md:pl-0">
+              Audit results verified. Select an action below to authenticate and enter the clinical dashboard or scroll back to review the guidelines.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 pt-6">
+              <button 
+                onClick={onLogin}
+                className="px-8 py-4 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
+              >
+                Sign In to Dashboard
+              </button>
+              <button 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="px-8 py-4 bg-white dark:bg-slate-950 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide flex items-center gap-2"
+              >
+                <span>Scroll to Top</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+              </button>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
       <footer className="bg-surface-container-high dark:bg-slate-900 border-t-2 border-clinical-black dark:border-slate-800 py-20 px-gutter transition-colors duration-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 w-full">
           <div className="space-y-6 lg:col-span-1">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-primary"></div>
-              <span className="font-headline-md text-headline-md font-bold text-primary dark:text-white">Clinical Workflows</span>
-            </div>
+            <button 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="group flex items-center gap-3 text-left focus:outline-none"
+              title="Back to Top"
+            >
+              <div className="w-8 h-8 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
+                <Stethoscope size={16} className="text-white transition-transform group-hover:rotate-[15deg]" />
+              </div>
+              <span className="font-headline-md text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight">Clinical Workflows</span>
+            </button>
             <p className="font-body-sm text-on-surface-variant dark:text-slate-400">
               Advancing patient outcomes through deterministic artificial intelligence. Engineered for professionals, by professionals.
             </p>
@@ -450,19 +527,19 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
             <div className="flex gap-4">
               <button 
                 onClick={() => window.open('https://github.com', '_blank')}
-                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center neo-brutal-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] transition-all bg-white dark:bg-slate-950 text-clinical-black dark:text-white"
+                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
                 <span className="material-symbols-outlined text-clinical-black dark:text-white">link</span>
               </button>
               <button 
                 onClick={() => window.open('mailto:info@example.com')}
-                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center neo-brutal-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] transition-all bg-white dark:bg-slate-955 text-clinical-black dark:text-white"
+                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
                 <span className="material-symbols-outlined text-clinical-black dark:text-white">alternate_email</span>
               </button>
               <button 
                 onClick={() => navigator.clipboard.writeText(window.location.href)}
-                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center neo-brutal-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] transition-all bg-white dark:bg-slate-955 text-clinical-black dark:text-white"
+                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
                 <span className="material-symbols-outlined text-clinical-black dark:text-white">share</span>
               </button>

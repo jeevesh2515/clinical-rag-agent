@@ -199,6 +199,10 @@ def _roles_to_json(value: list[str] | str | None) -> str:
     return json.dumps(list(value))
 
 
+def _roles_to_json(value: list[str]) -> str:
+    return json.dumps(value) if value else "[]"
+
+
 def _json_to_roles(value: str | None) -> list[str]:
     if not value:
         return []

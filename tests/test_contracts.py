@@ -32,6 +32,8 @@ QUERY_CONTRACT_KEYS = {
     "request_id",
     "graph_route",
     "latency_ms",
+    "rephrased_question",
+    "model_used",
 }
 
 

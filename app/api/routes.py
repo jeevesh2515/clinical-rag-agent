@@ -20,6 +20,7 @@ from app.ingestion.sources import DEFAULT_SOURCES
 from app.models import ApiErrorResponse, IngestRequest, IngestResponse, QueryRequest, QueryResponse, SourcesResponse
 from app.okf.interface import KnowledgeInterface
 from app.retrieval.store import HybridStore
+from app.llm import DEFAULT_MODEL_ID, list_models_for_api
 
 router = APIRouter()
 router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -159,6 +160,7 @@ def query(
         include_patient_education=payload.include_patient_education,
         request_id=request_id_from(request),
         user_id=user_id,
+        model_id=payload.model_id,
     )
 
 @router.post(
@@ -207,6 +209,7 @@ def query_stream(
                 include_patient_education=payload.include_patient_education,
                 request_id=request_id,
                 user_id=user_id,
+                model_id=payload.model_id,
             )
             yield _event("token", {"text": response.answer})
             for citation in response.citations:
@@ -270,3 +273,18 @@ def eval_results() -> dict:
 @router.get("/cases", tags=["cases"])
 def list_all_cases() -> dict:
     return {"cases": list_cases(), "total": len(list_cases())}
+
+
+@router.get("/models", tags=["models"])
+def list_available_models() -> dict:
+    """Return the catalogue of LLM models the frontend can pick from.
+
+    Each entry includes a ``configured`` flag so the UI can show "Set
+    OPENAI_API_KEY to enable" hints when a provider isn't usable on the
+    current deployment.
+    """
+    settings = get_settings()
+    return {
+        "models": list_models_for_api(settings),
+        "active": DEFAULT_MODEL_ID,
+    }

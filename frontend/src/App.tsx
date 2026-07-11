@@ -111,12 +111,12 @@ interface Conversation {
 const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
 
 const SUGGESTED_QUESTIONS = [
-  { icon: Heart, text: 'When should drug treatment be considered for Stage 1 hypertension?', category: 'Guidelines', tone: 'text-rose-500' },
-  { icon: Activity, text: 'What is the BP target for patients with CKD Stage 3?', category: 'Targets', tone: 'text-amber-500' },
-  { icon: FlaskRound, text: 'Calculate MAP for blood pressure 140/90', category: 'Calculator', tone: 'text-violet-500' },
-  { icon: Brain, text: 'What are the first-line medications for hypertension?', category: 'Treatment', tone: 'text-emerald-500' },
-  { icon: Stethoscope, text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-500' },
-  { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-brand-accent' },
+  { icon: Heart, text: 'When should drug treatment be considered for Stage 1 hypertension?', category: 'Guidelines', tone: 'text-rose-500 dark:text-rose-400' },
+  { icon: Activity, text: 'What is the BP target for patients with CKD Stage 3?', category: 'Targets', tone: 'text-amber-600 dark:text-amber-400' },
+  { icon: FlaskRound, text: 'Calculate MAP for blood pressure 140/90', category: 'Calculator', tone: 'text-violet-500 dark:text-violet-400' },
+  { icon: Brain, text: 'What are the first-line medications for hypertension?', category: 'Treatment', tone: 'text-emerald-650 dark:text-emerald-400' },
+  { icon: Stethoscope, text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-550 dark:text-cyan-400' },
+  { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-brand-accent dark:text-brand-accent' },
 ]
 
 const CASES = [
@@ -991,45 +991,45 @@ function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title:
 function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) => void }) {
   return (
     <div className="flex-1 overflow-y-auto scroll-premium">
-      <div className="flex flex-col items-center justify-center min-h-full text-center px-6 pt-12 pb-36 max-w-3xl mx-auto">
+      <div className="flex flex-col items-center justify-center min-h-full text-center px-4 pt-6 pb-20 max-w-3xl mx-auto">
         {/* Hero */}
-        <div className="relative mb-4">
-          <div className="w-16 h-16 bg-brand-accent flex items-center justify-center text-white border-2 border-clinical-black dark:border-white clinical-shadow">
-            <Sparkles size={28} className="text-white" />
+        <div className="relative mb-3">
+          <div className="w-12 h-12 bg-brand-accent flex items-center justify-center text-white border-2 border-clinical-black dark:border-white clinical-shadow">
+            <Sparkles size={22} className="text-white" />
           </div>
         </div>
 
-        <h1 className="font-headline-xl text-3xl font-black text-clinical-black dark:text-white uppercase mb-3">
+        <h1 className="font-headline-xl text-2xl font-black text-clinical-black dark:text-white uppercase mb-2">
           How can I help you today?
         </h1>
-        <p className="text-gray-500 dark:text-slate-400 text-[14px] leading-relaxed mb-4 max-w-lg">
+        <p className="text-gray-500 dark:text-slate-400 text-[13px] leading-relaxed mb-3 max-w-lg">
           Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-slate-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-slate-300">WHO</span> guidelines — with citations you can verify.
         </p>
 
         {/* Trust strip */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
-          <Pill variant="info" icon={Shield}>Educational only — not medical advice</Pill>
-          <Pill variant="success" icon={CheckCircle2}>Every claim cited</Pill>
-          <Pill variant="okf" icon={Brain}>OKF + RAG hybrid</Pill>
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+          <Pill variant="info" icon={Shield} className="text-[10px] px-2 py-0.5">Educational only — not medical advice</Pill>
+          <Pill variant="success" icon={CheckCircle2} className="text-[10px] px-2 py-0.5">Every claim cited</Pill>
+          <Pill variant="okf" icon={Brain} className="text-[10px] px-2 py-0.5">OKF + RAG hybrid</Pill>
         </div>
 
         {/* Suggested questions */}
-        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">Try asking</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        <p className="text-[9px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2.5">Try asking</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
           {SUGGESTED_QUESTIONS.map((q, i) => (
             <button
               key={i}
               onClick={() => onQuestionClick(q.text)}
-              className="group flex items-start gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white hover:bg-stone-50 dark:hover:bg-slate-800 text-left transition-all shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none rounded-none"
+              className="group flex items-start gap-2.5 p-3 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white hover:bg-stone-50 dark:hover:bg-slate-800 text-left transition-all shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none rounded-none"
             >
-              <div className={cn('w-9 h-9 border-2 border-clinical-black dark:border-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform bg-stone-100 dark:bg-slate-800 rounded-none', q.tone)}>
-                <q.icon size={15} />
+              <div className={cn('w-8 h-8 border-2 border-clinical-black dark:border-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform bg-stone-100 dark:bg-slate-800 rounded-none', q.tone)}>
+                <q.icon size={13} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 mb-0.5 uppercase tracking-widest leading-none">{q.category}</p>
-                <p className="text-[13px] text-clinical-black dark:text-white leading-snug font-bold font-headline-md mt-1">{q.text}</p>
+                <p className="text-[9px] font-bold text-gray-400 dark:text-slate-500 mb-0.5 uppercase tracking-widest leading-none">{q.category}</p>
+                <p className="text-[12.5px] text-clinical-black dark:text-white leading-snug font-bold font-headline-md mt-1">{q.text}</p>
               </div>
-              <ArrowUp size={13} className="text-gray-400 dark:text-slate-500 group-hover:text-brand-accent group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
+              <ArrowUp size={12} className="text-gray-400 dark:text-slate-500 group-hover:text-brand-accent group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
             </button>
           ))}
         </div>
@@ -2057,10 +2057,10 @@ export default function App() {
             <button
               onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
               className={cn(
-                'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white transition-all shrink-0',
+                'w-10 h-10 flex items-center justify-center border-2 transition-all shrink-0',
                 evidencePanelOpen
-                  ? 'bg-brand-accent text-white shadow-none'
-                  : 'bg-white dark:bg-slate-900 text-clinical-black dark:text-white hover:text-brand-accent dark:hover:text-brand-accent clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none'
+                  ? 'bg-brand-accent text-white border-brand-accent shadow-none'
+                  : 'bg-white dark:bg-slate-900 text-brand-accent dark:text-brand-accent border-brand-accent dark:border-brand-accent shadow-[2px_2px_0px_0px_rgba(255,51,102,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none'
               )}
               title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
             >
@@ -2092,7 +2092,7 @@ export default function App() {
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(rgba(255,255,255,0.15)_1px,transparent_1px)] [background-size:24px_24px] [background-position:center] transition-all duration-1000">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-all duration-1000">
           {messages.length === 0 ? (
             <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
           ) : (
@@ -2113,10 +2113,10 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-3 pb-3 px-4 md:px-6 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
+        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-2 pb-2.5 px-4 md:px-6 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
           <div className="max-w-3xl mx-auto">
             <div className={cn(
-              'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-1 pr-3 pl-2 flex items-end gap-2 clinical-shadow',
+              'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-1 pr-2.5 pl-2 flex items-end gap-2 clinical-shadow',
             )}>
               <textarea
                 ref={textareaRef}
@@ -2125,9 +2125,9 @@ export default function App() {
                 onKeyDown={handleKeyDown}
                 placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION…'}
                 rows={1}
-                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-sm font-bold resize-none focus:outline-none focus:ring-0 leading-relaxed px-2 py-2 min-h-[42px] max-h-32 scrollbar-thin"
+                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-sm font-medium resize-none focus:outline-none focus:ring-0 leading-normal px-2 py-1.5 min-h-[36px] max-h-32 scrollbar-thin"
               />
-              <div className="flex items-center gap-2 pb-1.5">
+              <div className="flex items-center gap-2 pb-1">
                 <button
                   onClick={() => setIsProfileModalOpen(true)}
                   className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-1.5 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white brutalist-button shrink-0"
@@ -2139,7 +2139,7 @@ export default function App() {
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isLoading}
                   className={cn(
-                    'shrink-0 h-9 px-4 font-label-md text-xs uppercase tracking-wider flex items-center gap-2 transition-all border-2 border-clinical-black dark:border-white brutalist-button',
+                    'shrink-0 h-8 px-3.5 font-label-md text-xs uppercase tracking-wider flex items-center gap-2 transition-all border-2 border-clinical-black dark:border-white brutalist-button',
                     inputValue.trim() && !isLoading
                       ? 'bg-[#1a1a1a] dark:bg-brand-accent hover:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
                       : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 cursor-not-allowed'
@@ -2147,21 +2147,21 @@ export default function App() {
                 >
                   {isLoading ? <Spinner size="sm" /> : (
                     <>
-                      <Send size={16} />
+                      <Send size={14} />
                       <span>Send</span>
                     </>
                   )}
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-4 px-2">
-              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low flex items-center gap-1.5">
+            <div className="flex items-center justify-between mt-3.5 px-2">
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low flex items-center gap-1.5">
                 <Kbd>Enter</Kbd> send
                 <span className="text-gray-300 dark:text-slate-700">·</span>
                 <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> new line
               </p>
-              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low inline-flex items-center gap-1.5 bg-yellow-200 dark:bg-yellow-900/60 px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
-                <Shield size={12} /> Educational purposes only
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low inline-flex items-center gap-1.5 bg-yellow-200 dark:bg-yellow-900/60 px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white">
+                <Shield size={11} /> Educational purposes only
               </p>
             </div>
           </div>

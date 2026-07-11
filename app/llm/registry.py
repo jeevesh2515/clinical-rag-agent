@@ -175,6 +175,7 @@ def list_models_for_api(settings: Settings) -> list[dict]:
             "provider": m.provider,
             "description": m.description,
             "badge": m.badge,
-            "configured": llm.is_configured,
+            "is_configured": llm.is_configured,
         })
     return out
+

@@ -17,7 +17,7 @@ from __future__ import annotations
 from datetime import timedelta
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -38,6 +38,7 @@ from app.auth.security import (
 )
 from app.db import User as OrmUser
 from app.db import get_db
+from app.core.rate_limiter import limiter
 
 router = APIRouter()
 
@@ -131,7 +132,8 @@ async def get_current_active_clinician(
 
 
 @router.post("/register", response_model=UserModel, status_code=status.HTTP_201_CREATED)
-async def register_user(payload: RegisterUser, db: Session = Depends(get_db)) -> UserInDB:
+@limiter.limit("3/minute")
+async def register_user(request: Request, payload: RegisterUser, db: Session = Depends(get_db)) -> UserInDB:
     if get_user_by_username(db, payload.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered"
@@ -161,7 +163,9 @@ async def register_user(payload: RegisterUser, db: Session = Depends(get_db)) ->
 
 
 @router.post("/token", response_model=Token)
+@limiter.limit("10/minute")
 async def login_for_access_token(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ) -> dict:
@@ -181,7 +185,8 @@ async def login_for_access_token(
 
 
 @router.post("/login", response_model=Token)
-async def login_json(payload: LoginUser, db: Session = Depends(get_db)) -> dict:
+@limiter.limit("10/minute")
+async def login_json(request: Request, payload: LoginUser, db: Session = Depends(get_db)) -> dict:
     """JSON-bodied login. Used by the frontend so we don't have to ship form-data."""
     user = authenticate_user(db, payload.username, payload.password)
     if not user:

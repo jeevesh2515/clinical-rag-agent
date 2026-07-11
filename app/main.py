@@ -8,9 +8,13 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 from app.api.routes import router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.rate_limiter import limiter
 from app.models import ApiError, ApiErrorDetail, ApiErrorResponse
 
 configure_logging()
@@ -36,6 +40,10 @@ app = FastAPI(
     version="0.1.0",
     description="Hybrid clinical RAG API with citations, tools, and evaluation.",
 )
+
+# Wire rate limiter into the app so route-level @limiter.limit() decorators work.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 settings = get_settings()
 

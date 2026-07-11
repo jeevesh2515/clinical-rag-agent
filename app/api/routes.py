@@ -289,12 +289,12 @@ def list_all_cases() -> dict:
 def list_available_models() -> dict:
     """Return the catalogue of LLM models the frontend can pick from.
 
-    Each entry includes a ``configured`` flag so the UI can show "Set
+    Each entry includes an ``is_configured`` flag so the UI can show "Set
     OPENAI_API_KEY to enable" hints when a provider isn't usable on the
     current deployment.
     """
     settings = get_settings()
     return {
         "models": list_models_for_api(settings),
-        "active": DEFAULT_MODEL_ID,
+        "default_model": DEFAULT_MODEL_ID,
     }

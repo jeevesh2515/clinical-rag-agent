@@ -30,10 +30,15 @@ from fastapi.testclient import TestClient
 from app.agents.clinical_rag_agent import ClinicalRAGAgent
 from app.api.dependencies import get_agent, get_store
 from app.core.config import Settings
+from app.core.rate_limiter import limiter
 from app.db import bootstrap, reset_engine_for_tests
 from app.ingestion.chunker import chunk_page
 from app.main import app
 from app.retrieval.store import HybridStore
+
+# Disable rate limiting for all unit/integration tests
+limiter.enabled = False
+
 
 
 def _resolve_persistent_db_path() -> Path | None:

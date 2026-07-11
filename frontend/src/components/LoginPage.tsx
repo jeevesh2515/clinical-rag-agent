@@ -1,15 +1,14 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Loader2, AlertCircle, Stethoscope, Heart, Activity, Shield, Brain } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
+import { Eye, EyeOff, AlertCircle, ArrowRight, Stethoscope, ShieldCheck, Check } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import { Button, Pill } from './ui/primitives'
 
 const API_BASE = ''
 
-const FEATURES = [
-  { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600 dark:text-rose-400' },
-  { icon: Activity, text: 'Hypertension management', color: 'text-emerald-600 dark:text-emerald-400' },
-  { icon: Shield, text: 'Safety-first AI', color: 'text-brand-accent' },
-  { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-600 dark:text-violet-400' },
+const PERKS = [
+  { title: 'Cited, never guessed', desc: 'Every answer is linked to a guideline source.' },
+  { title: 'Safety-first routing', desc: 'Diagnosis, dosing, and emergency triage are refused upstream.' },
+  { title: 'Calm by design', desc: 'Pressure Relief mode built in for stressful moments.' },
 ]
 
 interface LoginPageProps {
@@ -24,9 +23,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
-
-  const { theme } = useTheme()
+  const [rememberMe, setRememberMe] = useState(true)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,16 +41,13 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
           const err = await res.json()
           detail = err.detail || detail
         } catch {
-          detail = `Login failed: HTTP ${res.status} ${res.statusText || ''}`
+          detail = `Login failed: HTTP ${res.status}`
         }
         throw new Error(detail)
       }
       const data = await res.json()
-      if (rememberMe) {
-        localStorage.setItem('cw_token', data.access_token)
-      } else {
-        sessionStorage.setItem('cw_token', data.access_token)
-      }
+      if (rememberMe) localStorage.setItem('cw_token', data.access_token)
+      else sessionStorage.setItem('cw_token', data.access_token)
       await onLogin(data.access_token)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -63,162 +57,187 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome }: L
   }
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md transition-colors duration-300">
-      {/* Left - Brand Side */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-800 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
-        <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
-          <button 
+    <div className="min-h-screen flex bg-ink-50 dark:bg-ink-950 text-ink-900 dark:text-white font-sans">
+      {/* Left brand panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-500 via-brand-600 to-ink-900" />
+        <div className="absolute inset-0 bg-mesh-brand opacity-50" />
+        <div className="absolute inset-0 bg-grid-soft-dark [background-size:32px_32px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_60%)] opacity-30" />
+
+        <div className="relative z-10 flex flex-col justify-between px-12 py-12 w-full">
+          <button
             onClick={onBackToHome}
-            className="flex items-center gap-4 mb-8 text-left focus:outline-none hover:opacity-80 transition-all w-fit"
+            className="flex items-center gap-2.5 group w-fit"
           >
-            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white neo-brutal-shadow-sm font-bold animate-pulse-slow">
-              <Stethoscope size={22} className="text-white" />
+            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/20 group-hover:bg-white/25 transition-all">
+              <Stethoscope size={18} className="text-white" />
             </div>
-            <span className="text-clinical-black dark:text-white font-headline-md text-headline-md font-bold tracking-tight uppercase">Clinical Workflows</span>
+            <span className="font-display text-base font-bold text-white tracking-tight">
+              CardioCompass
+            </span>
           </button>
-          
-          <h1 className="font-headline-xl text-[48px] font-black text-clinical-black dark:text-white leading-tight uppercase mb-6">
-            Evidence-Based<br />Care Planning
-          </h1>
-          
-          <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 leading-relaxed mb-12 border-l-4 border-outline-variant dark:border-slate-700 pl-6">
-            Hybrid retrieval, grounded citations, and safety-first AI for hypertension management.
-          </p>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {FEATURES.map((f, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 neo-brutal-shadow-sm dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.15)]">
-                <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                  <f.icon size={20} className={f.color} />
+
+          <div className="space-y-8 max-w-md">
+            <div>
+              <Pill variant="calm" icon={<ShieldCheck size={11} />} className="!bg-white/15 !text-white !border-white/30">
+                Educational use · Not a substitute for clinical care
+              </Pill>
+              <h1 className="mt-5 font-display text-4xl xl:text-5xl font-bold text-white leading-[1.05] tracking-tight">
+                Welcome back to calmer,
+                <br />
+                <span className="text-white/80">more confident care.</span>
+              </h1>
+              <p className="mt-4 text-white/80 leading-relaxed">
+                Sign in to continue asking hypertension questions with cited, validated answers.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {PERKS.map((p) => (
+                <div key={p.title} className="flex items-start gap-3 rounded-2xl bg-white/10 backdrop-blur border border-white/15 p-4">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                    <Check size={14} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{p.title}</p>
+                    <p className="text-xs text-white/70 mt-0.5">{p.desc}</p>
+                  </div>
                 </div>
-                <span className="text-clinical-black dark:text-white font-bold text-xs uppercase tracking-wide">{f.text}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          
-          <div className="mt-16">
-            <p className="text-on-surface-variant dark:text-slate-500 font-code-sm text-[10px] uppercase font-bold">For educational purposes only. Not for clinical use.</p>
-          </div>
+
+          <p className="text-xs text-white/60">
+            CardioCompass · Built on OKF + RAG hybrid retrieval.
+          </p>
         </div>
       </div>
 
-      {/* Right - Form Side */}
-      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 transition-colors duration-300 relative pt-20">
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
+      {/* Right form */}
+      <div className="flex-1 flex flex-col">
+        {/* Top bar */}
+        <div className="flex items-center justify-between p-6 lg:p-8">
           <button
             onClick={onBackToHome}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+            className="text-sm text-ink-500 hover:text-ink-900 dark:text-ink-400 dark:hover:text-white transition-colors"
           >
-            ← Back to Home
+            ← Back home
           </button>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-clinical-black dark:text-white font-code-sm font-bold uppercase select-none">
-              {theme === 'dark' ? 'Dark' : 'Light'}
-            </span>
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
 
-        <div className="w-full max-w-md border-4 border-clinical-black dark:border-white p-8 bg-white dark:bg-slate-900 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-colors duration-300">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="w-12 h-12 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white mb-3">
-              <Stethoscope size={22} className="text-white" />
-            </div>
-            <h1 className="font-headline-md text-headline-lg font-black text-clinical-black dark:text-white uppercase">Clinical Workflows</h1>
-            <p className="text-on-surface-variant dark:text-slate-400 text-xs font-bold font-code-sm uppercase mt-1">Sign in to your account</p>
-          </div>
-
-          <div className="hidden lg:block mb-8">
-            <h2 className="font-headline-xl text-headline-xl font-black text-clinical-black dark:text-white uppercase">Welcome back</h2>
-            <p className="text-on-surface-variant dark:text-slate-400 text-xs font-bold font-code-sm uppercase mt-1">Sign in to your account to continue</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
-                Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                required
-                autoFocus
-                placeholder="Enter your username"
-                className="w-full px-4 py-3 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent dark:focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent dark:focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+        <div className="flex-1 flex items-center justify-center p-6 lg:p-8">
+          <div className="w-full max-w-md">
+            <div className="lg:hidden mb-8 text-center">
+              <div className="inline-flex items-center gap-2.5 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+                  <Stethoscope size={16} className="text-white" />
+                </div>
+                <span className="font-display text-base font-bold text-ink-900 dark:text-white">CardioCompass</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-ink-900 dark:text-white tracking-tight">
+              Sign in
+            </h2>
+            <p className="mt-2 text-sm text-ink-500 dark:text-ink-400">
+              Continue your conversation with cited, grounded answers.
+            </p>
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              <div>
+                <label htmlFor="username" className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-1.5">
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  autoFocus
+                  placeholder="Enter your username"
+                  className="input"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="password" className="block text-xs font-semibold text-ink-700 dark:text-ink-300">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-xs text-brand-500 hover:text-brand-600 font-medium transition-colors"
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Enter your password"
+                    className="input pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-ink-400 hover:text-ink-700 dark:hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2.5 select-none cursor-pointer">
                 <input
                   type="checkbox"
                   checked={rememberMe}
-                  onChange={e => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded-none border-2 border-clinical-black dark:border-slate-700 text-brand-accent focus:ring-0"
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-ink-300 text-brand-500 focus:ring-brand-500/30 focus:ring-offset-0 dark:border-ink-600 dark:bg-ink-900"
                 />
-                <span className="text-xs font-bold text-clinical-black dark:text-white uppercase font-code-sm">Remember me</span>
+                <span className="text-sm text-ink-600 dark:text-ink-300">Keep me signed in</span>
               </label>
-            </div>
 
-            {error && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 dark:bg-rose-950/30 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold text-xs uppercase animate-fade-in-up">
-                <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
-                <p>{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white neo-brutal-shadow dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] neo-brutal-btn uppercase font-bold tracking-wider hover:bg-brand-accent/90 transition-all flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <><Loader2 size={16} className="animate-spin" /> Signing in&hellip;</>
-              ) : (
-                'Sign in'
+              {error && (
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 animate-fade-up">
+                  <AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
+                </div>
               )}
-            </button>
-          </form>
 
-          <p className="mt-8 text-center text-xs font-bold text-on-surface-variant dark:text-slate-400 font-code-sm uppercase">
-            Don&apos;t have an account?{' '}
-            <button
-              onClick={onSwitchToSignup}
-              className="font-bold text-brand-accent hover:underline hover:text-brand-accent/80 transition-colors"
-            >
-              Create one
-            </button>
-          </p>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={isLoading}
+                iconRight={!isLoading && <ArrowRight size={16} />}
+              >
+                {isLoading ? 'Signing in…' : 'Sign in'}
+              </Button>
+            </form>
 
-          <div className="mt-6 p-3 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-800 text-xs font-bold font-code-sm text-center">
-            <p className="text-clinical-black dark:text-white">
-              Demo: Register with any username/email/password to get started
+            <p className="mt-6 text-center text-sm text-ink-500 dark:text-ink-400">
+              Don't have an account?{' '}
+              <button
+                onClick={onSwitchToSignup}
+                className="text-brand-500 hover:text-brand-600 font-semibold transition-colors"
+              >
+                Create one
+              </button>
             </p>
+
+            <div className="mt-6 p-3.5 rounded-xl bg-ink-50 dark:bg-ink-900/50 border border-ink-200/60 dark:border-ink-800">
+              <p className="text-xs text-ink-500 dark:text-ink-400 text-center">
+                Demo · register any username/email/password to get started.
+              </p>
+            </div>
           </div>
         </div>
       </div>

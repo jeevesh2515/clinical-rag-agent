@@ -1,22 +1,22 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Plus, MessageSquare, LogOut,
-  Send, Activity, BookOpen, Shield, Zap, Brain, Heart,
-  X, Loader2, AlertCircle, CheckCircle2,
-  FileText, ExternalLink, Info, Stethoscope, Search, Trash2,
-  BarChart3, Network, Database, Copy, Check, PanelLeftClose,
-  PanelLeft, Sparkles, ChevronDown, ChevronRight,
-  ArrowUp, FlaskRound, type LucideIcon
+  Send, Activity, BookOpen, Shield, Brain, Heart,
+  X, AlertCircle, CheckCircle2,
+  Stethoscope, Search, Trash2,
+  PanelLeftClose,
+  PanelLeft, Sparkles,
+  ArrowUp, FlaskRound, Wind,
 } from 'lucide-react'
 import LoginPage from './components/LoginPage'
 import SignupPage from './components/SignupPage'
 import LandingPage from './components/LandingPage'
 import Markdown from './components/Markdown'
 import ThemeToggle from './components/ThemeToggle'
-
-// Permissive icon type — lucide props allow string | number for size, but we
-// only ever pass numbers.
-type IconType = LucideIcon
+import PressureReliefModal from './components/relief/PressureReliefModal'
+import { CitationCard } from './components/chat/CitationCard'
+import { Button, Pill, Avatar, Kbd, cn } from './components/ui/primitives'
+import { MODELS, DEFAULT_MODEL, getModel, type ModelOption } from './lib/models'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -99,28 +99,15 @@ interface Conversation {
 const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
 
 const SUGGESTED_QUESTIONS = [
-  { icon: Heart, text: 'When should drug treatment be considered for Stage 1 hypertension?', category: 'Guidelines', tone: 'text-rose-500' },
-  { icon: Activity, text: 'What is the BP target for patients with CKD Stage 3?', category: 'Targets', tone: 'text-amber-500' },
-  { icon: FlaskRound, text: 'Calculate MAP for blood pressure 140/90', category: 'Calculator', tone: 'text-violet-500' },
-  { icon: Brain, text: 'What are the first-line medications for hypertension?', category: 'Treatment', tone: 'text-emerald-500' },
-  { icon: Stethoscope, text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-500' },
-  { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-brand-accent' },
-]
-
-const CASES = [
-  { id: '', label: 'No case selected' },
-  { id: 'htn-001', label: 'htn-001 — 55M Stage 1 HTN' },
-  { id: 'htn-002', label: 'htn-002 — 68F HTN + CKD' },
-  { id: 'htn-003', label: 'htn-003 — 32F HTN + Pregnancy' },
-  { id: 'htn-004', label: 'htn-004 — 72M HTN + Diabetes' },
-  { id: 'htn-005', label: 'htn-005 — 48M Resistant HTN' },
+  { icon: Heart,        text: 'When should drug treatment be considered for Stage 1 hypertension?', category: 'Guidelines', tone: 'text-rose-500' },
+  { icon: Activity,     text: 'What is the BP target for patients with CKD Stage 3?',            category: 'Targets',    tone: 'text-amber-500' },
+  { icon: FlaskRound,   text: 'Calculate MAP for blood pressure 140/90',                       category: 'Calculator', tone: 'text-violet-500' },
+  { icon: Brain,        text: 'What are the first-line medications for hypertension?',         category: 'Treatment',  tone: 'text-emerald-500' },
+  { icon: Stethoscope,  text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-500' },
+  { icon: BookOpen,     text: 'Summarize NICE NG136 guidelines for hypertension management',  category: 'NICE',       tone: 'text-brand-500' },
 ]
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
-
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(' ')
-}
 
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr)
@@ -136,10 +123,6 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString()
 }
 
-function getInitials(name: string): string {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-}
-
 // ─── API Client ───────────────────────────────────────────────────────────────
 
 class ApiClient {
@@ -150,15 +133,6 @@ class ApiClient {
     const h: HeadersInit = { 'Content-Type': 'application/json' }
     if (this.token) h['Authorization'] = `Bearer ${this.token}`
     return h
-  }
-
-  async register(username: string, email: string, password: string): Promise<UserProfile> {
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST', headers: this.headers(),
-      body: JSON.stringify({ username, email, password }),
-    })
-    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || 'Registration failed') }
-    return res.json()
   }
 
   async login(username: string, password: string): Promise<{ access_token: string; token_type: string }> {
@@ -174,56 +148,6 @@ class ApiClient {
     const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
     if (!res.ok) throw new Error('Failed to get user')
     return res.json()
-  }
-
-  async updateProfile(data: { full_name?: string; email?: string; date_of_birth?: string; notes?: string }): Promise<UserProfile> {
-    const res = await fetch(`${API_BASE}/api/auth/users/me`, {
-      method: 'PUT',
-      headers: this.headers(),
-      body: JSON.stringify(data),
-    })
-    if (!res.ok) {
-      const e = await res.json().catch(() => ({}))
-      throw new Error(e.detail || 'Failed to update profile')
-    }
-    return res.json()
-  }
-
-  async listUploads(): Promise<{ uploads: any[]; total: number }> {
-    const res = await fetch(`${API_BASE}/api/uploads`, { headers: this.headers() })
-    if (!res.ok) throw new Error('Failed to list uploads')
-    return res.json()
-  }
-
-  async createUpload(file: File, category: string, userNote?: string): Promise<any> {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('category', category)
-    if (userNote) formData.append('user_note', userNote)
-    
-    // Note: Do not set Content-Type header manually when sending FormData,
-    // browser will set it with the correct boundary parameters automatically.
-    const headers = { ...this.headers() } as any
-    delete headers['Content-Type']
-    
-    const res = await fetch(`${API_BASE}/api/uploads`, {
-      method: 'POST',
-      headers,
-      body: formData
-    })
-    if (!res.ok) {
-      const e = await res.json().catch(() => ({}))
-      throw new Error(e.detail || 'Upload failed')
-    }
-    return res.json()
-  }
-
-  async deleteUpload(uploadId: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/uploads/${uploadId}`, {
-      method: 'DELETE',
-      headers: this.headers()
-    })
-    if (!res.ok) throw new Error('Failed to delete upload')
   }
 
   async listConversations(): Promise<ConversationSummary[]> {
@@ -251,194 +175,173 @@ class ApiClient {
     await fetch(`${API_BASE}/api/chat/conversations/${id}`, { method: 'DELETE', headers: this.headers() })
   }
 
-  async sendMessage(conversationId: string, question: string, mode: string, caseId?: string): Promise<ChatMessage> {
+  async sendMessage(
+    conversationId: string,
+    question: string,
+    mode: string,
+    caseId?: string,
+    modelId?: string
+  ): Promise<ChatMessage> {
     const res = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/message`, {
       method: 'POST', headers: this.headers(),
-      body: JSON.stringify({ question, mode, case_id: caseId }),
+      body: JSON.stringify({ question, mode, case_id: caseId, model_id: modelId }),
     })
-    if (!res.ok) throw new Error('Failed to send message')
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}))
+      throw new Error(e.detail || 'Failed to send message')
+    }
     return res.json()
+  }
+
+  async listModels(): Promise<{ models: ModelOption[]; active: string }> {
+    // Optional endpoint — falls back to static list if unavailable
+    try {
+      const res = await fetch(`${API_BASE}/api/models`, { headers: this.headers() })
+      if (res.ok) return res.json()
+    } catch { /* */ }
+    return { models: MODELS, active: DEFAULT_MODEL }
   }
 }
 
 const api = new ApiClient()
 
-// ─── Small Components ─────────────────────────────────────────────────────────
+// ─── Tiny UI helpers ──────────────────────────────────────────────────────────
 
-function Spinner({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
-  const s = { sm: 'w-3.5 h-3.5', md: 'w-4 h-4', lg: 'w-6 h-6' }
-  return <Loader2 className={cn('animate-spin', s[size], className)} />
-}
-
-function Pill({
-  children, variant = 'default', className = '', icon: Icon
-}: {
-  children: React.ReactNode
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'okf' | 'rag' | 'neutral'
-  className?: string
-  icon?: IconType
-}) {
-  const v: Record<string, string> = {
-    default: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30',
-    danger:  'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30',
-    info:    'bg-stone-100 text-[#1a1a1a] border-[#1a1a1a] dark:bg-slate-800 dark:text-white dark:border-white',
-    okf:     'bg-[#ffddb8] text-[#1a1a1a] border-[#1a1a1a] dark:bg-amber-955/40 dark:text-amber-200 dark:border-amber-500',
-    rag:     'bg-[#6ffbbe] text-[#1a1a1a] border-[#1a1a1a] dark:bg-emerald-955/40 dark:text-emerald-200 dark:border-emerald-500',
-    neutral: 'bg-white/80 text-gray-600 border-gray-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700/60',
-  }
-  return (
-    <span className={cn(
-      'inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold border-2 tracking-tight uppercase',
-      v[variant],
-      className,
-    )}>
-      {Icon && <Icon size={10} className="-ml-0.5" />}
-      {children}
-    </span>
-  )
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <button
-      onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="w-8 h-8 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-all brutalist-button bg-white dark:bg-slate-800"
-      title={copied ? 'Copied!' : 'Copy'}
-    >
-      {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} className="text-inherit text-gray-400" />}
-    </button>
-  )
+function Spinner({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const s = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'
+  return <span className={cn('inline-block border-2 border-current border-t-transparent rounded-full animate-spin', s)} />
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, onOpenProfile, isLoading }: {
+function Sidebar({
+  isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, isLoading,
+}: {
   isOpen: boolean; onToggle: () => void; user: UserProfile; conversations: ConversationSummary[]
   currentConvId: string | null; onNewChat: () => void; onSelectConv: (id: string) => void
-  onDeleteConv: (id: string) => void; onLogout: () => void; onOpenProfile: () => void; isLoading: boolean
+  onDeleteConv: (id: string) => void; onLogout: () => void; isLoading: boolean
 }) {
   const [search, setSearch] = useState('')
   const [hoveredConv, setHoveredConv] = useState<string | null>(null)
-  const filtered = conversations.filter(c => c.title.toLowerCase().includes(search.toLowerCase()))
+  const filtered = conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
 
   const now = new Date()
-  const today = filtered.filter(c => new Date(c.updated_at).toDateString() === now.toDateString())
-  const week = filtered.filter(c => {
+  const today = filtered.filter((c) => new Date(c.updated_at).toDateString() === now.toDateString())
+  const week = filtered.filter((c) => {
     const d = now.getTime() - new Date(c.updated_at).getTime()
     return d > 86400000 && d < 7 * 86400000
   })
-  const older = filtered.filter(c => now.getTime() - new Date(c.updated_at).getTime() >= 7 * 86400000)
+  const older = filtered.filter((c) => now.getTime() - new Date(c.updated_at).getTime() >= 7 * 86400000)
 
   return (
-    <aside className={cn(
-      'flex flex-col h-full bg-[#1a1a1a] text-white border-r-2 border-[#1a1a1a] transition-all duration-300 ease-in-out shrink-0 z-10',
-      isOpen ? 'w-sidebar-width' : 'w-0 overflow-hidden'
-    )}>
+    <aside
+      className={cn(
+        'flex flex-col h-full bg-white/80 dark:bg-ink-950/80 backdrop-blur-xl border-r border-ink-200/60 dark:border-ink-800',
+        'transition-all duration-300 ease-smooth shrink-0 z-10',
+        isOpen ? 'w-[280px]' : 'w-0 overflow-hidden'
+      )}
+    >
       {/* Brand */}
-      <div className="flex items-center justify-between px-4 py-6 border-b-2 border-white/20">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="w-8 h-8 bg-brand-accent flex items-center justify-center text-white border-2 border-white">
-            <Stethoscope size={16} className="text-white" />
+      <div className="flex items-center justify-between px-4 py-5 border-b border-ink-200/60 dark:border-ink-800">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-soft">
+            <Stethoscope size={14} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-label-md text-label-md text-white uppercase tracking-wider leading-none">Clinical Workflows</h1>
-            <p className="font-mono text-[10px] text-white/70 mt-1 uppercase">Hypertension AI</p>
+            <h1 className="font-display text-sm font-bold text-ink-900 dark:text-white tracking-tight leading-none">
+              CardioCompass
+            </h1>
+            <p className="font-mono text-[10px] text-ink-500 dark:text-ink-400 mt-1 leading-none">
+              Hypertension AI
+            </p>
           </div>
         </div>
-        <button onClick={onToggle} className="p-1 text-white/50 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30" title="Collapse sidebar">
+        <Button variant="icon" onClick={onToggle} title="Collapse sidebar" aria-label="Collapse sidebar">
           <PanelLeftClose size={16} />
-        </button>
+        </Button>
       </div>
 
       {/* New chat */}
-      <div className="px-4 py-4">
-        <button onClick={onNewChat}
-          className="w-full bg-brand-accent text-white font-label-md text-label-md py-2.5 flex items-center justify-center gap-2 hover:bg-white hover:text-[#1a1a1a] transition-colors border-2 border-white uppercase tracking-wider brutalist-button">
-          <Plus size={15} />
-          <span>New Chat</span>
-        </button>
+      <div className="px-3 py-3">
+        <Button
+          variant="primary"
+          fullWidth
+          onClick={onNewChat}
+          icon={<Plus size={16} />}
+          className="!justify-start"
+        >
+          New chat
+        </Button>
       </div>
 
       {/* Search */}
-      <div className="px-4 pb-4">
+      <div className="px-3 pb-3">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
           <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search conversations..."
-            className="w-full bg-white/10 border-2 border-white/20 text-white pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-brand-accent transition-all placeholder-white/30 font-mono"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search conversations…"
+            className="w-full bg-ink-50 dark:bg-ink-900/60 border border-ink-200/60 dark:border-ink-800 text-ink-900 dark:text-white pl-9 pr-3 py-2 text-sm rounded-xl focus:outline-none focus:border-brand-500/40 focus:bg-white dark:focus:bg-ink-900 transition-all placeholder:text-ink-400"
           />
         </div>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium px-4 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scroll-premium px-2 py-1">
         {isLoading ? (
-          <div className="flex justify-center py-8"><Spinner className="text-white/50" /></div>
+          <div className="flex justify-center py-8"><Spinner /></div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 px-4 border border-dashed border-white/20">
-            <MessageSquare size={20} className="text-white/30 mx-auto mb-3" />
-            <p className="text-white/50 text-[12px] font-medium">No conversations yet</p>
-            <p className="text-white/40 text-[11px] mt-1">Start one to see it here</p>
+          <div className="text-center py-12 px-4">
+            <MessageSquare size={18} className="text-ink-300 dark:text-ink-700 mx-auto mb-2.5" />
+            <p className="text-ink-500 text-xs">No conversations yet</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-0.5">
             {today.length > 0 && <SectionLabel>Today</SectionLabel>}
-            {today.map(c => (
+            {today.map((c) => (
               <ConvItem key={c.id} conv={c} isActive={c.id === currentConvId}
                 hovered={hoveredConv === c.id} onHover={setHoveredConv}
                 onSelect={onSelectConv} onDelete={onDeleteConv} />
             ))}
-            {week.length > 0 && <SectionLabel className="mt-3">This Week</SectionLabel>}
-            {week.map(c => (
+            {week.length > 0 && <SectionLabel>This week</SectionLabel>}
+            {week.map((c) => (
               <ConvItem key={c.id} conv={c} isActive={c.id === currentConvId}
                 hovered={hoveredConv === c.id} onHover={setHoveredConv}
                 onSelect={onSelectConv} onDelete={onDeleteConv} />
             ))}
-            {older.length > 0 && <SectionLabel className="mt-3">Earlier</SectionLabel>}
-            {older.map(c => (
+            {older.length > 0 && <SectionLabel>Earlier</SectionLabel>}
+            {older.map((c) => (
               <ConvItem key={c.id} conv={c} isActive={c.id === currentConvId}
                 hovered={hoveredConv === c.id} onHover={setHoveredConv}
                 onSelect={onSelectConv} onDelete={onDeleteConv} />
             ))}
-          </>
+          </div>
         )}
       </div>
 
-      {/* Footer User card */}
-      <div className="p-4 border-t-2 border-white/20 flex items-center justify-between bg-black">
-        <div className="flex items-center gap-3 min-w-0">
-          <button 
-            onClick={onOpenProfile}
-            className="w-8 h-8 bg-white flex items-center justify-center text-[#1a1a1a] font-bold text-sm border-2 border-white shrink-0 clinical-shadow"
-            title="Edit Profile"
-          >
-            {getInitials(user.username)}
-          </button>
-          <div className="min-w-0">
-            <p className="font-label-md text-label-md leading-tight text-white uppercase truncate">{user.username}</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <div className="w-1.5 h-1.5 bg-brand-accent"></div>
-              <p className="text-[10px] text-white/70 font-mono capitalize truncate">{user.roles[0] || 'patient'}</p>
-            </div>
+      {/* Footer user card */}
+      <div className="p-3 border-t border-ink-200/60 dark:border-ink-800">
+        <div className="flex items-center gap-3 rounded-xl p-2 hover:bg-ink-50 dark:hover:bg-ink-900/60 transition-colors">
+          <Avatar name={user.username} size={32} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-ink-900 dark:text-white truncate">{user.username}</p>
+            <p className="text-[11px] text-ink-500 dark:text-ink-400 capitalize">{user.roles[0] || 'patient'}</p>
           </div>
+          <Button variant="icon" onClick={onLogout} title="Sign out" aria-label="Sign out">
+            <LogOut size={15} />
+          </Button>
         </div>
-        <button onClick={onLogout} className="text-white/50 hover:text-brand-accent transition-colors shrink-0" title="Log out">
-          <LogOut size={16} />
-        </button>
       </div>
     </aside>
   )
 }
 
-function SectionLabel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className={cn('py-1.5', className)}>
-      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest font-mono">{children}</p>
-    </div>
+    <p className="px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400 dark:text-ink-500">
+      {children}
+    </p>
   )
 }
 
@@ -448,28 +351,28 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
 }) {
   return (
     <button
-      className={cn(
-        'w-full flex items-center gap-2.5 p-2 text-left group transition-all duration-300 relative border-2 mb-1.5',
-        isActive
-          ? 'bg-brand-accent text-white border-[#1a1a1a] clinical-shadow'
-          : 'text-white/70 hover:bg-white/10 hover:text-white border-transparent hover:border-white/20'
-      )}
       onClick={() => onSelect(conv.id)}
       onMouseEnter={() => onHover(conv.id)}
       onMouseLeave={() => onHover(null)}
+      className={cn(
+        'group w-full flex items-center gap-2.5 p-2.5 rounded-xl text-left transition-all duration-200',
+        isActive
+          ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300'
+          : 'text-ink-700 dark:text-ink-300 hover:bg-ink-50 dark:hover:bg-ink-900/60'
+      )}
     >
-      <MessageSquare size={13} className={cn('shrink-0', isActive ? 'text-white' : 'text-white/50')} />
+      <MessageSquare size={14} className={cn('shrink-0', isActive ? 'text-brand-500' : 'text-ink-400')} />
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold truncate leading-tight">{conv.title}</p>
-        <p className={cn("text-[10px] mt-0.5 font-mono", isActive ? "text-white/80" : "text-white/50")}>
+        <p className="text-[13px] font-medium truncate leading-tight">{conv.title}</p>
+        <p className={cn('text-[10.5px] mt-0.5', isActive ? 'text-brand-600/70 dark:text-brand-300/70' : 'text-ink-400')}>
           {formatRelativeTime(conv.updated_at)}
         </p>
       </div>
       {(hovered || isActive) && (
         <button
-          onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-          className="p-1 text-white/50 hover:text-white hover:bg-white/10 transition-all shrink-0"
-          title="Delete conversation"
+          onClick={(e) => { e.stopPropagation(); onDelete(conv.id) }}
+          className="p-1 rounded-md text-ink-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors shrink-0"
+          title="Delete"
         >
           <Trash2 size={12} />
         </button>
@@ -478,110 +381,57 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
   )
 }
 
-// ─── Citation Card (collapsible) ──────────────────────────────────────────────
+// ─── Message bubble ───────────────────────────────────────────────────────────
 
-function CitationCard({ citation }: { citation: Citation }) {
-  const [open, setOpen] = useState(true)
-
-  return (
-    <div className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden clinical-shadow relative transition-all duration-1000">
-      <div className="absolute -top-2 -left-2 w-4 h-4 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white z-10 transition-all duration-1000"></div>
-      <div className="p-3 border-b-2 border-[#1a1a1a] dark:border-white/20 flex items-center justify-between bg-[#f0f0f0] dark:bg-slate-900">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-[#1a1a1a] dark:bg-white text-white dark:text-black border-2 border-[#1a1a1a] dark:border-white">0</span>
-          <Pill variant={citation.source_type === 'okf' ? 'okf' : 'rag'} icon={citation.source_type === 'okf' ? Brain : Database}>
-            {citation.source_type?.toUpperCase() || 'RAG'}
-          </Pill>
-        </div>
-        <button onClick={() => setOpen(!open)} className="text-[#1a1a1a] dark:text-white">
-          {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-        </button>
-      </div>
-      <div className="p-5 space-y-4">
-        <div className="flex items-center gap-1 text-[10px] font-bold text-[#1a1a1a] dark:text-white tracking-widest uppercase font-code-sm bg-yellow-200 dark:bg-yellow-900/60 inline-block px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
-          <span className="material-symbols-outlined text-[14px] align-text-bottom">format_quote</span>
-          QUOTED
-        </div>
-        <p className="text-sm text-[#1a1a1a] dark:text-white font-code-sm leading-relaxed bg-[#f0f0f0] dark:bg-slate-900 p-4 border-2 border-[#1a1a1a] dark:border-white font-medium opacity-low">
-          {citation.quote || citation.title}
-        </p>
-        <div className="flex items-center justify-between pt-4 border-t-2 border-[#1a1a1a] dark:border-white/20 border-dashed">
-          <div className="flex items-center gap-2 text-xs text-[#1a1a1a] dark:text-white font-code-sm truncate font-bold bg-[#1a1a1a] dark:bg-white dark:text-black text-white px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
-            <FileText size={14} />
-            <span className="truncate">{citation.source_id || 'source'}</span>
-          </div>
-          <CopyButton text={citation.quote || citation.source_id || ''} />
-        </div>
-        {citation.source_url && (
-          <a href={citation.source_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[12px] text-brand-accent dark:text-brand-accent hover:underline font-medium">
-            <ExternalLink size={11} /> View source
-          </a>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─── Message Bubble ───────────────────────────────────────────────────────────
-
-function MessageBubble({ message, onCitationClick, mode, username }: {
-  message: ChatMessage; onCitationClick: (c: Citation[]) => void; mode: 'patient' | 'clinician'; username: string
+function MessageBubble({ message, onCitationClick, username, index }: {
+  message: ChatMessage; onCitationClick: (c: Citation[]) => void; username: string; index?: number
 }) {
   const isUser = message.role === 'user'
-  const isClinician = mode === 'clinician' && !isUser
-
   return (
-    <div className={cn('flex gap-4 animate-message w-full mb-8')}>
+    <div
+      className={cn('flex gap-3 md:gap-4 w-full animate-fade-up')}
+      style={{ animationDelay: `${(index || 0) * 60}ms` }}
+    >
       {isUser ? (
         <>
-          <div className="w-10 h-10 bg-[#1a1a1a] dark:bg-white text-white dark:text-black flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
-            {username.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-5 clinical-shadow relative">
-            <div className="absolute -top-3 left-4 bg-brand-accent text-white px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
-              {username}
-            </div>
-            <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed mt-2 text-[16px] whitespace-pre-wrap break-words">
+          <Avatar name={username} size={36} tone="ink" className="mt-1" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-ink-700 dark:text-ink-200 mb-1.5">{username}</p>
+            <div className="rounded-2xl rounded-tl-md bg-ink-100 dark:bg-ink-800/60 px-4 py-3 text-[15px] text-ink-900 dark:text-white leading-relaxed whitespace-pre-wrap break-words">
               {message.content}
             </div>
           </div>
         </>
       ) : (
         <>
-          <div className="w-10 h-10 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white flex-shrink-0 flex items-center justify-center clinical-shadow">
-            <span className="material-symbols-outlined text-white text-[24px]">auto_awesome</span>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-soft shrink-0 mt-1">
+            <Sparkles size={15} className="text-white" />
           </div>
-          <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-6 clinical-shadow relative">
-            <div className="absolute -top-3 left-4 bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
-              {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
-            </div>
-            <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed space-y-5 mt-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-ink-700 dark:text-ink-200 mb-1.5">Hypertension AI</p>
+            <div className="rounded-2xl rounded-tl-md bg-white dark:bg-ink-900/60 border border-ink-200/60 dark:border-ink-800 px-5 py-4 shadow-soft-sm">
               <Markdown content={message.content} />
-
-              {/* Badges row */}
               {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
-                <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white">
+                <div className="mt-5 pt-4 border-t border-ink-200/60 dark:border-ink-800 flex flex-wrap items-center gap-2">
                   {message.citations && message.citations.length > 0 && (
                     <button
                       onClick={() => onCitationClick(message.citations!)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white clinical-shadow uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-ink-100 dark:bg-ink-800 text-ink-700 dark:text-ink-200 hover:bg-ink-200 dark:hover:bg-ink-700 hover:shadow-soft-sm hover:-translate-y-[0.5px] transition-all duration-200 active:scale-95"
                     >
-                      <span className="material-symbols-outlined text-[16px]">menu_book</span>
-                      <span>{message.citations.length} source{message.citations.length !== 1 ? 's' : ''}</span>
+                      <BookOpen size={12} />
+                      {message.citations.length} source{message.citations.length !== 1 ? 's' : ''}
                     </button>
                   )}
                   {message.knowledge_path?.path && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-accent text-white border-2 border-[#1a1a1a] clinical-shadow uppercase font-code-sm">
-                      <span className="material-symbols-outlined text-[16px]">verified</span>
-                      <span>{message.knowledge_path.path === 'rag' ? 'RAG' : 'OKF'}</span>
-                    </span>
+                    <Pill variant={message.knowledge_path.path === 'okf' ? 'okf' : 'brand'}>
+                      {message.knowledge_path.path === 'okf' ? 'OKF' : 'RAG'}
+                    </Pill>
+                  )}
+                  {message.safety_flags?.unsupported_claims_detected && (
+                    <Pill variant="warning" icon={<AlertCircle size={10} />}>Unverified claims</Pill>
                   )}
                   {message.safety_flags?.medical_disclaimer && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#f0f0f0] dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white uppercase font-code-sm opacity-low">
-                      <span className="material-symbols-outlined text-[16px]">security</span>
-                      <span>Disclaimer</span>
-                    </span>
+                    <Pill variant="default" icon={<Shield size={10} />}>Educational only</Pill>
                   )}
                 </div>
               )}
@@ -593,19 +443,23 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
   )
 }
 
-// ─── Typing indicator ────────────────────────────────────────────────────────
+// ─── Typing indicator ─────────────────────────────────────────────────────────
 
 function TypingIndicator() {
   return (
-    <div className="flex gap-4 animate-fade-in mb-4">
-      <div className="w-10 h-10 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white flex-shrink-0 flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-        <Sparkles size={20} className="text-white" />
+    <div className="flex gap-3 md:gap-4 w-full animate-fade-up">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-soft shrink-0 mt-1">
+        <Sparkles size={15} className="text-white" />
       </div>
-      <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-5 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none relative">
-        <div className="absolute -top-3 left-4 bg-[#1a1a1a] text-white px-2 py-0.5 border-2 border-[#1a1a1a] font-label-md text-xs uppercase tracking-wider">Hypertension AI</div>
-        <div className="flex items-center gap-1.5 mt-2">
-          {[0, 150, 300].map(d => (
-            <div key={d} className="w-2.5 h-2.5 bg-brand-accent dark:bg-white rounded-none border border-clinical-black dark:border-transparent animate-bounce" style={{ animationDelay: `${d}ms` }} />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-ink-700 dark:text-ink-200 mb-1.5">Hypertension AI</p>
+        <div className="rounded-2xl rounded-tl-md bg-white dark:bg-ink-900/60 border border-ink-200/60 dark:border-ink-800 px-5 py-4 inline-flex items-center gap-1.5">
+          {[0, 150, 300].map((d) => (
+            <div
+              key={d}
+              className="w-2 h-2 rounded-full bg-brand-500/70 animate-bounce"
+              style={{ animationDelay: `${d}ms` }}
+            />
           ))}
         </div>
       </div>
@@ -613,305 +467,68 @@ function TypingIndicator() {
   )
 }
 
-// ─── Evidence Panel ──────────────────────────────────────────────────────────
+// ─── Welcome screen ──────────────────────────────────────────────────────────
 
-type EvidenceTab = 'sources' | 'tools' | 'safety' | 'knowledge'
-
-function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, knowledgePath }: {
-  isOpen: boolean; onClose: () => void
-  citations: Citation[]; toolTrace: ToolTrace[]
-  safetyFlags: SafetyFlags | null; knowledgePath: KnowledgePath | null
-}) {
-  const [tab, setTab] = useState<EvidenceTab>('sources')
-  const [lisinoprilDosage, setLisinoprilDosage] = useState(20)
-
-  const tabs: { id: EvidenceTab; label: string; icon: IconType; count: number }[] = useMemo(() => [
-    { id: 'sources', label: 'Sources', icon: BookOpen, count: citations.length },
-    { id: 'tools', label: 'Tools', icon: Zap, count: toolTrace.length },
-    { id: 'safety', label: 'Safety', icon: Shield, count: safetyFlags ? 1 : 0 },
-    { id: 'knowledge', label: 'Knowledge', icon: Network, count: knowledgePath?.okf_concepts?.length || 0 },
-  ], [citations.length, toolTrace.length, safetyFlags, knowledgePath])
-
-  return (
-    <aside className={cn(
-      'flex flex-col h-full bg-white dark:bg-slate-950 border-l-2 border-[#1a1a1a] dark:border-white transition-all duration-300 ease-in-out shrink-0',
-      isOpen ? 'w-evidence-panel-width' : 'w-0 overflow-hidden'
-    )}>
-      {isOpen && (
-        <>
-          {/* Header */}
-          <div className="px-6 py-6 border-b-2 border-[#1a1a1a] dark:border-white bg-brand-accent text-white transition-all duration-1000">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-headline-md text-headline-md font-bold uppercase tracking-wide">Evidence & Context</h3>
-              <button onClick={onClose} className="text-white/70 hover:text-white hover:bg-white/10 transition-all p-1.5 border-2 border-transparent hover:border-white/30" title="Close">
-                <X size={18} />
-              </button>
-            </div>
-            <p className="font-code-sm text-xs font-bold uppercase opacity-low">Sources, tools, and safety</p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b-2 border-[#1a1a1a] dark:border-white/20 bg-[#f0f0f0] dark:bg-slate-950 p-0 overflow-x-auto scrollbar-thin">
-            {tabs.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold transition-all whitespace-nowrap',
-                  tab === t.id
-                    ? 'text-[#1a1a1a] dark:text-white border-b-4 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 border-t-2 border-t-[#1a1a1a] dark:border-t-white'
-                    : 'text-[#1a1a1a]/60 dark:text-white/60 hover:text-[#1a1a1a] dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 border-b-4 border-transparent border-t-2 border-t-transparent opacity-low'
-                )}
-              >
-                <t.icon size={14} />
-                <span className="uppercase tracking-wider text-xs font-headline-md">{t.label}</span>
-                {t.count > 0 && (
-                  <span className={cn(
-                    'px-1.5 py-0.5 text-[10px] font-bold border-2',
-                    tab === t.id
-                      ? 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white'
-                      : 'bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-[#1a1a1a]/20 dark:border-white/20'
-                  )}>{t.count}</span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto scroll-premium p-6 space-y-6 bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
-            {tab === 'sources' && (
-              <>
-                {/* Titration Sandbox */}
-                <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-5 space-y-6 mb-8 transition-all duration-1000">
-                  <div className="flex items-center justify-between border-b-2 border-[#1a1a1a] dark:border-white/20 pb-2">
-                    <h3 className="font-headline-md text-sm uppercase text-[#1a1a1a] dark:text-white">Titration Sandbox</h3>
-                    <span className="material-symbols-outlined text-brand-accent">monitoring</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between font-code-sm text-[10px] uppercase font-bold text-[#1a1a1a] dark:text-white">
-                        <span>Lisinopril Dosage</span>
-                        <span className="text-brand-accent">{lisinoprilDosage}mg</span>
-                      </div>
-                      <input 
-                        type="range"
-                        min="0"
-                        max="40"
-                        step="10"
-                        value={lisinoprilDosage}
-                        onChange={e => setLisinoprilDosage(Number(e.target.value))}
-                        className="w-full h-2 bg-[#f0f0f0] dark:bg-slate-800 appearance-none border-2 border-[#1a1a1a] dark:border-white accent-brand-accent cursor-pointer"
-                      />
-                    </div>
-                    <div className="p-4 bg-[#1a1a1a] dark:bg-slate-950 text-white space-y-2">
-                      <p className="font-label-md text-[10px] uppercase tracking-widest opacity-70">Predicted Outcome</p>
-                      <div className="flex items-end gap-1 h-16 pt-2">
-                        <div className="flex-1 bg-brand-accent/30 border-t-2 border-brand-accent" style={{ height: '100%' }}></div>
-                        <div className="flex-1 bg-brand-accent/40 border-t-2 border-brand-accent" style={{ height: `${Math.max(30, 100 - (lisinoprilDosage / 40) * 20)}%` }}></div>
-                        <div className="flex-1 bg-brand-accent/60 border-t-2 border-brand-accent" style={{ height: `${Math.max(25, 100 - (lisinoprilDosage / 40) * 45)}%` }}></div>
-                        <div className="flex-1 bg-brand-accent border-t-2 border-brand-accent" style={{ height: `${Math.max(20, 100 - (lisinoprilDosage / 40) * 60)}%` }}></div>
-                      </div>
-                      <div className="flex justify-between font-code-sm text-[12px] font-bold">
-                        <span>{145 - Math.round((lisinoprilDosage / 40) * 19)}/{92 - Math.round((lisinoprilDosage / 40) * 12)}</span>
-                        <span className="text-brand-accent">BP Target Goal</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {citations.length === 0 ? (
-                  <EmptyEvidence icon={BookOpen} title="No citations yet" subtitle="Ask a clinical question to see source material" />
-                ) : (
-                  citations.map((c, i) => <CitationCard key={i} citation={c} />)
-                )}
-              </>
-            )}
-            {tab === 'tools' && (
-              toolTrace.length === 0 ? (
-                <EmptyEvidence icon={Zap} title="No tools used" subtitle="Tools will appear here if the agent called them" />
-              ) : toolTrace.map((t, i) => (
-                <div key={i} className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20">
-                      <Zap size={13} className="text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">{t.name}</p>
-                    {typeof t.duration_ms === 'number' && (
-                      <span className="ml-auto text-[11px] text-gray-400 dark:text-slate-500 font-mono">{t.duration_ms}ms</span>
-                    )}
-                  </div>
-                  {(t.input_summary || t.inputs) && (
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Input</p>
-                      <pre className="text-[11.5px] leading-relaxed text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-950/60 border-2 border-[#1a1a1a] dark:border-white p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
-                        {t.input_summary || JSON.stringify(t.inputs, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                  {(t.output_summary || t.output !== undefined) && (
-                    <div>
-                      <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1.5">Output</p>
-                      <pre className="text-[11.5px] leading-relaxed text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-200 dark:border-emerald-500/20 p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
-                        {t.output_summary || JSON.stringify(t.output, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-            {tab === 'safety' && (
-              <div className="space-y-4">
-                <div className={cn(
-                  'flex items-start gap-3 p-4 border-2 border-[#1a1a1a] dark:border-white clinical-shadow',
-                  safetyFlags?.unsupported_claims_detected
-                    ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
-                    : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
-                )}>
-                  {safetyFlags?.unsupported_claims_detected
-                    ? <AlertCircle size={18} className="text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-                    : <CheckCircle2 size={18} className="text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />}
-                  <div>
-                    <p className={cn(
-                      'text-[13px] font-semibold',
-                      safetyFlags?.unsupported_claims_detected ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-700 dark:text-emerald-300'
-                    )}>
-                      {safetyFlags?.unsupported_claims_detected ? 'Unsupported Claims Detected' : 'Claims Validated'}
-                    </p>
-                    <p className="text-[11.5px] text-gray-600 dark:text-slate-400 mt-1 leading-relaxed">
-                      {safetyFlags?.unsupported_claims_detected
-                        ? 'Some claims could not be fully supported by indexed sources — treat as provisional.'
-                        : 'All clinical claims are supported by indexed guideline sources.'}
-                    </p>
-                  </div>
-                </div>
-                {safetyFlags?.medical_disclaimer && (
-                  <div className="flex items-start gap-3 p-4 bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
-                    <Info size={18} className="text-brand-accent shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[13px] font-semibold text-brand-accent">Medical Disclaimer</p>
-                      <p className="text-[11.5px] text-gray-600 dark:text-slate-400 mt-1 leading-relaxed">
-                        Educational workflow support only — must not replace clinical judgment.
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {!safetyFlags && <EmptyEvidence icon={Shield} title="No safety data" />}
-              </div>
-            )}
-            {tab === 'knowledge' && (
-              <div className="space-y-4">
-                {knowledgePath ? (
-                  <>
-                    <div className="bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20">
-                          <Network size={13} className="text-brand-accent" />
-                        </div>
-                        <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">Knowledge Path</p>
-                        <Pill variant={knowledgePath.path === 'okf' ? 'okf' : 'rag'} className="ml-auto">
-                          {knowledgePath.path?.toUpperCase() || 'RAG'}
-                        </Pill>
-                      </div>
-                      {knowledgePath.reason && (
-                        <p className="text-[12px] text-gray-600 dark:text-slate-400 leading-relaxed">{knowledgePath.reason}</p>
-                      )}
-                    </div>
-                    {knowledgePath.okf_concepts && knowledgePath.okf_concepts.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1 font-mono">
-                          OKF Concepts Matched
-                        </p>
-                        {knowledgePath.okf_concepts.map((c, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 mb-1.5 transition-all"
-                          >
-                            <div className="w-7 h-7 bg-brand-accent/10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a]/20 dark:border-white/20">
-                              <Brain size={12} className="text-brand-accent" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[12.5px] font-semibold text-gray-900 dark:text-slate-200 truncate">{c.title}</p>
-                              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-mono truncate">{c.source_path}</p>
-                            </div>
-                            <div className="shrink-0 w-16">
-                              <div className="w-full h-1.5 bg-gray-200 dark:bg-slate-800 overflow-hidden">
-                                <div className="h-full bg-brand-accent transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
-                              </div>
-                              <p className="text-[10px] text-gray-500 dark:text-slate-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <EmptyEvidence icon={Network} title="No knowledge path" subtitle="Knowledge routing will appear here" />
-                )}
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </aside>
-  )
-}
-
-function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title: string; subtitle?: string }) {
-  return (
-    <div className="text-center py-12">
-      <div className="w-12 h-12 bg-gray-100 dark:bg-slate-800/60 mx-auto mb-3 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white">
-        <Icon size={20} className="text-gray-300 dark:text-slate-600" />
-      </div>
-      <p className="text-gray-700 dark:text-slate-300 text-[13px] font-medium">{title}</p>
-      {subtitle && <p className="text-gray-400 dark:text-slate-500 text-[11px] mt-1 max-w-[200px] mx-auto">{subtitle}</p>}
-    </div>
-  )
-}
-
-// ─── Welcome Screen ──────────────────────────────────────────────────────────
-
-function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) => void }) {
+function WelcomeScreen({ onQuestionClick, onOpenRelief }: { onQuestionClick: (text: string) => void; onOpenRelief: () => void }) {
   return (
     <div className="flex-1 overflow-y-auto scroll-premium">
       <div className="flex flex-col items-center justify-center min-h-full text-center px-6 py-12 max-w-3xl mx-auto">
-        {/* Hero */}
-        <div className="relative mb-8">
-          <div className="w-16 h-16 bg-brand-accent flex items-center justify-center text-white border-2 border-clinical-black dark:border-white clinical-shadow">
-            <Sparkles size={28} className="text-white" />
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-soft-lg">
+            <Stethoscope size={26} className="text-white" />
           </div>
         </div>
 
-        <h1 className="font-headline-xl text-3xl font-black text-clinical-black dark:text-white uppercase mb-3">
-          How can I help you today?
+        <h1 className="font-display text-3xl md:text-4xl font-bold text-ink-900 dark:text-white tracking-tight">
+          How can I help with your blood pressure today?
         </h1>
-        <p className="text-gray-500 dark:text-slate-400 text-[14px] leading-relaxed mb-10 max-w-lg">
-          Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-slate-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-slate-300">WHO</span> guidelines — with citations you can verify.
+        <p className="mt-3 text-[15px] text-ink-500 dark:text-ink-400 leading-relaxed max-w-lg">
+          Grounded in{' '}
+          <span className="font-semibold text-ink-700 dark:text-ink-200">NICE</span>,{' '}
+          <span className="font-semibold text-ink-700 dark:text-ink-200">ACC/AHA</span>,{' '}
+          <span className="font-semibold text-ink-700 dark:text-ink-200">ESC/ESH</span> &{' '}
+          <span className="font-semibold text-ink-700 dark:text-ink-200">WHO</span> guidelines.
+          Every claim is cited. No hallucinated doses.
         </p>
 
-        {/* Trust strip */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-          <Pill variant="info" icon={Shield}>Educational only — not medical advice</Pill>
-          <Pill variant="success" icon={CheckCircle2}>Every claim cited</Pill>
-          <Pill variant="okf" icon={Brain}>OKF + RAG hybrid</Pill>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <Pill variant="success" icon={<CheckCircle2 size={11} />}>Cited answers</Pill>
+          <Pill variant="info" icon={<Shield size={11} />}>Educational only</Pill>
+          <Pill variant="okf" icon={<Brain size={11} />}>OKF + RAG hybrid</Pill>
         </div>
 
-        {/* Suggested questions */}
-        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">Try asking</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        {/* Pressure relief CTA */}
+        <button
+          onClick={onOpenRelief}
+          className="mt-6 group flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-calm-50 hover:bg-calm-100 dark:bg-calm-500/10 dark:hover:bg-calm-500/15 border border-calm-200/60 dark:border-calm-500/30 transition-all duration-300 hover:shadow-soft hover:-translate-y-[1px]"
+        >
+          <div className="w-8 h-8 rounded-lg bg-calm-500/15 flex items-center justify-center">
+            <Wind size={15} className="text-calm-600 dark:text-calm-300" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-calm-800 dark:text-calm-200">Feeling tense? Try Pressure Relief</p>
+            <p className="text-[11px] text-calm-700/80 dark:text-calm-300/70">Guided breathing · 1–5 min · lower acute BP</p>
+          </div>
+          <ArrowUp size={14} className="text-calm-600 dark:text-calm-300 -rotate-90 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400 dark:text-ink-500 mt-10 mb-3">Try asking</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
           {SUGGESTED_QUESTIONS.map((q, i) => (
             <button
               key={i}
               onClick={() => onQuestionClick(q.text)}
-              className="group flex items-start gap-3 p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white hover:bg-stone-50 dark:hover:bg-slate-800 text-left transition-all shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none rounded-none"
+              className="group flex items-start gap-3 p-3.5 rounded-2xl bg-white dark:bg-ink-900/60 border border-ink-200/60 dark:border-ink-800 hover:border-ink-300 dark:hover:border-ink-700 hover:shadow-soft text-left transition-all duration-250"
             >
-              <div className={cn('w-9 h-9 border-2 border-clinical-black dark:border-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform bg-stone-100 dark:bg-slate-800 rounded-none', q.tone)}>
-                <q.icon size={15} />
+              <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-ink-100 dark:bg-ink-800', q.tone)}>
+                <q.icon size={14} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 mb-0.5 uppercase tracking-widest leading-none">{q.category}</p>
-                <p className="text-[13px] text-clinical-black dark:text-white leading-snug font-bold font-headline-md mt-1">{q.text}</p>
+                <p className="text-[10px] font-semibold text-ink-500 dark:text-ink-400 uppercase tracking-wider leading-none">{q.category}</p>
+                <p className="text-[13px] text-ink-900 dark:text-white leading-snug font-medium mt-1">{q.text}</p>
               </div>
-              <ArrowUp size={13} className="text-gray-400 dark:text-slate-500 group-hover:text-brand-accent group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
+              <ArrowUp size={13} className="text-ink-400 group-hover:text-brand-500 group-hover:-translate-y-0.5 transition-all rotate-45 shrink-0 mt-1" />
             </button>
           ))}
         </div>
@@ -920,488 +537,68 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
   )
 }
 
-// ─── Profile Modal ──────────────────────────────────────────────────────────
+// ─── Model selector ──────────────────────────────────────────────────────────
 
-function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
-  isOpen: boolean
-  onClose: () => void
-  user: UserProfile
-  onUpdateUser: (updated: UserProfile) => void
-  onChatAboutDoc: (filename: string) => void
+function ModelSelector({ value, onChange, models }: {
+  value: string; onChange: (id: string) => void; models: ModelOption[]
 }) {
-  const [fullName, setFullName] = useState(user.full_name || '')
-  const [dateOfBirth, setDateOfBirth] = useState(user.date_of_birth || '')
-  const [notes, setNotes] = useState(user.notes || '')
-  const [email, setEmail] = useState(user.email || '')
-  const [isSavingProfile, setIsSavingProfile] = useState(false)
-  const [profileError, setProfileError] = useState('')
-  const [profileSuccess, setProfileSuccess] = useState(false)
-
-  // Uploads state
-  const [uploads, setUploads] = useState<any[]>([])
-  const [isFetchingUploads, setIsFetchingUploads] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState('')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [uploadCategory, setUploadCategory] = useState<string>('other')
-  const [uploadNote, setUploadNote] = useState<string>('')
-
-  // Load uploads
-  useEffect(() => {
-    if (isOpen) {
-      setIsFetchingUploads(true)
-      api.listUploads()
-        .then(data => setUploads(data.uploads))
-        .catch(err => console.error(err))
-        .finally(() => setIsFetchingUploads(false))
-    }
-  }, [isOpen])
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setProfileError('')
-    setProfileSuccess(false)
-    setIsSavingProfile(true)
-    try {
-      const updated = await api.updateProfile({
-        full_name: fullName,
-        email,
-        date_of_birth: dateOfBirth,
-        notes
-      })
-      onUpdateUser(updated)
-      setProfileSuccess(true)
-    } catch (err) {
-      setProfileError(err instanceof Error ? err.message : 'Failed to update profile')
-    } finally {
-      setIsSavingProfile(false)
-    }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0])
-    }
-  }
-
-  const handleUploadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedFile) return
-    setUploadError('')
-    setIsUploading(true)
-    try {
-      const newUpload = await api.createUpload(selectedFile, uploadCategory, uploadNote)
-      setUploads(prev => [newUpload, ...prev])
-      setSelectedFile(null)
-      setUploadNote('')
-      // Clear file input
-      const fileInput = document.getElementById('profile-file-input') as HTMLInputElement
-      if (fileInput) fileInput.value = ''
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Upload failed')
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
-  const handleDeleteUpload = async (id: string) => {
-    try {
-      await api.deleteUpload(id)
-      setUploads(prev => prev.filter(u => u.id !== id))
-    } catch (err) {
-      alert('Failed to delete file')
-    }
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-clinical-black/50 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white text-clinical-black border-4 border-clinical-black w-full max-w-4xl max-h-[90vh] flex flex-col neo-brutal-shadow relative">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 bg-brand-accent text-white border-2 border-clinical-black flex items-center justify-center neo-brutal-shadow-sm font-bold z-10 hover:bg-brand-accent/80 active:translate-x-[1px] active:translate-y-[1px]"
-        >
-          <X size={16} />
-        </button>
-
-        {/* Modal Header */}
-        <div className="p-6 border-b-4 border-clinical-black bg-surface-container-low flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-headline-xl font-black uppercase tracking-tight">User Clinical Profile</h2>
-            <p className="text-xs text-on-surface-variant font-bold font-code-sm uppercase">Manage details and personalized RAG knowledge base</p>
-          </div>
-          <span className="px-3 py-1 border-2 border-clinical-black font-code-sm font-bold text-xs uppercase tracking-wide bg-brand-accent text-white neo-brutal-shadow-sm">
-            {user.roles[0] || 'patient'}
-          </span>
-        </div>
-
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Column 1: Profile Details */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider font-headline-lg border-b-2 border-clinical-black pb-1">
-              Personal Information
-            </h3>
-            
-            <form onSubmit={handleSaveProfile} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  placeholder="Enter full name"
-                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="Enter email address"
-                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={e => setDateOfBirth(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
-                  Notes & Description (Clinical Details)
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Add details regarding symptoms, medication history, or notes for simulated consultation."
-                  rows={4}
-                  className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
-                />
-              </div>
-
-              {profileError && (
-                <div className="p-3 bg-rose-50 border-2 border-rose-500 text-rose-700 text-xs font-bold uppercase flex items-center gap-2">
-                  <AlertCircle size={14} />
-                  <span>{profileError}</span>
-                </div>
-              )}
-
-              {profileSuccess && (
-                <div className="p-3 bg-emerald-50 border-2 border-emerald-500 text-emerald-700 text-xs font-bold uppercase flex items-center gap-2">
-                  <CheckCircle2 size={14} />
-                  <span>Profile updated successfully</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSavingProfile}
-                className="py-2.5 px-4 bg-brand-accent text-white font-bold border-2 border-clinical-black neo-brutal-shadow-sm neo-brutal-btn uppercase text-xs tracking-wider flex items-center gap-2"
-              >
-                {isSavingProfile ? <Loader2 size={14} className="animate-spin" /> : 'Save Changes'}
-              </button>
-            </form>
-          </div>
-
-          {/* Column 2: Document Ingestion */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider font-headline-lg border-b-2 border-clinical-black pb-1">
-              Personal Documents (RAG)
-            </h3>
-            
-            {/* Upload form */}
-            <form onSubmit={handleUploadSubmit} className="p-4 border-2 border-clinical-black bg-stone-50 space-y-3">
-              <span className="text-[10px] font-code-sm font-bold uppercase tracking-wider block text-on-surface-variant">
-                Upload prescription / doctor notes / report (PDF or Image)
-              </span>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Category</label>
-                  <select
-                    value={uploadCategory}
-                    onChange={e => setUploadCategory(e.target.value)}
-                    className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
-                  >
-                    <option value="prescription">Prescription</option>
-                    <option value="doctor_note">Doctor's Note</option>
-                    <option value="lab_report">Lab Report</option>
-                    <option value="image">Image</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Select File</label>
-                  <input
-                    id="profile-file-input"
-                    type="file"
-                    onChange={handleFileChange}
-                    accept="application/pdf,image/*"
-                    required
-                    className="w-full text-xs text-clinical-black border border-clinical-black/30 p-1 file:mr-2 file:py-1 file:px-2 file:border-2 file:border-clinical-black file:text-[10px] file:font-bold file:bg-white file:uppercase"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">User Note</label>
-                <input
-                  type="text"
-                  value={uploadNote}
-                  onChange={e => setUploadNote(e.target.value)}
-                  placeholder="Optional brief description of the document"
-                  className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
-                />
-              </div>
-
-              {uploadError && (
-                <div className="text-[10px] text-rose-600 font-bold uppercase">{uploadError}</div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isUploading || !selectedFile}
-                className="w-full py-2 bg-clinical-black text-white font-bold border-2 border-clinical-black neo-brutal-btn text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                {isUploading ? <Loader2 size={12} className="animate-spin" /> : 'Ingest Document'}
-              </button>
-            </form>
-
-            {/* List uploads */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase text-clinical-black tracking-wide">
-                Ingested Files ({uploads.length})
-              </h4>
-              
-              {isFetchingUploads ? (
-                <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin" /></div>
-              ) : uploads.length === 0 ? (
-                <p className="text-xs text-on-surface-variant italic">No documents uploaded yet.</p>
-              ) : (
-                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                  {uploads.map((up: any) => (
-                    <div key={up.id} className="p-3 bg-white border-2 border-clinical-black flex items-start justify-between gap-3 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                          <span className="px-1.5 py-0.5 bg-brand-accent/15 text-brand-accent border border-brand-accent/30 font-code-sm text-[9px] font-bold uppercase">
-                            {up.category}
-                          </span>
-                          <span className="text-[9px] font-code-sm text-on-surface-variant font-semibold">
-                            {up.kind} · {(up.size_bytes / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-                        <p className="text-xs font-bold truncate text-clinical-black" title={up.display_title || up.original_filename}>
-                          {up.display_title || up.original_filename}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => onChatAboutDoc(up.display_title || up.original_filename)}
-                          className="p-1 border border-clinical-black hover:bg-brand-accent hover:text-white transition-colors"
-                          title="Ask follow-up regarding this document"
-                        >
-                          <MessageSquare size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteUpload(up.id)}
-                          className="p-1 border border-clinical-black hover:bg-rose-500 hover:text-white transition-colors"
-                          title="Delete document"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Respiratory Rhythm Shader (Enhanced) ─────────────────────────────────────
-function BreathingShader() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const current = getModel(value)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null
-    if (!gl) return
-
-    let animationFrameId: number
-
-    const resizeCanvas = () => {
-      const w = canvas.clientWidth || window.innerWidth
-      const h = canvas.clientHeight || window.innerHeight
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w
-        canvas.height = h
-      }
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-
-    const ro = new ResizeObserver(() => resizeCanvas())
-    ro.observe(canvas)
-    resizeCanvas()
-
-    const vs = `
-      attribute vec2 a_position;
-      varying vec2 v_texCoord;
-      void main() {
-        v_texCoord = a_position * 0.5 + 0.5;
-        gl_Position = vec4(a_position, 0.0, 1.0);
-      }
-    `
-
-    // Enhanced fragment shader with breathing ring, particles, and rich teal palette
-    const fs = `
-      precision highp float;
-      varying vec2 v_texCoord;
-      uniform float u_time;
-      uniform vec2 u_resolution;
-
-      // pseudo-random hash for particle positions
-      float hash(vec2 p) {
-        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-      }
-
-      void main() {
-          vec2 uv = v_texCoord;
-          float aspect = u_resolution.x / u_resolution.y;
-          vec2 pos = uv;
-          pos.x *= aspect;
-
-          // Slow respiratory rhythm (~12 breaths/min)
-          float breath = sin(u_time * 0.25) * 0.5 + 0.5;
-          float breathIn = sin(u_time * 0.25); // -1..1 raw
-
-          // Gradient background — soft teal/cyan medical palette
-          vec3 deep = vec3(0.05, 0.30, 0.35);   // dark teal
-          vec3 mid  = vec3(0.10, 0.55, 0.55);   // rich teal
-          vec3 light = vec3(0.70, 0.92, 0.95);  // airy cyan
-          vec3 top  = mix(light, mid, 0.3);
-
-          vec3 bg = mix(mid, top, uv.y + breath * 0.15);
-          bg = mix(bg, deep, 1.0 - uv.y * 0.4);
-
-          // Breathing ring — concentric pulse that expands/contracts
-          vec2 center = vec2(0.5 * aspect, 0.5);
-          float dist = distance(pos, center);
-          float ringRadius = 0.25 + breath * 0.15;
-          float ring = 1.0 - smoothstep(0.02, 0.08, abs(dist - ringRadius));
-          vec3 ringColor = vec3(0.25, 0.85, 0.85);
-          bg += ring * ringColor * (0.3 + breath * 0.2);
-
-          // Inner glow — brightness pulse with breath
-          float innerGlow = exp(-dist * 3.0) * (0.1 + breath * 0.15);
-          bg += vec3(0.2, 0.7, 0.8) * innerGlow;
-
-          // Floating particles — 24 slow drifting dots
-          for (int i = 0; i < 24; i++) {
-            float fi = float(i);
-            float px = hash(vec2(fi, 0.0));
-            float py = hash(vec2(fi, 1.0));
-            float speed = 0.08 + hash(vec2(fi, 2.0)) * 0.12;
-            float size = 0.005 + hash(vec2(fi, 3.0)) * 0.015;
-            float phase = hash(vec2(fi, 4.0)) * 6.28;
-
-            vec2 p = vec2(px * aspect, py);
-            p.y = fract(p.y - u_time * speed * 0.15 + phase * 0.1);
-            p.x = px * aspect + sin(u_time * 0.1 + fi) * 0.05;
-
-            float d = distance(pos, p);
-            float particle = smoothstep(size, 0.0, d);
-            float twinkle = 0.5 + 0.5 * sin(u_time * 2.0 + fi * 1.7);
-            bg += vec3(0.3, 0.9, 0.9) * particle * twinkle * 0.25;
-          }
-
-          // Subtle vignette
-          float vignette = 1.0 - dist * 0.6;
-          bg *= vignette;
-
-          gl_FragColor = vec4(bg, 0.85);
-      }
-    `
-
-    const compileShader = (type: number, src: string) => {
-      const shader = gl.createShader(type)
-      if (!shader) return null
-      gl.shaderSource(shader, src)
-      gl.compileShader(shader)
-      return shader
-    }
-
-    const prog = gl.createProgram()
-    if (!prog) return
-
-    const vertexShader = compileShader(gl.VERTEX_SHADER, vs)
-    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fs)
-    if (!vertexShader || !fragmentShader) return
-
-    gl.attachShader(prog, vertexShader)
-    gl.attachShader(prog, fragmentShader)
-    gl.linkProgram(prog)
-    gl.useProgram(prog)
-
-    const buf = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW)
-
-    const pos = gl.getAttribLocation(prog, 'a_position')
-    gl.enableVertexAttribArray(pos)
-    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-
-    const uTime = gl.getUniformLocation(prog, 'u_time')
-    const uRes = gl.getUniformLocation(prog, 'u_resolution')
-
-    const render = (time: number) => {
-      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-        resizeCanvas()
-      }
-      gl.viewport(0, 0, canvas.width, canvas.height)
-      if (uTime) gl.uniform1f(uTime, time * 0.001)
-      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-      animationFrameId = requestAnimationFrame(render)
-    }
-
-    animationFrameId = requestAnimationFrame(render)
-
-    return () => {
-      cancelAnimationFrame(animationFrameId)
-      ro.disconnect()
-    }
+    window.addEventListener('mousedown', onClick)
+    return () => window.removeEventListener('mousedown', onClick)
   }, [])
 
   return (
-    <div className="absolute inset-0 w-full h-full -z-10 pointer-events-none transition-opacity duration-1000 opacity-80">
-      <canvas ref={canvasRef} className="block w-full h-full" />
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-ink-700 dark:text-ink-200 hover:bg-ink-100 dark:hover:bg-ink-800/60 transition-colors"
+        title="Switch model"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span className="hidden md:inline">{current.label}</span>
+        <span className="md:hidden">{current.label.split(' ')[0]}</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 shadow-soft-xl p-2 z-50 animate-fade-up">
+          <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-500 dark:text-ink-400">
+            Choose model
+          </p>
+          <div className="max-h-80 overflow-y-auto scroll-premium">
+            {models.map((m) => {
+              const selected = m.id === value
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => { onChange(m.id); setOpen(false) }}
+                  className={cn(
+                    'w-full text-left p-2.5 rounded-xl transition-colors',
+                    selected ? 'bg-brand-50 dark:bg-brand-500/10' : 'hover:bg-ink-50 dark:hover:bg-ink-800/60'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={cn('text-sm font-semibold', selected ? 'text-brand-700 dark:text-brand-300' : 'text-ink-900 dark:text-white')}>
+                      {m.label}
+                    </p>
+                    {m.badge && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-calm-50 text-calm-700 dark:bg-calm-500/15 dark:text-calm-300">
+                        {m.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11.5px] text-ink-500 dark:text-ink-400 mt-0.5">{m.description}</p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1412,35 +609,21 @@ export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [page, setPage] = useState<'landing' | 'login' | 'signup'>('landing')
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [evidencePanelOpen, setEvidencePanelOpen] = useState(false)
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [currentConvId, setCurrentConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isFetchingConvs, setIsFetchingConvs] = useState(false)
-  const [mode, setMode] = useState<'patient' | 'clinician'>('patient')
-  const [caseId, setCaseId] = useState('')
+  const [evidenceOpen, setEvidenceOpen] = useState(false)
   const [panelCitations, setPanelCitations] = useState<Citation[]>([])
-  const [panelTools, setPanelTools] = useState<ToolTrace[]>([])
-  const [panelSafety, setPanelSafety] = useState<SafetyFlags | null>(null)
-  const [panelKnowledge, setPanelKnowledge] = useState<KnowledgePath | null>(null)
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
-  const [isReliefMode, setIsReliefMode] = useState(false)
+  const [reliefOpen, setReliefOpen] = useState(false)
+  const [modelId, setModelId] = useState<string>(() => {
+    try { return localStorage.getItem('cw_model') || DEFAULT_MODEL } catch { return DEFAULT_MODEL }
+  })
 
-  const toggleReliefMode = () => {
-    const next = !isReliefMode
-    setIsReliefMode(next)
-    if (next) {
-      document.body.classList.add('relief-mode')
-    } else {
-      document.body.classList.remove('relief-mode')
-    }
-  }
-  
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-
 
   // Auto-resize composer
   useEffect(() => {
@@ -1455,11 +638,7 @@ export default function App() {
     if (savedToken) {
       api.setToken(savedToken)
       api.getCurrentUser()
-        .then(u => {
-          setUser(u)
-          const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
-          setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
-        })
+        .then(setUser)
         .catch(() => localStorage.removeItem('cw_token'))
     }
   }, [])
@@ -1473,37 +652,19 @@ export default function App() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, isLoading])
 
+  useEffect(() => {
+    try { localStorage.setItem('cw_model', modelId) } catch { /* */ }
+  }, [modelId])
+
   const handleLogin = async (token: string) => {
     api.setToken(token)
-    try {
-      const u = await api.getCurrentUser()
-      setUser(u)
-      const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
-      setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
-    } catch {
-      throw new Error('Failed to load user profile')
-    }
+    const u = await api.getCurrentUser()
+    setUser(u)
   }
-
   const handleSignup = async (token: string) => {
     api.setToken(token)
-    try {
-      const u = await api.getCurrentUser()
-      setUser(u)
-      const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
-      setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
-    } catch {
-      throw new Error('Failed to load user profile')
-    }
-  }
-
-  const handleChatAboutDoc = (filename: string) => {
-    setIsProfileModalOpen(false)
-    const prompt = `Let's review the uploaded document: "${filename}". Can you summarize its key clinical details and check for any recommendations or care gaps?`
-    setInputValue(prompt)
-    if (textareaRef.current) {
-      textareaRef.current.focus()
-    }
+    const u = await api.getCurrentUser()
+    setUser(u)
   }
 
   const handleLogout = () => {
@@ -1514,8 +675,7 @@ export default function App() {
 
   const handleNewChat = () => {
     setCurrentConvId(null); setMessages([]); setInputValue('')
-    setPanelCitations([]); setPanelTools([]); setPanelSafety(null); setPanelKnowledge(null)
-    setEvidencePanelOpen(false)
+    setPanelCitations([]); setEvidenceOpen(false)
   }
 
   const handleSelectConv = async (id: string) => {
@@ -1524,17 +684,14 @@ export default function App() {
       const conv = await api.getConversation(id)
       setMessages(conv.messages || [])
       const last = conv.messages?.[conv.messages.length - 1]
-      if (last?.role === 'assistant') {
-        setPanelCitations(last.citations || []); setPanelTools(last.tool_trace || [])
-        setPanelSafety(last.safety_flags || null); setPanelKnowledge(last.knowledge_path || null)
-      }
-      setEvidencePanelOpen(true)
+      if (last?.role === 'assistant') setPanelCitations(last.citations || [])
+      setEvidenceOpen(true)
     } catch { setMessages([]) }
   }
 
   const handleDeleteConv = async (id: string) => {
     await api.deleteConversation(id)
-    setConversations(prev => prev.filter(c => c.id !== id))
+    setConversations((prev) => prev.filter((c) => c.id !== id))
     if (currentConvId === id) { setCurrentConvId(null); setMessages([]) }
   }
 
@@ -1550,7 +707,7 @@ export default function App() {
       content: question,
       timestamp: new Date().toISOString(),
     }
-    setMessages(prev => [...prev, userMsg])
+    setMessages((prev) => [...prev, userMsg])
 
     try {
       let convId = currentConvId
@@ -1558,18 +715,15 @@ export default function App() {
         const conv = await api.createConversation(question.slice(0, 60))
         convId = conv.id
         setCurrentConvId(convId)
-        setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
+        setConversations((prev) => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
-      const assistantMsg = await api.sendMessage(convId, question, mode, caseId || undefined)
-      setMessages(prev => [...prev, assistantMsg])
+      const assistantMsg = await api.sendMessage(convId, question, 'patient', undefined, modelId)
+      setMessages((prev) => [...prev, assistantMsg])
       setPanelCitations(assistantMsg.citations || [])
-      setPanelTools(assistantMsg.tool_trace || [])
-      setPanelSafety(assistantMsg.safety_flags || null)
-      setPanelKnowledge(assistantMsg.knowledge_path || null)
-      if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
-      setConversations(prev => prev.map(c => c.id === convId ? { ...c, updated_at: new Date().toISOString() } : c))
+      if (assistantMsg.citations?.length) setEvidenceOpen(true)
+      setConversations((prev) => prev.map((c) => c.id === convId ? { ...c, updated_at: new Date().toISOString() } : c))
     } catch (err) {
-      setMessages(prev => [...prev, {
+      setMessages((prev) => [...prev, {
         id: `err-${Date.now()}`,
         role: 'assistant',
         content: `**Something went wrong.** ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
@@ -1587,181 +741,87 @@ export default function App() {
     }
   }
 
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)
-
-  const currentConv = conversations.find(c => c.id === currentConvId)
-  const canCollapseLeft = sidebarOpen
-  const isClinicianMode = mode === 'clinician'
+  const currentConv = conversations.find((c) => c.id === currentConvId)
 
   if (!user) {
-    if (page === 'landing') {
-      return <LandingPage onLogin={() => setPage('login')} onRegister={() => setPage('signup')} />
-    }
-    if (page === 'login') {
-      return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} onBackToHome={() => setPage('landing')} />
-    }
+    if (page === 'landing') return <LandingPage onLogin={() => setPage('login')} onRegister={() => setPage('signup')} />
+    if (page === 'login') return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} onBackToHome={() => setPage('landing')} />
     return <SignupPage onSignup={handleSignup} onSwitchToLogin={() => setPage('login')} onBackToHome={() => setPage('landing')} />
   }
 
   return (
-      <div className="flex h-screen overflow-hidden relative bg-white dark:bg-slate-950">
-      {isReliefMode && (
-        <>
-          <BreathingShader />
-          {/* Breath Guide */}
-          <div className="relief-breath-guide">
-            <div className="breath-ring" />
-            <span className="breath-label-in">breathe in</span>
-            <span className="breath-label-out">breathe out</span>
-          </div>
-          {/* CSS Floating Particles */}
-          <div className="relief-particles">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="relief-particle"
-                style={{
-                  left: `${(i * 8.3 + 3) % 100}%`,
-                  width: `${3 + (i % 3) * 2}px`,
-                  height: `${3 + (i % 3) * 2}px`,
-                  animationDuration: `${6 + (i % 4) * 3}s`,
-                  animationDelay: `${i * 0.6}s`,
-                }}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
+    <div className="flex h-screen overflow-hidden bg-ink-50 dark:bg-ink-950">
       <Sidebar
-        isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user}
-        conversations={conversations} currentConvId={currentConvId} onNewChat={handleNewChat}
-        onSelectConv={handleSelectConv} onDeleteConv={handleDeleteConv} onLogout={handleLogout}
-        onOpenProfile={() => setIsProfileModalOpen(true)}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        user={user}
+        conversations={conversations}
+        currentConvId={currentConvId}
+        onNewChat={handleNewChat}
+        onSelectConv={handleSelectConv}
+        onDeleteConv={handleDeleteConv}
+        onLogout={handleLogout}
         isLoading={isFetchingConvs}
       />
 
-      {/* Main Chat Area */}
-      <main className="flex flex-col flex-1 min-w-0 relative bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
+      {/* Main chat area */}
+      <main className="flex flex-col flex-1 min-w-0 relative">
         {/* Header */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-4 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
-          <div className="flex items-center gap-3 min-w-0">
-            {!canCollapseLeft && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white"
-                title="Open sidebar"
-              >
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-ink-200/60 dark:border-ink-800 bg-white/80 dark:bg-ink-950/80 backdrop-blur-xl shrink-0 z-20">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {!sidebarOpen && (
+              <Button variant="icon" onClick={() => setSidebarOpen(true)} title="Open sidebar">
                 <PanelLeft size={16} />
-              </button>
+              </Button>
             )}
-            <div className={cn(
-              'w-10 h-10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a] dark:border-white clinical-shadow',
-              isClinicianMode ? 'bg-slate-900' : 'bg-brand-accent'
-            )}>
-              <Stethoscope size={18} className="text-white" />
-            </div>
             <div className="min-w-0">
-              <h2 className="font-headline-md text-headline-md font-bold truncate max-w-md text-[#1a1a1a] dark:text-white">
-                {currentConv?.title || 'Clinical Workflows'}
+              <h2 className="font-display text-sm md:text-base font-bold text-ink-900 dark:text-white truncate">
+                {currentConv?.title || 'New conversation'}
               </h2>
-              <p className="font-code-sm text-body-sm text-[#1a1a1a]/70 dark:text-white/70 flex items-center gap-1 uppercase tracking-wider mt-1 opacity-low">
-                <span className={cn('w-2 h-2', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent')}></span>
-                {isClinicianMode ? 'Clinician mode · Workstation' : 'Patient mode · Hypertension AI'}
+              <p className="text-[11px] text-ink-500 dark:text-ink-400 flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {getModel(modelId).label}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Pressure Relief Toggle */}
-            <button 
-              onClick={toggleReliefMode}
-              className={cn(
-                "relief-toggle-btn relative flex items-center gap-2 px-4 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden",
-                isReliefMode 
-                  ? "bg-[#008080] text-white shadow-none border-[#008080]"
-                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
-              )}
-            >
-              {isReliefMode && (
-                <>
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#008080]/0 via-[#40c0c0]/20 to-[#008080]/0 animate-[shimmer_3s_ease-in-out_infinite]" />
-                  <span className="relative flex w-1.5 h-1.5 mr-0.5">
-                    <span className="absolute inset-0 rounded-full bg-teal-200 animate-ping opacity-40" />
-                    <span className="relative rounded-full bg-teal-100 w-1.5 h-1.5" />
-                  </span>
-                </>
-              )}
-              <span className="material-symbols-outlined text-[20px] relative">{isReliefMode ? 'spa' : 'air'}</span>
-              <span className="relative font-label-md">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
-            </button>
 
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setReliefOpen(true)}
+              icon={<Wind size={14} />}
+              className="!text-calm-600 dark:!text-calm-300 hover:!bg-calm-50 dark:hover:!bg-calm-500/10 breathe-glow"
+            >
+              <span className="hidden sm:inline">Pressure Relief</span>
+            </Button>
+            <ModelSelector value={modelId} onChange={setModelId} models={MODELS} />
             <ThemeToggle />
-            <select
-              value={caseId}
-              onChange={e => setCaseId(e.target.value)}
-              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none transition-all max-w-[200px] clinical-shadow font-code-sm uppercase font-bold text-[#1a1a1a] dark:text-white"
+            <Button
+              variant={evidenceOpen ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => setEvidenceOpen(!evidenceOpen)}
+              icon={<BookOpen size={14} />}
             >
-              {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
-            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow">
-              {(['patient', 'clinician'] as const).map(m => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={cn(
-                    'px-4 py-1.5 text-sm font-label-md transition-all uppercase',
-                    mode === m
-                      ? isClinicianMode
-                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                        : 'bg-brand-accent text-white'
-                      : 'text-[#1a1a1a]/70 dark:text-white/70 hover:text-[#1a1a1a] dark:hover:text-white opacity-low'
-                  )}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
-              className={cn(
-                'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white transition-all',
-                evidencePanelOpen
-                  ? 'bg-brand-accent text-white shadow-none'
-                  : 'bg-white dark:bg-slate-900 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none opacity-low'
-              )}
-              title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
-            >
-              <BarChart3 size={18} />
-            </button>
+              <span className="hidden md:inline">{panelCitations.length} source{panelCitations.length !== 1 ? 's' : ''}</span>
+              <span className="md:hidden">Sources</span>
+            </Button>
           </div>
-        </header>
-
-        {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setSidebarOpen(true)} className="text-[#1a1a1a] dark:text-white">
-              <PanelLeft size={20} />
-            </button>
-            <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white uppercase">Clinical Workflows</span>
-          </div>
-          <button onClick={() => setEvidencePanelOpen(!evidencePanelOpen)} className="text-[#1a1a1a] dark:text-white">
-            <Info size={18} />
-          </button>
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
+        <div className="flex-1 overflow-y-auto scroll-premium">
           {messages.length === 0 ? (
-            <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
+            <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} onOpenRelief={() => setReliefOpen(true)} />
           ) : (
-            <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto pb-32 animate-message transition-all duration-1000">
-              {messages.map(msg => (
+            <div className="px-4 sm:px-6 md:px-10 py-6 sm:py-10 space-y-6 sm:space-y-8 max-w-3xl mx-auto pb-32">
+              {messages.map((msg, i) => (
                 <MessageBubble
                   key={msg.id}
                   message={msg}
-                  mode={mode}
                   username={user?.username || 'You'}
-                  onCitationClick={c => { setPanelCitations(c); setEvidencePanelOpen(true) }}
+                  index={i}
+                  onCitationClick={(c) => { setPanelCitations(c); setEvidenceOpen(true) }}
                 />
               ))}
               {isLoading && <TypingIndicator />}
@@ -1770,86 +830,123 @@ export default function App() {
           )}
         </div>
 
+        {/* Floating Pressure Relief button (only when there are messages) */}
+        {messages.length > 0 && (
+          <button
+            onClick={() => setReliefOpen(true)}
+            className="absolute right-4 sm:right-6 bottom-28 z-20 group inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/95 dark:bg-ink-900/95 backdrop-blur-xl border border-calm-200/60 dark:border-calm-500/30 shadow-soft-lg hover:shadow-glow-calm hover:-translate-y-[2px] transition-all duration-300 breathe-glow"
+            title="Pressure Relief"
+          >
+            <span className="relative w-6 h-6 flex items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-calm-500/20 animate-ping" />
+              <span className="absolute inset-1.5 rounded-full bg-calm-500/30 animate-ping" style={{ animationDelay: '1s' }} />
+              <Wind size={16} className="relative text-calm-600 dark:text-calm-300" />
+            </span>
+            <div className="text-left">
+              <span className="text-xs font-bold text-calm-700 dark:text-calm-200 block leading-tight">Breathe</span>
+              <span className="text-[9px] text-calm-500 dark:text-calm-400 block leading-tight">1 min relief</span>
+            </div>
+          </button>
+        )}
+
         {/* Composer */}
-        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-6 pb-6 px-4 md:px-8 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
+        <div className="px-4 sm:px-6 md:px-10 pt-3 pb-5 bg-gradient-to-t from-ink-50 via-ink-50/90 to-transparent dark:from-ink-950 dark:via-ink-950/90 z-30">
           <div className="max-w-3xl mx-auto">
-            <div className={cn(
-              'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-2 pr-4 flex items-end gap-2 clinical-shadow',
-            )}>
+            <div className="relative rounded-2xl bg-white dark:bg-ink-900 border border-ink-200/60 dark:border-ink-800 shadow-soft transition-all duration-250 focus-within:border-brand-500/40 focus-within:shadow-soft-lg">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
-                onChange={handleInput}
+                onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION…'}
+                placeholder="Ask a clinical question about hypertension…"
                 rows={1}
-                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-[16px] font-bold resize-none focus:outline-none focus:ring-0 leading-relaxed px-3 py-3 min-h-[52px] max-h-32 scrollbar-thin"
+                className="block w-full bg-transparent text-[15px] text-ink-900 dark:text-white placeholder:text-ink-400 leading-relaxed resize-none focus:outline-none px-4 py-3.5 pr-24 max-h-40 scroll-premium"
               />
-              <div className="flex items-center gap-2 pb-1">
-                <button
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="text-[#1a1a1a] dark:text-white hover:bg-brand-accent hover:text-white dark:hover:bg-brand-accent transition-colors p-2 border-2 border-transparent hover:border-[#1a1a1a] dark:hover:border-white brutalist-button shrink-0"
-                  title="Upload documents"
+              <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReliefOpen(true)}
+                  className="!p-2 !text-calm-600 dark:!text-calm-300 hover:!bg-calm-50 dark:hover:!bg-calm-500/10"
+                  title="Pressure Relief"
                 >
-                  <span className="material-symbols-outlined text-[24px]">add_circle</span>
-                </button>
-                <button
+                  <Wind size={16} />
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isLoading}
-                  className={cn(
-                    'shrink-0 h-10 px-6 font-label-md text-xs uppercase tracking-wider flex items-center gap-2 transition-all border-2 border-clinical-black dark:border-white brutalist-button',
-                    inputValue.trim() && !isLoading
-                      ? 'bg-[#1a1a1a] dark:bg-brand-accent hover:bg-brand-accent dark:hover:bg-white dark:hover:text-black text-white'
-                      : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 cursor-not-allowed'
-                  )}
+                  className="!p-2.5 !rounded-xl"
+                  title="Send (Enter)"
+                  aria-label="Send"
                 >
-                  {isLoading ? <Spinner size="sm" /> : (
-                    <>
-                      <Send size={16} />
-                      <span>Send</span>
-                    </>
-                  )}
-                </button>
+                  {isLoading ? <Spinner size="sm" /> : <Send size={15} />}
+                </Button>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-4 px-2">
-              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low flex items-center gap-1.5">
-                <Kbd>Enter</Kbd> send
-                <span className="text-gray-300 dark:text-slate-700">·</span>
-                <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> new line
+            <div className="flex items-center justify-between mt-2.5 px-1">
+              <p className="text-[10.5px] text-ink-500 dark:text-ink-400 flex items-center gap-1.5">
+                <Kbd>Enter</Kbd> to send · <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> for new line
               </p>
-              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-code-sm font-bold uppercase opacity-low inline-flex items-center gap-1.5 bg-yellow-200 dark:bg-yellow-900/60 px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
-                <Shield size={12} /> Educational purposes only
-              </p>
+              <Pill variant="default" icon={<Shield size={10} />}>Educational purposes only</Pill>
             </div>
           </div>
         </div>
       </main>
 
-      <EvidencePanel
-        isOpen={evidencePanelOpen}
-        onClose={() => setEvidencePanelOpen(false)}
+      {/* Evidence panel */}
+      <EvidenceDrawer
+        open={evidenceOpen}
+        onClose={() => setEvidenceOpen(false)}
         citations={panelCitations}
-        toolTrace={panelTools}
-        safetyFlags={panelSafety}
-        knowledgePath={panelKnowledge}
       />
 
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        user={user}
-        onUpdateUser={(updated) => setUser(updated)}
-        onChatAboutDoc={handleChatAboutDoc}
-      />
+      {/* Pressure Relief modal */}
+      <PressureReliefModal open={reliefOpen} onClose={() => setReliefOpen(false)} />
     </div>
   )
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
+// ─── Evidence Drawer ─────────────────────────────────────────────────────────
+
+function EvidenceDrawer({ open, onClose, citations }: {
+  open: boolean; onClose: () => void; citations: Citation[]
+}) {
+  if (!open) return null
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded text-[10px] font-mono text-gray-600 dark:text-slate-400 shadow-sm">
-      {children}
-    </kbd>
+    <>
+      <div
+        className="fixed inset-0 bg-ink-900/30 backdrop-blur-sm z-30 animate-fade-in"
+        onClick={onClose}
+        aria-label="Close evidence"
+      />
+      <aside className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white dark:bg-ink-950 border-l border-ink-200/60 dark:border-ink-800 z-40 flex flex-col animate-fade-up">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-ink-200/60 dark:border-ink-800">
+          <div>
+            <h3 className="font-display text-base font-bold text-ink-900 dark:text-white">Sources & evidence</h3>
+            <p className="text-[11px] text-ink-500 dark:text-ink-400 mt-0.5">
+              {citations.length} citation{citations.length !== 1 ? 's' : ''} from this conversation
+            </p>
+          </div>
+          <Button variant="icon" onClick={onClose} title="Close" aria-label="Close">
+            <X size={16} />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto scroll-premium p-4 space-y-3">
+          {citations.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-12 h-12 rounded-2xl bg-ink-100 dark:bg-ink-900 mx-auto mb-3 flex items-center justify-center">
+                <BookOpen size={18} className="text-ink-400" />
+              </div>
+              <p className="text-sm font-semibold text-ink-700 dark:text-ink-200">No sources yet</p>
+              <p className="text-xs text-ink-500 dark:text-ink-400 mt-1">Ask a question and the citations will appear here.</p>
+            </div>
+          ) : (
+            citations.map((c, i) => <CitationCard key={i} citation={c} index={i} />)
+          )}
+        </div>
+      </aside>
+    </>
   )
 }

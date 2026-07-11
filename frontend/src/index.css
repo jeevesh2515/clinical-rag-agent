@@ -2,556 +2,373 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================================
+   Base — typography, focus, smooth scroll
+   ========================================================= */
 @layer base {
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply font-sans bg-ink-50 text-ink-900 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+  }
+
+  .dark body {
+    @apply bg-ink-950 text-ink-100;
   }
 
   ::selection {
-    background-color: rgba(255, 51, 102, 0.2);
-    color: inherit;
+    background-color: rgba(255, 51, 102, 0.18);
   }
 
   .dark ::selection {
-    background-color: rgba(255, 51, 102, 0.3);
-    color: inherit;
+    background-color: rgba(255, 51, 102, 0.30);
   }
 
   kbd {
-    font-family: 'Fira Code', 'SF Mono', 'Cascadia Code', monospace;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  /* Universal smoother focus ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-offset-2 ring-offset-white dark:ring-offset-ink-950 ring-brand-500/60;
+  }
+
+  /* Subtle placeholder color */
+  ::placeholder {
+    @apply text-ink-400;
+  }
+  .dark ::placeholder {
+    @apply text-ink-500;
   }
 }
 
+/* =========================================================
+   Components — soft-modern primitives
+   ========================================================= */
 @layer components {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  /* ---------- Soft-modern buttons (replace brutalist) ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium
+           rounded-xl px-4 py-2 text-sm
+           transition-all duration-250 ease-smooth
+           focus-visible:ring-2 focus-visible:ring-offset-2
+           active:scale-[0.98];
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white shadow-soft hover:bg-brand-600 hover:shadow-soft-lg hover:-translate-y-[1px]
+           focus-visible:ring-brand-500/50;
+  }
+  .btn-calm {
+    @apply btn bg-calm-500 text-white shadow-soft hover:bg-calm-600 hover:shadow-soft-lg hover:-translate-y-[1px]
+           focus-visible:ring-calm-500/50;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-700 hover:bg-ink-100 hover:text-ink-900
+           dark:text-ink-300 dark:hover:bg-ink-800/60 dark:hover:text-white
+           focus-visible:ring-ink-300;
+  }
+  .btn-outline {
+    @apply btn bg-white text-ink-900 border border-ink-200 shadow-soft-sm
+           hover:bg-ink-50 hover:border-ink-300 hover:shadow-soft
+           dark:bg-ink-900 dark:text-white dark:border-ink-700 dark:hover:bg-ink-800 dark:hover:border-ink-600
+           focus-visible:ring-ink-300;
+  }
+  .btn-subtle {
+    @apply btn bg-ink-100 text-ink-700 hover:bg-ink-200
+           dark:bg-ink-800/60 dark:text-ink-200 dark:hover:bg-ink-800
+           focus-visible:ring-ink-300;
+  }
+  .btn-icon {
+    @apply inline-flex items-center justify-center w-10 h-10 rounded-xl
+           text-ink-500 hover:text-ink-900 hover:bg-ink-100
+           dark:text-ink-400 dark:hover:text-white dark:hover:bg-ink-800/60
+           transition-all duration-250 ease-smooth
+           focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ink-300
+           active:scale-95;
   }
 
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+  /* ---------- Card surfaces ---------- */
+  .card {
+    @apply bg-white dark:bg-ink-900/70 border border-ink-200/70 dark:border-ink-800
+           rounded-2xl shadow-soft-sm;
+  }
+  .card-hover {
+    @apply card transition-all duration-300 ease-smooth
+           hover:shadow-soft-lg hover:-translate-y-[2px] hover:border-ink-300/80
+           dark:hover:border-ink-700;
+  }
+  .glass {
+    @apply bg-white/70 dark:bg-ink-950/70 backdrop-blur-xl
+           border border-white/40 dark:border-white/5;
   }
 
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
+  /* ---------- Pills ---------- */
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium
+           border border-transparent;
+  }
+  .pill-default { @apply pill bg-ink-100 text-ink-700 border-ink-200
+                          dark:bg-ink-800/60 dark:text-ink-200 dark:border-ink-700; }
+  .pill-brand   { @apply pill bg-brand-50 text-brand-700 border-brand-200
+                          dark:bg-brand-500/10 dark:text-brand-300 dark:border-brand-500/30; }
+  .pill-calm    { @apply pill bg-calm-50 text-calm-700 border-calm-200
+                          dark:bg-calm-500/10 dark:text-calm-300 dark:border-calm-500/30; }
+  .pill-okf     { @apply pill bg-okf-50 text-okf-700 border-okf-200
+                          dark:bg-okf-500/10 dark:text-okf-300 dark:border-okf-500/30; }
+  .pill-success { @apply pill bg-emerald-50 text-emerald-700 border-emerald-200
+                          dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30; }
+  .pill-warning { @apply pill bg-amber-50 text-amber-700 border-amber-200
+                          dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30; }
+  .pill-danger  { @apply pill bg-rose-50 text-rose-700 border-rose-200
+                           dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30; }
+  .pill-info    { @apply pill bg-sky-50 text-sky-700 border-sky-200
+                           dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/30; }
+
+  /* ---------- Inputs ---------- */
+  .input {
+    @apply w-full px-3.5 py-2.5 rounded-xl
+           bg-white dark:bg-ink-900
+           border border-ink-200 dark:border-ink-700
+           text-ink-900 dark:text-white placeholder:text-ink-400 dark:placeholder:text-ink-500
+           shadow-soft-sm
+           transition-all duration-250 ease-smooth
+           focus:border-brand-500/60 focus:shadow-ring-brand focus:outline-none;
+  }
+  .input-bare {
+    @apply w-full bg-transparent border-0 focus:outline-none
+           text-ink-900 dark:text-white placeholder:text-ink-400;
   }
 
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(148, 163, 184, 0.3);
-    border-radius: 3px;
+  /* ---------- Subtle dividers / bg utilities ---------- */
+  .divider    { @apply h-px w-full bg-ink-200/70 dark:bg-ink-800; }
+  .surface-1  { @apply bg-ink-50 dark:bg-ink-900/40; }
+  .surface-2  { @apply bg-white dark:bg-ink-900; }
+  .surface-3  { @apply bg-ink-100/60 dark:bg-ink-800/40; }
+
+  /* ---------- Premium scrollbar ---------- */
+  .scroll-premium::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-premium::-webkit-scrollbar-track { background: transparent; }
+  .scroll-premium::-webkit-scrollbar-thumb {
+    background-color: rgba(15, 23, 42, 0.12);
+    border-radius: 999px;
   }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(148, 163, 184, 0.5);
-  }
-
-  .dark .scrollbar-thin {
-    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
-  }
+  .scroll-premium::-webkit-scrollbar-thumb:hover { background-color: rgba(15, 23, 42, 0.24); }
+  .dark .scroll-premium::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.08); }
+  .dark .scroll-premium::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.18); }
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* =========================================================
+   Button hover overlay effects
+   ========================================================= */
+@keyframes btn-shimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.3s ease-out forwards;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out forwards;
-}
-
-/* Neo Brutalist Styles */
-.neo-brutal-shadow {
-  box-shadow: 4px 4px 0px 0px #1a1a1a;
-  transition: all 200ms ease;
-}
-
-.neo-brutal-shadow-sm {
-  box-shadow: 2px 2px 0px 0px #1a1a1a;
-  transition: all 200ms ease;
-}
-
-.neo-brutal-btn {
-  transition: all 200ms ease;
-}
-
-.neo-brutal-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px 0px #1a1a1a;
-}
-
-.tipped-label {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background-color: #1a1a1a;
-  color: #ffffff;
-  padding: 2px 8px;
-  font-family: 'Fira Code', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: 1px solid #1a1a1a;
-  transform: rotate(-3deg);
-  z-index: 10;
-}
-
-.scanline-effect {
+.btn-overlay {
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
-
-.scanline-effect::after {
-  content: " ";
-  display: block;
+.btn-overlay::after {
+  content: '';
   position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.005), rgba(0, 0, 255, 0.01));
-  z-index: 2;
-  background-size: 100% 4px, 6px 100%;
-  pointer-events: none;
-}
-
-/* Scroll Reveal */
-.reveal-on-scroll {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.reveal-on-scroll.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.reveal-left {
-  opacity: 0;
-  transform: translateX(-50px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.reveal-left.active {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.reveal-right {
-  opacity: 0;
-  transform: translateX(50px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.reveal-right.active {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.reveal-bottom {
-  opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.reveal-bottom.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Parallax Element Smoothness */
-.parallax-element {
-  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  will-change: transform;
-}
-
-/* ─── Clinical Shadow (Base + Relief) ──────────── */
-.clinical-shadow {
-  box-shadow: 4px 4px 0px 0px #1a1a1a;
-  transition: all 200ms ease;
-}
-.dark .clinical-shadow {
-  box-shadow: 4px 4px 0px 0px #ffffff;
-}
-
-/* ─── Brutalist Design System ─────────────────── */
-.brutalist-border {
-  border: 2px solid #1a1a1a;
-}
-.dark .brutalist-border {
-  border: 2px solid #ffffff;
-}
-
-.brutalist-divider {
-  border-right: 2px solid #1a1a1a;
-}
-.dark .brutalist-divider {
-  border-right-color: #ffffff;
-}
-
-.brutalist-button {
-  border: 2px solid #1a1a1a;
-  box-shadow: 2px 2px 0px 0px #1a1a1a;
-  transition: all 200ms ease;
-}
-.dark .brutalist-button {
-  border-color: #ffffff;
-  box-shadow: 2px 2px 0px 0px #ffffff;
-}
-.brutalist-button:active {
-  box-shadow: 0px 0px 0px 0px #1a1a1a;
-  transform: translate(2px, 2px);
-}
-.dark .brutalist-button:active {
-  box-shadow: 0px 0px 0px 0px #ffffff;
-}
-
-.brutalist-input {
-  border: 2px solid #1a1a1a;
-}
-.dark .brutalist-input {
-  border-color: #ffffff;
-}
-
-/* ─── Legacy aliases (backward compat) ────────── */
-.brutal-border { border: 2px solid #1a1a1a; }
-.dark .brutal-border { border: 2px solid #ffffff; }
-
-.brutal-shadow {
-  box-shadow: 4px 4px 0px 0px #1a1a1a;
-  transition: all 200ms ease;
-}
-.dark .brutal-shadow {
-  box-shadow: 4px 4px 0px 0px #ffffff;
-}
-
-.brutal-shadow-sm {
-  box-shadow: 2px 2px 0px 0px #1a1a1a;
-  transition: all 200ms ease;
-}
-.dark .brutal-shadow-sm {
-  box-shadow: 2px 2px 0px 0px #ffffff;
-}
-
-.brutal-button:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px 0px #1a1a1a;
-}
-.dark .brutal-button:active {
-  box-shadow: 0px 0px 0px 0px #ffffff;
-}
-
-.brutal-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px #1a1a1a;
-}
-.dark .brutal-card:hover {
-  box-shadow: 6px 6px 0px 0px #ffffff;
-}
-
-.hover-invert:hover {
-  background-color: #1a1a1a;
-  color: #ffffff;
-}
-.dark .hover-invert:hover {
-  background-color: #ffffff;
-  color: #1a1a1a;
-}
-
-.hover-invert-accent:hover {
-  background-color: #ff3366;
-  color: #ffffff;
-}
-
-/* ─── Message entry animation ─────────────────── */
-@keyframes messageSlideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-message {
-  animation: messageSlideUp 0.3s ease-out forwards;
-}
-
-/* ─── Opacity low utility ─────────────────────── */
-.opacity-low {
-  opacity: 0.6;
-}
-
-/* ─── Glass panel utility ─────────────────────── */
-.glass-panel {
-  background: #ffffff;
-  border-top: 2px solid #1a1a1a;
-  transition: all 1000ms ease;
-}
-.dark .glass-panel {
-  background: #0f172a;
-  border-top-color: #ffffff;
-}
-
-/* ─── 1000ms transition utility ───────────────── */
-.transition-1000 {
-  transition: all 1000ms ease !important;
-}
-
-/* ─── Pressure Relief Mode ───────────────────────
- *  Toggled via js — softens all brutalist edges,
- *  swaps brand-accent to teal, adds glassmorphism.
- * ─────────────────────────────────────────────── */
-.relief-mode .clinical-shadow,
-.relief-mode .brutal-shadow,
-.relief-mode .brutal-shadow-sm,
-.relief-mode .brutalist-button,
-.relief-mode .shadow-\[4px_4px_0px_0px_\#1a1a1a\],
-.relief-mode .shadow-\[2px_2px_0px_0px_\#1a1a1a\],
-.relief-mode .shadow-\[4px_4px_0px_0px_rgba\(26\,26\,26\,1\)\],
-.relief-mode .shadow-\[2px_2px_0px_0px_rgba\(26\,26\,26\,1\)\] {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
-}
-.dark.relief-mode .clinical-shadow,
-.dark.relief-mode .brutal-shadow,
-.dark.relief-mode .brutal-shadow-sm,
-.dark.relief-mode .brutalist-button {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
-}
-
-.relief-mode .bg-white,
-.relief-mode .bg-\[#fafafa\],
-.relief-mode .bg-\[#f0f0f0\] {
-  background-color: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-.dark.relief-mode .bg-white,
-.dark.relief-mode .bg-\[#fafafa\],
-.dark.relief-mode .bg-\[#f0f0f0\],
-.dark.relief-mode .bg-slate-900,
-.dark.relief-mode .bg-slate-950,
-.dark.relief-mode .bg-gray-950 {
-  background-color: rgba(15, 23, 42, 0.7) !important;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-.relief-mode .border-2,
-.relief-mode .border-4,
-.relief-mode .brutalist-border,
-.relief-mode .brutal-border {
-  border-radius: 32px !important;
-  border-width: 1px !important;
-  border-color: rgba(26, 26, 26, 0.1) !important;
-}
-.dark.relief-mode .border-2,
-.dark.relief-mode .border-4,
-.dark.relief-mode .brutalist-border,
-.dark.relief-mode .brutal-border {
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-.relief-mode .brutalist-divider {
-  border-right-width: 1px !important;
-  border-right-color: rgba(26, 26, 26, 0.1) !important;
-}
-
-.relief-mode .rounded-none,
-.relief-mode .rounded-sm,
-.relief-mode .rounded-lg,
-.relief-mode .rounded-xl {
-  border-radius: 32px !important;
-}
-
-/* Relief toggle button — keep teal border in both modes */
-.relief-mode .relief-toggle-btn {
-  border-radius: 32px !important;
-  border-width: 1px !important;
-  border-color: #008080 !important;
-}
-.dark.relief-mode .relief-toggle-btn {
-  border-color: #008080 !important;
-}
-
-.relief-mode .brutal-button:active,
-.relief-mode .neo-brutal-btn:active,
-.relief-mode .brutalist-button:active {
-  transform: translate(0, 0) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-}
-
-.relief-mode .bg-brand-accent {
-  background-color: #008080 !important;
-}
-.relief-mode .text-brand-accent {
-  color: #008080 !important;
-}
-.relief-mode .marker\:text-brand-accent::marker,
-.relief-mode .marker\:text-brand-accent li::marker {
-  color: #008080 !important;
-}
-.relief-mode .border-brand-accent {
-  border-color: #008080 !important;
-}
-.relief-mode .hover\:bg-brand-accent:hover {
-  background-color: #008080 !important;
-}
-.relief-mode .hover\:text-brand-accent:hover {
-  color: #008080 !important;
-}
-.relief-mode .from-brand-accent {
-  --tw-gradient-from: #008080 !important;
-}
-.relief-mode .accent-brand-accent {
-  accent-color: #008080 !important;
-}
-.relief-mode .ring-brand-accent {
-  --tw-ring-color: #008080 !important;
-}
-
-.relief-mode .opacity-low {
-  opacity: 0.6;
-}
-
-
-
-/* ─── Custom thin scrollbar (premium) ─────────── */
-.scroll-premium::-webkit-scrollbar { width: 6px; height: 6px; }
-.scroll-premium::-webkit-scrollbar-track { background: #f0f0f0; border-left: 1px solid #1a1a1a; }
-.scroll-premium::-webkit-scrollbar-thumb { background: #1a1a1a; border: 1px solid #f0f0f0; }
-.scroll-premium::-webkit-scrollbar-thumb:hover { background: #ff3366; }
-.dark .scroll-premium::-webkit-scrollbar-track { background: #1e293b; border-left-color: #334155; }
-.dark .scroll-premium::-webkit-scrollbar-thumb { background: #475569; border-color: #1e293b; }
-.dark .scroll-premium::-webkit-scrollbar-thumb:hover { background: #ff3366; }
-
-.relief-mode .scroll-premium::-webkit-scrollbar-track { background: transparent; border-left: none; }
-.relief-mode .scroll-premium::-webkit-scrollbar-thumb { background: #008080; border-radius: 10px; border: none; }
-
-/* ─── Relief Mode Transitions (1000ms) ────────── */
-.relief-mode .transition-relief {
-  transition: all 1000ms ease !important;
-}
-
-/* ─── Breath Guide Overlay ────────────────────── */
-@keyframes breathInOut {
-  0%, 100% { opacity: 0; transform: translateY(0) scale(0.95); }
-  15%      { opacity: 1; transform: translateY(0) scale(1); }
-  50%      { opacity: 0; transform: translateY(-6px) scale(1); }
-  65%      { opacity: 1; transform: translateY(0) scale(1); }
-  85%      { opacity: 0; transform: translateY(0) scale(0.95); }
-}
-
-.relief-breath-guide {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  pointer-events: none;
-  text-align: center;
-  animation: breathInOut 4.8s ease-in-out infinite;
-}
-
-.relief-breath-guide .breath-label-in,
-.relief-breath-guide .breath-label-out {
-  display: block;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  transition: opacity 0.6s ease;
-}
-
-.relief-breath-guide .breath-label-in {
-  color: #008080;
-  animation: fadeInOut 4.8s ease-in-out infinite;
-}
-
-.relief-breath-guide .breath-label-out {
-  color: #008080;
-  opacity: 0;
-  animation: fadeOutIn 4.8s ease-in-out infinite;
-}
-
-.dark .relief-breath-guide .breath-label-in,
-.dark .relief-breath-guide .breath-label-out {
-  color: #40c0c0;
-}
-
-@keyframes fadeInOut {
-  0%, 40%  { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-@keyframes fadeOutIn {
-  0%, 40%  { opacity: 0; }
-  50%, 100% { opacity: 1; }
-}
-
-.relief-breath-guide .breath-ring {
-  width: 120px;
-  height: 120px;
-  border: 1.5px solid rgba(0, 128, 128, 0.15);
-  border-radius: 50%;
-  margin: 0 auto 8px;
-  animation: breatheRing 4.8s ease-in-out infinite;
-  box-shadow: 0 0 40px rgba(0, 128, 128, 0.08);
-}
-
-.dark .relief-breath-guide .breath-ring {
-  border-color: rgba(64, 192, 192, 0.2);
-  box-shadow: 0 0 40px rgba(64, 192, 192, 0.12);
-}
-
-@keyframes breatheRing {
-  0%, 100% { transform: scale(0.6); opacity: 0.3; }
-  50%      { transform: scale(1.2); opacity: 0.8; }
-}
-
-/* ─── CSS-Only Floating Particles ─────────────── */
-.relief-particles {
-  position: fixed;
   inset: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.18) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
   pointer-events: none;
   z-index: 1;
+}
+.btn-overlay:hover::after {
+  opacity: 1;
+}
+
+.btn-overlay-dark::after {
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0,0,0,0.08) 0%, transparent 60%);
+}
+
+/* Shimmer sweep on primary buttons */
+.btn-shimmer {
+  position: relative;
   overflow: hidden;
 }
+.btn-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  transform: translateX(-100%) skewX(-15deg);
+  pointer-events: none;
+}
+.btn-shimmer:hover::before {
+  animation: btn-shimmer 0.8s ease-out;
+}
 
+/* Card hover glow */
+.card-glow {
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.35s ease;
+}
+.card-glow:hover {
+  transform: translateY(-3px) scale(1.01);
+}
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,51,102,0.15), transparent 40%, rgba(0,128,128,0.10) 70%, transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+.card-glow:hover::before {
+  opacity: 1;
+}
+
+/* Floating element animation */
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  25% { transform: translateY(-8px) translateX(4px); }
+  50% { transform: translateY(-4px) translateX(-3px); }
+  75% { transform: translateY(-10px) translateX(2px); }
+}
+.float-drift {
+  animation: float-drift 8s ease-in-out infinite;
+}
+.float-drift-delayed {
+  animation: float-drift 10s ease-in-out infinite 2s;
+}
+
+/* Gradient border animation */
+@keyframes border-roll {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.gradient-border {
+  position: relative;
+  background-clip: padding-box;
+  border: 1px solid transparent;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,51,102,0.3), rgba(0,128,128,0.2), rgba(255,51,102,0.3));
+  background-size: 200% 200%;
+  animation: border-roll 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Breathing glow for pressure relief button */
+@keyframes breathe-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 128, 128, 0.35); }
+  50% { box-shadow: 0 0 0 12px rgba(0, 128, 128, 0); }
+}
+.breathe-glow {
+  animation: breathe-glow 3s ease-in-out infinite;
+}
+
+/* Pressure Relief — calming full-screen overlay */
+@keyframes breathRingIn {
+  0%   { transform: scale(0.6); opacity: 0.3; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes breathCircleIn {
+  0%, 100% { transform: scale(0.7); }
+  50%      { transform: scale(1.15); }
+}
+
+.relief-backdrop {
+  background: radial-gradient(ellipse at top, rgba(0, 128, 128, 0.18) 0%, transparent 55%),
+              radial-gradient(ellipse at bottom right, rgba(0, 128, 128, 0.10) 0%, transparent 60%),
+              rgba(8, 14, 14, 0.92);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+.relief-circle {
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 200, 200, 0.6) 0%, rgba(0, 128, 128, 0.18) 55%, transparent 75%);
+  animation: breathCircleIn 16s ease-in-out infinite;
+  box-shadow: 0 0 80px rgba(0, 200, 200, 0.25), inset 0 0 60px rgba(0, 200, 200, 0.2);
+  position: relative;
+}
+.relief-circle::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(120, 230, 230, 0.6);
+  animation: breathRingIn 4s ease-out infinite;
+}
+.relief-circle::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(120, 230, 230, 0.4);
+  animation: breathRingIn 4s ease-out infinite;
+  animation-delay: 2s;
+}
+
+/* Floating ambient particles (CSS-only) */
+@keyframes reliefFloat {
+  0%   { transform: translateY(20px) translateX(0); opacity: 0; }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(-110vh) translateX(40px); opacity: 0; }
+}
 .relief-particle {
   position: absolute;
-  width: 4px;
-  height: 4px;
-  background: rgba(0, 128, 128, 0.25);
+  width: 4px; height: 4px;
   border-radius: 50%;
-  animation: floatUp linear infinite;
+  background: rgba(120, 230, 230, 0.6);
+  bottom: -10px;
+  animation: reliefFloat linear infinite;
+  pointer-events: none;
 }
 
-.dark .relief-particle {
-  background: rgba(64, 192, 192, 0.2);
+/* =========================================================
+   Reveal-on-scroll for landing page sections
+   ========================================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 80ms; }
+.reveal-delay-2 { transition-delay: 160ms; }
+.reveal-delay-3 { transition-delay: 240ms; }
+.reveal-delay-4 { transition-delay: 320ms; }
+.reveal-delay-5 { transition-delay: 400ms; }
 
-@keyframes floatUp {
-  0%   { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
-  10%  { opacity: 1; }
-  90%  { opacity: 1; }
-  100% { transform: translateY(-10vh) translateX(20px) scale(1); opacity: 0; }
+/* =========================================================
+   Mobile-tap highlight (iOS Safari friendliness)
+   ========================================================= */
+button, a { -webkit-tap-highlight-color: transparent; }
+
+/* =========================================================
+   Reduced motion
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
-
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-

@@ -13,6 +13,7 @@ import SignupPage from './components/SignupPage'
 import LandingPage from './components/LandingPage'
 import Markdown from './components/Markdown'
 import ThemeToggle from './components/ThemeToggle'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 // Permissive icon type — lucide props allow string | number for size, but we
 // only ever pass numbers.
@@ -2145,6 +2146,7 @@ export default function App() {
         onUpdateUser={(updated) => setUser(updated)}
         onChatAboutDoc={handleChatAboutDoc}
       />
+      <SpeedInsights />
     </div>
   )
 }

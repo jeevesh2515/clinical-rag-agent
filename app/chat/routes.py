@@ -143,6 +143,8 @@ async def add_message_to_conversation(
         tool_trace=tool_trace_list,
         safety_flags=safety_dict,
         knowledge_path=kp_dict,
+        rephrased_question=agent_response.rephrased_question,
+        model_used=agent_response.model_used,
     )
     chat_repository.add_message(db, conversation_id, current_user.id, agent_message)
 

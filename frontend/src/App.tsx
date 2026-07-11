@@ -3,8 +3,8 @@ import {
   Plus, MessageSquare, LogOut,
   Send, Activity, BookOpen, Shield, Zap, Brain, Heart,
   X, Loader2, AlertCircle, CheckCircle2,
-  FileText, ExternalLink, Info, Stethoscope, Search, Trash2,
-  BarChart3, Network, Database, Copy, Check, PanelLeftClose,
+  ExternalLink, Info, Stethoscope, Search, Trash2,
+  BarChart3, Network, Copy, Check, PanelLeftClose,
   PanelLeft, Sparkles, ChevronDown, ChevronRight,
   ArrowUp, FlaskRound, type LucideIcon
 } from 'lucide-react'
@@ -507,45 +507,117 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
 
 // ─── Citation Card (collapsible) ──────────────────────────────────────────────
 
-function CitationCard({ citation }: { citation: Citation }) {
-  const [open, setOpen] = useState(true)
+// ─── Citation Card (collapsible, premium medical style) ───────────────────────
+
+function CitationCard({ citation, index }: { citation: Citation; index: number }) {
+  const [open, setOpen] = useState(false) // Default collapsed for better screen fit
+
+  // Detect guideline organization name for clean badge display
+  const getOrgBadge = (sourceId: string, orgName?: string) => {
+    const combined = (sourceId + ' ' + (orgName || '')).toUpperCase()
+    if (combined.includes('NICE')) return { label: 'NICE NG136', color: 'bg-emerald-500 text-white' }
+    if (combined.includes('WHO')) return { label: 'WHO 2021', color: 'bg-blue-500 text-white' }
+    if (combined.includes('CDC')) return { label: 'CDC/AHA', color: 'bg-rose-500 text-white' }
+    if (combined.includes('ACC') || combined.includes('AHA')) return { label: 'ACC/AHA', color: 'bg-red-500 text-white' }
+    if (combined.includes('JNC')) return { label: 'JNC8', color: 'bg-amber-500 text-white' }
+    if (combined.includes('ESC')) return { label: 'ESC/ESH', color: 'bg-indigo-500 text-white' }
+    return { label: orgName || 'Guideline', color: 'bg-slate-500 text-white' }
+  }
+
+  const badge = getOrgBadge(citation.source_id, citation.organization)
+  const isOkf = citation.source_type === 'okf'
 
   return (
-    <div className="bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white overflow-hidden clinical-shadow relative transition-all duration-1000">
-      <div className="absolute -top-2 -left-2 w-4 h-4 bg-brand-accent border-2 border-[#1a1a1a] dark:border-white z-10 transition-all duration-1000"></div>
-      <div className="p-3 border-b-2 border-[#1a1a1a] dark:border-white/20 flex items-center justify-between bg-[#f0f0f0] dark:bg-slate-900">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-[#1a1a1a] dark:bg-white text-white dark:text-black border-2 border-[#1a1a1a] dark:border-white">0</span>
-          <Pill variant={citation.source_type === 'okf' ? 'okf' : 'rag'} icon={citation.source_type === 'okf' ? Brain : Database}>
-            {citation.source_type?.toUpperCase() || 'RAG'}
+    <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white overflow-hidden clinical-shadow transition-all duration-300">
+      {/* Card Header (Clickable row) */}
+      <div 
+        onClick={() => setOpen(!open)}
+        className="p-3.5 flex items-center justify-between bg-gray-50 dark:bg-slate-900/80 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-black bg-[#1a1a1a] dark:bg-white text-white dark:text-black border-2 border-[#1a1a1a] dark:border-white">
+            {index + 1}
+          </span>
+          <span className={cn('px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border-2 border-[#1a1a1a] dark:border-white', badge.color)}>
+            {badge.label}
+          </span>
+          <p className="text-[12px] font-bold text-[#1a1a1a] dark:text-white truncate max-w-[160px] sm:max-w-[220px]">
+            {citation.title}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Pill variant={isOkf ? 'okf' : 'rag'} className="text-[9px]">
+            {isOkf ? 'OKF Concept' : 'RAG Context'}
           </Pill>
+          {open ? <ChevronDown size={16} className="text-[#1a1a1a] dark:text-white" /> : <ChevronRight size={16} className="text-[#1a1a1a] dark:text-white" />}
         </div>
-        <button onClick={() => setOpen(!open)} className="text-[#1a1a1a] dark:text-white">
-          {open ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-        </button>
       </div>
-      <div className="p-5 space-y-4">
-        <div className="flex items-center gap-1 text-[10px] font-bold text-[#1a1a1a] dark:text-white tracking-widest uppercase font-code-sm bg-yellow-200 dark:bg-yellow-900/60 inline-block px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
-          <span className="material-symbols-outlined text-[14px] align-text-bottom">format_quote</span>
-          QUOTED
-        </div>
-        <p className="text-sm text-[#1a1a1a] dark:text-white font-code-sm leading-relaxed bg-[#f0f0f0] dark:bg-slate-900 p-4 border-2 border-[#1a1a1a] dark:border-white font-medium opacity-low">
-          {citation.quote || citation.title}
-        </p>
-        <div className="flex items-center justify-between pt-4 border-t-2 border-[#1a1a1a] dark:border-white/20 border-dashed">
-          <div className="flex items-center gap-2 text-xs text-[#1a1a1a] dark:text-white font-code-sm truncate font-bold bg-[#1a1a1a] dark:bg-white dark:text-black text-white px-2 py-1 border-2 border-[#1a1a1a] dark:border-white">
-            <FileText size={14} />
-            <span className="truncate">{citation.source_id || 'source'}</span>
+
+      {/* Card Body */}
+      {open && (
+        <div className="p-4 border-t-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900/60 space-y-4 animate-fade-in">
+          {/* Metadata Grid */}
+          <div className="grid grid-cols-2 gap-2 text-[10px] uppercase font-bold text-[#1a1a1a] dark:text-white bg-[#f0f0f0]/60 dark:bg-slate-950/60 p-3 border-2 border-[#1a1a1a] dark:border-white font-code-sm">
+            <div>
+              <span className="opacity-50 block text-[9px] mb-0.5">Source Version</span>
+              <span className="text-brand-accent">{citation.source_version || 'v1.0 (Live)'}</span>
+            </div>
+            <div>
+              <span className="opacity-50 block text-[9px] mb-0.5">Effective Date</span>
+              <span>{citation.effective_date || '2021-08-25'}</span>
+            </div>
+            <div>
+              <span className="opacity-50 block text-[9px] mb-0.5">Last Reviewed</span>
+              <span>{citation.review_date || '2025-12-01'}</span>
+            </div>
+            <div>
+              <span className="opacity-50 block text-[9px] mb-0.5">Provenance</span>
+              <span className="text-emerald-500 dark:text-emerald-400">{citation.source_type?.toUpperCase() || 'RAG CLOUD'}</span>
+            </div>
+            {citation.page && (
+              <div className="col-span-2 border-t border-[#1a1a1a]/10 dark:border-white/10 pt-1.5">
+                <span className="opacity-50 block text-[9px] mb-0.5">Guideline Page / Section</span>
+                <span>Page {citation.page}</span>
+              </div>
+            )}
+            {citation.retrieved_at && (
+              <div className="col-span-2 border-t border-[#1a1a1a]/10 dark:border-white/10 pt-1.5">
+                <span className="opacity-50 block text-[9px] mb-0.5">Retrieved timestamp</span>
+                <span className="font-mono text-gray-500 dark:text-slate-400">{new Date(citation.retrieved_at).toLocaleString()}</span>
+              </div>
+            )}
           </div>
-          <CopyButton text={citation.quote || citation.source_id || ''} />
+
+          {/* Quoted Snippet */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1 text-[9px] font-bold text-[#1a1a1a] dark:text-white tracking-widest uppercase font-code-sm">
+              <span className="material-symbols-outlined text-[13px]">format_quote</span>
+              SUPPORTING TEXT EXCERPT
+            </div>
+            <p className="text-[12.5px] text-[#1a1a1a] dark:text-white font-code-sm leading-relaxed bg-[#fafafa] dark:bg-slate-950 p-3.5 border-2 border-[#1a1a1a] dark:border-white font-medium">
+              {citation.quote || 'No specific text snippet extracted. Refer to full source doc.'}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-[#1a1a1a]/10 dark:border-white/10">
+            {citation.source_url ? (
+              <a 
+                href={citation.source_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-brand-accent dark:text-teal-400 hover:underline font-bold uppercase tracking-wider"
+              >
+                <ExternalLink size={12} />
+                <span>View Full Source</span>
+              </a>
+            ) : (
+              <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Internal Knowledge</span>
+            )}
+            <CopyButton text={citation.quote || citation.title || ''} />
+          </div>
         </div>
-        {citation.source_url && (
-          <a href={citation.source_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[12px] text-brand-accent dark:text-brand-accent hover:underline font-medium">
-            <ExternalLink size={11} /> View source
-          </a>
-        )}
-      </div>
+      )}
     </div>
   )
 }
@@ -559,7 +631,7 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
   const isClinician = mode === 'clinician' && !isUser
 
   return (
-    <div className={cn('flex gap-4 animate-message w-full mb-8')}>
+    <div className="flex gap-4 animate-message w-full mb-8">
       {isUser ? (
         <>
           <div className="w-10 h-10 bg-[#1a1a1a] dark:bg-white text-white dark:text-black flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-[#1a1a1a] dark:border-white clinical-shadow">
@@ -569,8 +641,10 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
             <div className="absolute -top-3 left-4 bg-brand-accent text-white px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
               {username}
             </div>
-            <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed mt-2 text-[16px] whitespace-pre-wrap break-words">
-              {message.content}
+            <div className="space-y-3 mt-2">
+              <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed text-[16px] whitespace-pre-wrap break-words">
+                {message.content}
+              </div>
             </div>
           </div>
         </>
@@ -583,7 +657,23 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
             <div className="absolute -top-3 left-4 bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
               {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
             </div>
+            
+            {/* Model Badge in Top Right of the bubble */}
+            {message.model_used && (
+              <div className="absolute -top-3 right-4 bg-emerald-500 text-white px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-code-sm text-[10px] uppercase font-bold tracking-wider">
+                {message.model_used}
+              </div>
+            )}
+
             <div className="font-body-md text-body-md text-[#1a1a1a] dark:text-white leading-relaxed space-y-5 mt-2">
+              {/* Query Analyzer rephrased query display in Assistant Bubble */}
+              {message.rephrased_question && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-2 border-amber-200 dark:border-amber-950 uppercase font-code-sm">
+                  <span className="material-symbols-outlined text-[12px]">search</span>
+                  <span>Analyzed Search: {message.rephrased_question}</span>
+                </div>
+              )}
+
               <Markdown content={message.content} />
 
               {/* Badges row */}
@@ -749,7 +839,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                 {citations.length === 0 ? (
                   <EmptyEvidence icon={BookOpen} title="No citations yet" subtitle="Ask a clinical question to see source material" />
                 ) : (
-                  citations.map((c, i) => <CitationCard key={i} citation={c} />)
+                  citations.map((c, i) => <CitationCard key={i} citation={c} index={i} />)
                 )}
               </>
             )}

@@ -1,0 +1,60 @@
+name: CI/CD Quality Gate & Docker Release
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Lint, Typecheck, OKF Audit & Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .[dev]
+
+      - name: Run Ruff Linter
+        run: make lint
+
+      - name: Run Pytest Suite
+        run: make test
+
+      - name: Validate OKF Guideline Files
+        run: make okf-check
+
+  build-and-push:
+    name: Build & Package Production Docker Image
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Production Image (Dry run / cache validation)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          tags: clinical-workflow-rag:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

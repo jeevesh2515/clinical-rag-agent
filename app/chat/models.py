@@ -15,6 +15,8 @@ class ChatMessage(BaseModel):
     tool_trace: Optional[List[dict[str, Any]]] = Field(None, description="Trace of tools used by the assistant")
     safety_flags: Optional[dict[str, Any]] = Field(None, description="Safety flags detected in the response")
     knowledge_path: Optional[dict[str, Any]] = Field(None, description="Knowledge routing path used by the agent")
+    rephrased_question: Optional[str] = Field(None, description="Analyzed rephrased query")
+    model_used: Optional[str] = Field(None, description="AI model used for generating the message")
 
 
 class Conversation(BaseModel):

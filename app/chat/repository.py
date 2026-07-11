@@ -31,6 +31,8 @@ def _msg_to_model(msg: OrmMessage) -> ChatMessage:
         tool_trace=json.loads(msg.tool_trace_json) if msg.tool_trace_json else None,
         safety_flags=json.loads(msg.safety_flags_json) if msg.safety_flags_json else None,
         knowledge_path=json.loads(msg.knowledge_path_json) if msg.knowledge_path_json else None,
+        rephrased_question=msg.rephrased_question,
+        model_used=msg.model_used,
     )
 
 
@@ -114,6 +116,8 @@ class ChatRepository:
             tool_trace_json=json.dumps(message.tool_trace) if message.tool_trace else None,
             safety_flags_json=json.dumps(message.safety_flags) if message.safety_flags else None,
             knowledge_path_json=json.dumps(message.knowledge_path) if message.knowledge_path else None,
+            rephrased_question=message.rephrased_question,
+            model_used=message.model_used,
             created_at=message.timestamp or utcnow(),
         )
         db.add(row)

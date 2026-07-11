@@ -302,6 +302,8 @@ class Message(Base):
     tool_trace_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     safety_flags_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     knowledge_path_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rephrased_question: Mapped[str | None] = mapped_column(Text, nullable=True)
+    model_used: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
@@ -366,6 +368,19 @@ def bootstrap() -> None:
     work until ``UPLOAD_DIR`` is pointed at a writable path).
     """
     init_db()
+    
+    # Idempotently add the new fields to existing message tables if they are missing
+    engine = _get_engine()
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        for column, col_type in [("rephrased_question", "TEXT"), ("model_used", "VARCHAR(128)")]:
+            try:
+                conn.execute(text(f"ALTER TABLE messages ADD COLUMN {column} {col_type}"))
+                conn.commit()
+            except Exception:
+                # Column likely already exists or table is empty
+                pass
+
     upload_dir = os.environ.get("UPLOAD_DIR", "data/uploads")
     try:
         Path(upload_dir).mkdir(parents=True, exist_ok=True)

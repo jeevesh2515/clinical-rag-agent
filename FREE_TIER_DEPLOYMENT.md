@@ -101,14 +101,14 @@ OpenRouter (free LLM models: Llama 3.1 8B, DeepSeek R1, Gemma 4, Nemotron)
 3. Copy the connection string from Dashboard > Connection Details:
 
    ```
-   postgresql://alex:AbC123dEf@ep-bold-darkness-123456.us-east-1.aws.neon.tech/neondb?sslmode=require
+   postgresql://[user]:[password]@[neon-host]/[dbname]?sslmode=require
    ```
 
 4. Enable pgvector extension:
 
    ```bash
    # Connect via psql or Neon SQL Editor
-   psql "postgresql://alex:AbC123dEf@ep-bold-darkness-123456.us-east-1.aws.neon.tech/neondb?sslmode=require"
+   psql "postgresql://[user]:[password]@[neon-host]/[dbname]?sslmode=require"
 
    CREATE EXTENSION IF NOT EXISTS vector;
    SELECT extname, extversion FROM pg_extension WHERE extname = 'vector';

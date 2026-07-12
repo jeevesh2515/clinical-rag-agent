@@ -11,8 +11,6 @@ from enum import Enum
 class UserRole(str, Enum):
     clinician = "clinician"
     patient = "patient"
-    admin = "admin"
-    care_coordinator = "care_coordinator"
 
 
 class User(BaseModel):

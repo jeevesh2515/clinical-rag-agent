@@ -12,7 +12,6 @@ Usage (via config):
     DATABASE_URL=sqlite:///./clinical_demo.db                     # keeps in-memory store
 """
 
-from dataclasses import asdict
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
@@ -20,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.ingestion.chunker import TextChunk
 from app.retrieval.bm25 import BM25SparseEncoder, sparse_dot
-from app.retrieval.embeddings import EmbeddingClient, cosine
+from app.retrieval.embeddings import EmbeddingClient
 from app.retrieval.store import HybridCandidate, minmax_normalize
 
 

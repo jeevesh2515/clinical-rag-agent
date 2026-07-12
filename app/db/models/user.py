@@ -1,14 +1,18 @@
 """User ORM model."""
 
 from __future__ import annotations
-
 import json
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.models.base import Base, utcnow
+
+if TYPE_CHECKING:
+    from app.db.models.conversation import Conversation
+    from app.db.models.upload import Upload
 
 
 def _roles_to_json(value: list[str]) -> str:

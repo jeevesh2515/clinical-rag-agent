@@ -50,7 +50,7 @@ export default function SignupPage({
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [role, setRole] = useState<'patient' | 'clinician' | 'admin' | 'care_coordinator'>('patient')
+  const [role, setRole] = useState<'patient' | 'clinician'>('patient')
 
   const passwordChecks = {
     length: password.length >= 8,
@@ -231,8 +231,6 @@ export default function SignupPage({
                   >
                     <option value="patient">Patient (Normal User)</option>
                     <option value="clinician">Clinician (Medical Staff)</option>
-                    <option value="admin">Administrator (System Control)</option>
-                    <option value="care_coordinator">Care Coordinator (Operations)</option>
                   </select>
                 </div>
 

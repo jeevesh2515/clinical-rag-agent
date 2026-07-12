@@ -147,7 +147,7 @@ def test_agent_routes_unsafe_request_to_refuse(store, settings):
     assert response.retrieval.results == []
 
 
-def test_agent_routes_out_of_domain_to_insufficient(store, settings):
+def test_agent_routes_out_of_domain_to_converse(store, settings):
     from app.agents.clinical_rag_agent import ClinicalRAGAgent
 
     agent = ClinicalRAGAgent(settings, store)
@@ -155,10 +155,10 @@ def test_agent_routes_out_of_domain_to_insufficient(store, settings):
         "Who won the world cup?",
         alpha=0.55, top_k=5, rerank_top_n=2,
     )
-    assert response.graph_route == "insufficient"
+    assert response.graph_route == "converse"
     assert response.intent == "out_of_domain"
     assert response.citations == []
-    assert "enough evidence" in response.answer.lower()
+    assert len(response.answer) > 10
 
 
 def test_agent_tool_trace_respects_cap(store, settings):

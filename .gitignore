@@ -48,6 +48,8 @@ uv.lock
 .planning/
 PR.md
 PRIVATE_LEARNING_PLAN.md
+IMPLEMENTATION_SUMMARY.md
+FINAL_REPORT.md
 .vercel
 .gstack/
 test-results

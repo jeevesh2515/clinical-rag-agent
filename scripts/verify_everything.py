@@ -80,27 +80,6 @@ for mid in ["openai-gpt-4o", "anthropic-claude-3.5-sonnet", "google-gemini-1.5-p
 # =============================================================================
 section("3. External service connections")
 
-# Pinecone
-pinecone_key = os.environ.get("PINECONE_API_KEY", "")
-if pinecone_key:
-    try:
-        from pinecone import Pinecone
-        pc = Pinecone(api_key=pinecone_key)
-        indexes = pc.list_indexes()
-        names = [i.name for i in indexes]
-        check(f"Pinecone connected, {len(names)} index(es)", True)
-        check("clinical-rag-hybrid index exists",
-              "clinical-rag-hybrid" in names, f"found: {names}")
-        desc = pc.describe_index("clinical-rag-hybrid")
-        check("Index dimension=1536", desc.dimension == 1536, f"got {desc.dimension}")
-        stats = pc.Index("clinical-rag-hybrid").describe_index_stats()
-        check(f"Index has {stats.total_vector_count} vectors initially",
-              stats.total_vector_count >= 0)
-    except Exception as e:
-        check("Pinecone connection", False, str(e)[:200])
-else:
-    check("PINECONE_API_KEY present", False)
-
 # Cohere embeddings
 cohere_key = os.environ.get("COHERE_API_KEY", "")
 if cohere_key:

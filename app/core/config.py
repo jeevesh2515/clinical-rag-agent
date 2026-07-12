@@ -11,11 +11,6 @@ class Settings(BaseSettings):
     app_env: str = "local"
     log_level: str = "INFO"
 
-    pinecone_api_key: str | None = Field(default=None, repr=False)
-    pinecone_index_name: str = "clinical-rag-hybrid"
-    pinecone_cloud: str = "aws"
-    pinecone_region: str = "us-east-1"
-
     cohere_api_key: str | None = Field(default=None, repr=False)
     tavily_api_key: str | None = Field(default=None, repr=False)
     openrouter_api_key: str | None = Field(default=None, repr=False)
@@ -23,6 +18,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = Field(default=None, repr=False)
     google_api_key: str | None = Field(default=None, repr=False)
     database_url: str = Field(default="sqlite:///./clinical_demo.db", repr=False)
+    vector_store: str = Field(default="auto", description="'auto' | 'memory' | 'pgvector'. 'auto' detects from database_url.")
 
     embedding_model: str = "embed-v4.0"
     embedding_dim: int = 1536

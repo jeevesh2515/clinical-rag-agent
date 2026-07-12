@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from typing import Any
 
 from app.core.config import Settings
 from app.ingestion.chunker import TextChunk
@@ -22,6 +23,22 @@ class HybridCandidate(dict):
     pass
 
 
+def create_store(settings: Settings) -> Any:
+    """Factory: returns a PgVectorStore or in-memory HybridStore based on config.
+
+``VECTOR_STORE`` env var:
+    - ``pgvector`` — always use PostgreSQL + pgvector (fails if DB isn't postgres)
+    - ``memory`` — always use in-memory HybridStore
+    - ``auto`` (default) — use pgvector when ``DATABASE_URL`` starts with ``postgresql://``
+    """
+    from app.retrieval.pgvector_store import PgVectorStore, is_pgvector_url
+
+    mode = settings.vector_store
+    if mode == "pgvector" or (mode == "auto" and is_pgvector_url(settings.database_url)):
+        return PgVectorStore(settings)
+    return HybridStore(settings)
+
+
 class HybridStore:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -30,30 +47,6 @@ class HybridStore:
         self._chunks: dict[str, TextChunk] = {}
         self._dense: dict[str, list[float]] = {}
         self._sparse: dict[str, dict[str, list]] = {}
-        self._pinecone_index = None
-        self._init_pinecone()
-
-    def _init_pinecone(self) -> None:
-        if not self.settings.pinecone_api_key:
-            return
-        try:
-            from pinecone import Pinecone, ServerlessSpec
-
-            pc = Pinecone(api_key=self.settings.pinecone_api_key)
-            names = [index["name"] for index in pc.list_indexes()]
-            if self.settings.pinecone_index_name not in names:
-                pc.create_index(
-                    name=self.settings.pinecone_index_name,
-                    dimension=self.settings.embedding_dim,
-                    metric="cosine",
-                    spec=ServerlessSpec(
-                        cloud=self.settings.pinecone_cloud,
-                        region=self.settings.pinecone_region,
-                    ),
-                )
-            self._pinecone_index = pc.Index(self.settings.pinecone_index_name)
-        except Exception:
-            self._pinecone_index = None
 
     @property
     def document_count(self) -> int:
@@ -91,52 +84,9 @@ class HybridStore:
         for chunk_id, chunk in self._chunks.items():
             self._sparse[chunk_id] = self.sparse_encoder.encode_document(chunk.text)
 
-        if self._pinecone_index:
-            vectors = []
-            for chunk_id, chunk in self._chunks.items():
-                if chunk_id not in {item.chunk_id for item in chunks}:
-                    continue
-                # Strip None values to comply with Pinecone metadata type restrictions
-                metadata_clean = {k: v for k, v in asdict(chunk).items() if v is not None}
-                vectors.append(
-                    {
-                        "id": chunk_id,
-                        "values": self._dense[chunk_id],
-                        "sparse_values": self._sparse[chunk_id],
-                        "metadata": metadata_clean,
-                    }
-                )
-            for start in range(0, len(vectors), 100):
-                self._pinecone_index.upsert(vectors=vectors[start : start + 100])
-
     def query(self, question: str, *, alpha: float, top_k: int) -> list[HybridCandidate]:
         dense_query = self.embedding_client.embed_query(question)
         sparse_query = self.sparse_encoder.encode_query(question)
-        if self._pinecone_index:
-            response = self._pinecone_index.query(
-                vector=[value * alpha for value in dense_query],
-                sparse_vector={
-                    "indices": sparse_query["indices"],
-                    "values": [value * (1 - alpha) for value in sparse_query["values"]],
-                },
-                top_k=top_k,
-                include_metadata=True,
-            )
-            candidates = []
-            for match in response.get("matches", []):
-                metadata = match.get("metadata", {})
-                candidates.append(
-                    HybridCandidate(
-                        chunk_id=match["id"],
-                        text=metadata.get("text", ""),
-                        metadata=metadata,
-                        dense_score=float(match.get("score", 0.0)),
-                        sparse_score=0.0,
-                        hybrid_score=float(match.get("score", 0.0)),
-                    )
-                )
-            return candidates
-
         raw_candidates: list[HybridCandidate] = []
         for chunk_id, chunk in self._chunks.items():
             dense_score = cosine(dense_query, self._dense[chunk_id])

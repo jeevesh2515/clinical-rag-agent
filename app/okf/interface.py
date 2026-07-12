@@ -2,10 +2,11 @@ import logging
 import time
 from pathlib import Path
 
+from typing import Any
+
 from app.okf.models import KnowledgeResult, OKFDocument, RAGResult, RouterDecision
 from app.okf.retriever import OKFRetriever
 from app.okf.router import QueryRouter
-from app.retrieval.store import HybridStore
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class KnowledgeInterface:
         self,
         okf_retriever: OKFRetriever,
         router: QueryRouter,
-        rag_store: HybridStore,
+        rag_store: Any,
     ) -> None:
         self._okf = okf_retriever
         self._router = router
@@ -130,7 +131,7 @@ class KnowledgeInterface:
     def from_settings(
         cls,
         okf_root: str | Path,
-        rag_store: HybridStore,
+        rag_store: Any,
     ) -> "KnowledgeInterface":
         """Factory method that wires OKF retriever + router + interface."""
         retriever = OKFRetriever(okf_root)

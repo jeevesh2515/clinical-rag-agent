@@ -1,10 +1,7 @@
 from datetime import datetime, timezone
 
 from app.ingestion.source_registry import build_source_registry
-from app.retrieval.store import HybridStore
-
-
-def check_source_freshness(store: HybridStore) -> list[dict]:
+def check_source_freshness(store: object) -> list[dict]:
     """Check each indexed source and flag if it may be outdated.
 
     Returns a list of dicts with source_id, title, version, last_ingested_at,
@@ -65,7 +62,7 @@ def check_source_freshness(store: HybridStore) -> list[dict]:
 
 
 def compare_source_versions(
-    store: HybridStore, source_id: str, expected_version: str
+    store: object, source_id: str, expected_version: str
 ) -> dict:
     """Compare indexed source version against an expected version string."""
     sources = build_source_registry(store)

@@ -4,15 +4,15 @@ from pathlib import Path
 from app.agents.clinical_rag_agent import ClinicalRAGAgent
 from app.core.config import get_settings
 from app.okf.interface import KnowledgeInterface
-from app.retrieval.store import HybridStore
+from app.retrieval.store import create_store
+
 
 _OKF_ROOT = Path(__file__).resolve().parent.parent.parent / "hypertension-okf"
 
 
 @lru_cache
-def get_store() -> HybridStore:
-    return HybridStore(get_settings())
-
+def get_store() -> object:
+    return create_store(get_settings())
 
 @lru_cache
 def get_knowledge_interface() -> KnowledgeInterface | None:

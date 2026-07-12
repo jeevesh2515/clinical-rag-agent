@@ -31,7 +31,6 @@ jobs:
       env:
         DATABASE_URL: sqlite:///./test.db
         COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-        PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
 
   build-frontend:
     runs-on: ubuntu-latest

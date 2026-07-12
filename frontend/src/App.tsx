@@ -5,7 +5,7 @@ import {
   Send, Activity, BookOpen, Shield, Zap, Brain, Heart,
   X, Loader2, AlertCircle, CheckCircle2,
   ExternalLink, Info, Stethoscope, Search, Trash2,
-  BarChart3, Network, Copy, Check, PanelLeftClose,
+  BarChart3, Copy, Check, PanelLeftClose,
   PanelLeft, Sparkles, ChevronDown, ChevronRight,
   ArrowUp, FlaskRound, type LucideIcon
 } from 'lucide-react'
@@ -81,6 +81,8 @@ interface ChatMessage {
   knowledge_path?: KnowledgePath
   rephrased_question?: string | null
   model_used?: string | null
+  mode?: 'patient' | 'clinician'
+  question?: string
 }
 
 interface ModelSpec {
@@ -538,7 +540,6 @@ function CitationCard({ citation, index, isHighlighted }: { citation: Citation; 
   }
 
   const badge = getOrgBadge(citation.source_id, citation.organization)
-  const isOkf = citation.source_type === 'okf'
 
   return (
     <div 
@@ -567,9 +568,6 @@ function CitationCard({ citation, index, isHighlighted }: { citation: Citation; 
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Pill variant={isOkf ? 'okf' : 'rag'} className="text-[9px]">
-            {isOkf ? 'OKF Concept' : 'RAG Context'}
-          </Pill>
           {open ? <ChevronDown size={16} className="text-[#1a1a1a] dark:text-white" /> : <ChevronRight size={16} className="text-[#1a1a1a] dark:text-white" />}
         </div>
       </div>
@@ -593,7 +591,7 @@ function CitationCard({ citation, index, isHighlighted }: { citation: Citation; 
             </div>
             <div>
               <span className="opacity-50 block text-[9px] mb-0.5">Provenance</span>
-              <span className="text-emerald-500 dark:text-emerald-400">{citation.source_type?.toUpperCase() || 'RAG CLOUD'}</span>
+              <span className="text-emerald-500 dark:text-emerald-400">CLINICAL GUIDELINE</span>
             </div>
             {citation.page && (
               <div className="col-span-2 border-t border-[#1a1a1a]/10 dark:border-white/10 pt-1.5">
@@ -620,17 +618,34 @@ function CitationCard({ citation, index, isHighlighted }: { citation: Citation; 
             </p>
           </div>
 
+          {/* Source URL — visible as clickable link */}
+          {citation.source_url && (
+            <div className="flex items-center gap-1.5 text-[10px] font-code-sm">
+              <span className="text-[#1a1a1a]/50 dark:text-white/40 uppercase font-bold tracking-wider">Source:</span>
+              <a
+                href={citation.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-accent dark:text-teal-400 hover:underline font-bold truncate max-w-[220px]"
+              >
+                {citation.organization
+                  ? `${citation.organization} — ${citation.title || 'Guideline'}`
+                  : citation.title || citation.source_url}
+              </a>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center justify-between pt-3 border-t border-[#1a1a1a]/10 dark:border-white/10">
             {citation.source_url ? (
-              <a 
-                href={citation.source_url} 
-                target="_blank" 
+              <a
+                href={citation.source_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[11px] text-brand-accent dark:text-teal-400 hover:underline font-bold uppercase tracking-wider"
               >
                 <ExternalLink size={12} />
-                <span>View Full Source</span>
+                <span>Open Full Source ↗</span>
               </a>
             ) : (
               <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Internal Knowledge</span>
@@ -645,11 +660,13 @@ function CitationCard({ citation, index, isHighlighted }: { citation: Citation; 
 
 // ─── Message Bubble ───────────────────────────────────────────────────────────
 
-function MessageBubble({ message, onCitationClick, onCitationIndexClick, mode, username }: {
-  message: ChatMessage; onCitationClick: (c: Citation[]) => void; onCitationIndexClick?: (index: number) => void; mode: 'patient' | 'clinician'; username: string
+function MessageBubble({ message, onCitationClick, onCitationIndexClick, mode, username, question, onReask }: {
+  message: ChatMessage; onCitationClick: (c: Citation[]) => void; onCitationIndexClick?: (index: number) => void; mode: 'patient' | 'clinician'; username: string; question?: string; onReask?: (question: string, mode: 'patient' | 'clinician') => void
 }) {
   const isUser = message.role === 'user'
   const isClinician = mode === 'clinician' && !isUser
+  const msgMode = message.mode
+  const oppositeMode = msgMode === 'patient' ? 'clinician' : 'patient'
 
   return (
     <div className="flex gap-4 animate-message w-full mb-8">
@@ -675,8 +692,20 @@ function MessageBubble({ message, onCitationClick, onCitationIndexClick, mode, u
             <span className="material-symbols-outlined text-white text-[24px]">auto_awesome</span>
           </div>
           <div className="flex-1 bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white p-6 clinical-shadow relative">
-            <div className="absolute -top-3 left-4 bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
-              {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
+            <div className="absolute -top-3 left-4 flex items-center gap-2">
+              <div className="bg-[#1a1a1a] dark:bg-white text-white dark:text-black px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-label-md text-xs uppercase tracking-wider">
+                {isClinician ? 'Clinical Assistant' : 'Hypertension AI'}
+              </div>
+              {msgMode && (
+                <div className={cn(
+                  'px-2 py-0.5 border-2 border-[#1a1a1a] dark:border-white font-code-sm text-[10px] uppercase font-bold tracking-wider',
+                  msgMode === 'patient'
+                    ? 'bg-brand-accent text-white'
+                    : 'bg-slate-900 dark:bg-slate-700 text-white'
+                )}>
+                  {msgMode === 'patient' ? 'Patient Mode' : 'Clinician Mode'}
+                </div>
+              )}
             </div>
             
             {/* Model Badge in Top Right of the bubble */}
@@ -702,7 +731,7 @@ function MessageBubble({ message, onCitationClick, onCitationIndexClick, mode, u
               />
 
               {/* Badges row */}
-              {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
+              {(message.citations?.length || message.safety_flags?.medical_disclaimer || (msgMode && question && onReask)) && (
                 <div className="flex flex-wrap items-center gap-3 mt-6 pt-6 border-t-2 border-[#1a1a1a] dark:border-white">
                   {message.citations && message.citations.length > 0 && (
                     <button
@@ -713,17 +742,20 @@ function MessageBubble({ message, onCitationClick, onCitationIndexClick, mode, u
                       <span>{message.citations.length} source{message.citations.length !== 1 ? 's' : ''}</span>
                     </button>
                   )}
-                  {message.knowledge_path?.path && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-accent text-white border-2 border-[#1a1a1a] clinical-shadow uppercase font-code-sm">
-                      <span className="material-symbols-outlined text-[16px]">verified</span>
-                      <span>{message.knowledge_path.path === 'rag' ? 'RAG' : 'OKF'}</span>
-                    </span>
-                  )}
                   {message.safety_flags?.medical_disclaimer && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-[#f0f0f0] dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white uppercase font-code-sm opacity-low">
                       <span className="material-symbols-outlined text-[16px]">security</span>
                       <span>Disclaimer</span>
                     </span>
+                  )}
+                  {msgMode && question && onReask && (
+                    <button
+                      onClick={() => onReask(question, oppositeMode)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-2 border-[#1a1a1a] dark:border-white uppercase font-code-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all clinical-shadow"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
+                      <span>View in {oppositeMode === 'clinician' ? 'Clinician' : 'Patient'} Mode</span>
+                    </button>
                   )}
                 </div>
               )}
@@ -757,7 +789,7 @@ function TypingIndicator() {
 
 // ─── Evidence Panel ──────────────────────────────────────────────────────────
 
-type EvidenceTab = 'sources' | 'tools' | 'safety' | 'knowledge'
+type EvidenceTab = 'sources' | 'tools' | 'safety'
 
 function EvidencePanel({ 
   isOpen, 
@@ -765,14 +797,13 @@ function EvidencePanel({
   citations, 
   toolTrace, 
   safetyFlags, 
-  knowledgePath,
   activeTab,
   setActiveTab,
   highlightedCitationIndex
 }: {
   isOpen: boolean; onClose: () => void
   citations: Citation[]; toolTrace: ToolTrace[]
-  safetyFlags: SafetyFlags | null; knowledgePath: KnowledgePath | null
+  safetyFlags: SafetyFlags | null
   activeTab: EvidenceTab; setActiveTab: (tab: EvidenceTab) => void
   highlightedCitationIndex: number | null
 }) {
@@ -782,8 +813,7 @@ function EvidencePanel({
     { id: 'sources', label: 'Sources', icon: BookOpen, count: citations.length },
     { id: 'tools', label: 'Tools', icon: Zap, count: toolTrace.length },
     { id: 'safety', label: 'Safety', icon: Shield, count: safetyFlags ? 1 : 0 },
-    { id: 'knowledge', label: 'Knowledge', icon: Network, count: knowledgePath?.okf_concepts?.length || 0 },
-  ], [citations.length, toolTrace.length, safetyFlags, knowledgePath])
+  ], [citations.length, toolTrace.length, safetyFlags])
 
   return (
     <aside className={cn(
@@ -958,57 +988,7 @@ function EvidencePanel({
                 {!safetyFlags && <EmptyEvidence icon={Shield} title="No safety data" />}
               </div>
             )}
-            {activeTab === 'knowledge' && (
-              <div className="space-y-4">
-                {knowledgePath ? (
-                  <>
-                    <div className="bg-stone-50 dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 bg-brand-accent/20 flex items-center justify-center border-2 border-[#1a1a1a]/20 dark:border-white/20">
-                          <Network size={13} className="text-brand-accent" />
-                        </div>
-                        <p className="text-[13px] font-semibold text-gray-900 dark:text-slate-200">Knowledge Path</p>
-                        <Pill variant={knowledgePath.path === 'okf' ? 'okf' : 'rag'} className="ml-auto">
-                          {knowledgePath.path?.toUpperCase() || 'RAG'}
-                        </Pill>
-                      </div>
-                      {knowledgePath.reason && (
-                        <p className="text-[12px] text-gray-600 dark:text-slate-400 leading-relaxed">{knowledgePath.reason}</p>
-                      )}
-                    </div>
-                    {knowledgePath.okf_concepts && knowledgePath.okf_concepts.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1 font-mono">
-                          OKF Concepts Matched
-                        </p>
-                        {knowledgePath.okf_concepts.map((c, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-slate-900/60 border-2 border-[#1a1a1a] dark:border-white hover:border-brand-accent/60 dark:hover:border-brand-accent/30 mb-1.5 transition-all"
-                          >
-                            <div className="w-7 h-7 bg-brand-accent/10 flex items-center justify-center shrink-0 border-2 border-[#1a1a1a]/20 dark:border-white/20">
-                              <Brain size={12} className="text-brand-accent" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[12.5px] font-semibold text-gray-900 dark:text-slate-200 truncate">{c.title}</p>
-                              <p className="text-[10.5px] text-gray-400 dark:text-slate-500 font-mono truncate">{c.source_path}</p>
-                            </div>
-                            <div className="shrink-0 w-16">
-                              <div className="w-full h-1.5 bg-gray-200 dark:bg-slate-800 overflow-hidden">
-                                <div className="h-full bg-brand-accent transition-all" style={{ width: `${Math.round(c.confidence * 100)}%` }} />
-                              </div>
-                              <p className="text-[10px] text-gray-500 dark:text-slate-500 text-right mt-1 font-mono">{Math.round(c.confidence * 100)}%</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <EmptyEvidence icon={Network} title="No knowledge path" subtitle="Knowledge routing will appear here" />
-                )}
-              </div>
-            )}
+
           </div>
         </>
       )}
@@ -1714,7 +1694,7 @@ export default function App() {
   const [panelCitations, setPanelCitations] = useState<Citation[]>([])
   const [panelTools, setPanelTools] = useState<ToolTrace[]>([])
   const [panelSafety, setPanelSafety] = useState<SafetyFlags | null>(null)
-  const [panelKnowledge, setPanelKnowledge] = useState<KnowledgePath | null>(null)
+
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isReliefMode, setIsReliefMode] = useState(false)
   const [models, setModels] = useState<ModelSpec[]>([])
@@ -1849,7 +1829,7 @@ export default function App() {
 
   const handleNewChat = () => {
     setCurrentConvId(null); setMessages([]); setInputValue('')
-    setPanelCitations([]); setPanelTools([]); setPanelSafety(null); setPanelKnowledge(null)
+    setPanelCitations([]); setPanelTools([]); setPanelSafety(null)
     setEvidencePanelOpen(false)
   }
 
@@ -1857,11 +1837,15 @@ export default function App() {
     setCurrentConvId(id)
     try {
       const conv = await api.getConversation(id)
-      setMessages(conv.messages || [])
+      const msgs = (conv.messages || []).map(m => {
+        if (!m.mode) m.mode = m.role === 'assistant' ? 'patient' : undefined
+        return m
+      })
+      setMessages(msgs)
       const last = conv.messages?.[conv.messages.length - 1]
       if (last?.role === 'assistant') {
         setPanelCitations(last.citations || []); setPanelTools(last.tool_trace || [])
-        setPanelSafety(last.safety_flags || null); setPanelKnowledge(last.knowledge_path || null)
+        setPanelSafety(last.safety_flags || null)
       }
       setEvidencePanelOpen(true)
     } catch { setMessages([]) }
@@ -1896,11 +1880,45 @@ export default function App() {
         setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
       const assistantMsg = await api.sendMessage(convId, question, mode, caseId || undefined, selectedModelId)
+      assistantMsg.mode = mode
+      assistantMsg.question = question
       setMessages(prev => [...prev, assistantMsg])
       setPanelCitations(assistantMsg.citations || [])
       setPanelTools(assistantMsg.tool_trace || [])
       setPanelSafety(assistantMsg.safety_flags || null)
-      setPanelKnowledge(assistantMsg.knowledge_path || null)
+      if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
+      setConversations(prev => prev.map(c => c.id === convId ? { ...c, updated_at: new Date().toISOString() } : c))
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content: `**Something went wrong.** ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
+        timestamp: new Date().toISOString(),
+      }])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleReask = async (question: string, newMode: 'patient' | 'clinician') => {
+    if (!question.trim() || isLoading) return
+    setMode(newMode)
+    setIsLoading(true)
+    try {
+      let convId = currentConvId
+      if (!convId) {
+        const conv = await api.createConversation(question.slice(0, 60))
+        convId = conv.id
+        setCurrentConvId(convId)
+        setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
+      }
+      const assistantMsg = await api.sendMessage(convId, question, newMode, caseId || undefined, selectedModelId)
+      assistantMsg.mode = newMode
+      assistantMsg.question = question
+      setMessages(prev => [...prev, assistantMsg])
+      setPanelCitations(assistantMsg.citations || [])
+      setPanelTools(assistantMsg.tool_trace || [])
+      setPanelSafety(assistantMsg.safety_flags || null)
       if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
       setConversations(prev => prev.map(c => c.id === convId ? { ...c, updated_at: new Date().toISOString() } : c))
     } catch (err) {
@@ -2081,7 +2099,15 @@ export default function App() {
                 evidencePanelOpen ? "hidden xl:flex" : "flex"
               )}>
                 <span className={cn('w-2 h-2 shrink-0', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent')}></span>
-                {isClinicianMode ? 'Clinician mode · Workstation' : 'Patient mode · Hypertension AI'}
+                <span className={cn(
+                  'px-1.5 py-0.5 text-[9px] font-bold border-2',
+                  isClinicianMode
+                    ? 'bg-slate-900 dark:bg-slate-700 text-white border-[#1a1a1a] dark:border-white'
+                    : 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white'
+                )}>
+                  {isClinicianMode ? 'Clinician' : 'Patient'}
+                </span>
+                {isClinicianMode ? 'mode · Workstation' : 'mode · Hypertension AI'}
               </p>
             </div>
           </div>
@@ -2202,26 +2228,30 @@ export default function App() {
             <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
           ) : (
             <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto pb-44 animate-message transition-all duration-1000">
-              {messages.map(msg => (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  mode={mode}
-                  username={user?.username || 'You'}
-                  onCitationClick={c => { setPanelCitations(c); setEvidencePanelOpen(true) }}
-                  onCitationIndexClick={(index) => {
-                    if (msg.citations) {
-                      setPanelCitations(msg.citations)
-                      setPanelTools(msg.tool_trace || [])
-                      setPanelSafety(msg.safety_flags || null)
-                      setPanelKnowledge(msg.knowledge_path || null)
-                      setEvidencePanelOpen(true)
-                      setEvidenceTab('sources')
-                      setHighlightedCitationIndex(index)
-                    }
-                  }}
-                />
-              ))}
+              {messages.map((msg, idx) => {
+                const prevUserMsg = msg.role === 'assistant' && idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1] : null
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    message={msg}
+                    mode={mode}
+                    username={user?.username || 'You'}
+                    question={prevUserMsg?.content}
+                    onReask={handleReask}
+                    onCitationClick={c => { setPanelCitations(c); setEvidencePanelOpen(true) }}
+                    onCitationIndexClick={(index) => {
+                      if (msg.citations) {
+                        setPanelCitations(msg.citations)
+                        setPanelTools(msg.tool_trace || [])
+                        setPanelSafety(msg.safety_flags || null)
+                        setEvidencePanelOpen(true)
+                        setEvidenceTab('sources')
+                        setHighlightedCitationIndex(index)
+                      }
+                    }}
+                  />
+                )
+              })}
               {isLoading && <TypingIndicator />}
               <div ref={bottomRef} />
             </div>
@@ -2290,7 +2320,6 @@ export default function App() {
         citations={panelCitations}
         toolTrace={panelTools}
         safetyFlags={panelSafety}
-        knowledgePath={panelKnowledge}
         activeTab={evidenceTab}
         setActiveTab={setEvidenceTab}
         highlightedCitationIndex={highlightedCitationIndex}

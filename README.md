@@ -138,7 +138,6 @@ flowchart TD
 
     subgraph Storage["💾 Storage"]
         U[SQLite / Postgres<br/>Users + Conversations + Messages]
-        V[Pinecone<br/>Production Vector Store]
     end
 
     A <--> B
@@ -149,7 +148,6 @@ flowchart TD
     I <--> O
     I <--> P
     O <--> Q
-    O <--> V
     U <--> B
 ```
 
@@ -198,7 +196,9 @@ The system classifies every query before any retrieval or generation:
 
 Three-panel professional chat:
 - **Conversation history** — grouped by date (today, this week, earlier)
-- **Patient / Clinician mode** — switch tone and detail level
+- **Patient / Clinician mode** — switch tone and detail level; mode badge on every message
+- **Mode toggle** — "View in opposite Mode" button to compare responses side-by-side
+- **Profile editing** — avatar icon opens profile modal (name, email, DOB, notes)
 - **Synthetic cases** — 5 hypertension patient scenarios for workflow demos
 - **Evidence panel** — citations, tool traces, safety flags, graph routing path
 - **Dark/light mode** — comfortable use in any environment
@@ -270,13 +270,13 @@ Synthetic patient cases with guideline-based care gap analysis:
 | **Reranking** | Cohere rerank-v3.5 | Cross-encoder relevance scoring |
 | **Generation** | OpenRouter (free) / Cohere / OpenAI | LLM-based answer generation |
 | **Knowledge Spine** | OKF (YAML + wikilinks) | 27 curated concept files |
-| **Vector Store** | Pinecone (production) / SQLite (dev) | Indexed vector storage |
+| **Vector Store** | HybridStore (in-memory) or PgVectorStore (pgvector) | BM25 + dense embeddings |
 | **Auth** | JWT + OAuth2 + bcrypt | Role-based access control |
 | **Frontend** | React 18 + TypeScript 5 | Modern SPA with dark/light mode |
 | **Styling** | Tailwind CSS 4 + Lucide icons | Responsive, accessible UI |
 | **Build** | Vite 6 | Fast dev server + optimized builds |
 | **CI** | GitHub Actions | Lint + 222 tests + frontend build |
-| **Deployment** | Vercel | Python serverless + static SPA |
+| **Deployment** | Vercel (frontend) / Render (backend) | Python serverless + static SPA |
 
 ---
 
@@ -310,9 +310,9 @@ Synthetic patient cases with guideline-based care gap analysis:
 |----------|----------|---------|---------|
 | `OPENROUTER_API_KEY` | ✅ | — | Free LLM generation (get at [openrouter.ai](https://openrouter.ai/keys)) |
 | `JWT_SECRET_KEY` | ✅ | (generated) | Auth token signing — generate with `secrets.token_urlsafe(48)` |
-| `DATABASE_URL` | — | `sqlite:///./clinical_demo.db` | Database connection |
-| `PINECONE_API_KEY` | — | — | Production vector store |
-| `PINECONE_INDEX_NAME` | — | `clinical-rag-hybrid` | Pinecone index |
+| `DATABASE_URL` | — | `sqlite:///./clinical_demo.db` | Database connection (use `postgresql://...` for free-tier pgvector on Neon/Supabase) |
+| `VECTOR_STORE` | — | `auto` | `auto` uses pgvector when DATABASE_URL starts with `postgresql://`; `memory` forces in-memory; `pgvector` forces pgvector |
+
 | `COHERE_API_KEY` | — | — | Embedding + reranking + generation |
 | `TAVILY_API_KEY` | — | — | Web search tool |
 | `APP_ENV` | — | `local` | Environment mode |
@@ -337,7 +337,7 @@ Synthetic patient cases with guideline-based care gap analysis:
 │   ├── models.py                   # Pydantic schemas
 │   ├── okf/                        # Open Knowledge Format module
 │   ├── personalization/            # Per-user document index
-│   ├── retrieval/                  # HybridStore, embeddings, BM25, reranker
+│   ├── retrieval/                  # HybridStore, PgVectorStore, embeddings, BM25, reranker
 │   ├── safety/                     # Intent classifier + refusal engine
 │   └── tools/                      # eGFR, MAP, BMI, PP calculators + care gaps
 ├── frontend/                       # React 18 + TypeScript + Tailwind
@@ -358,14 +358,32 @@ Synthetic patient cases with guideline-based care gap analysis:
 
 ## Deployment
 
-### Vercel (current)
+Two production options — pick the one that fits your budget.
+
+### Free Tier (recommended for dev/portfolio)
+
+```
+Frontend (Vercel) → Backend (Render) → Database (Neon pgvector) → LLM (OpenRouter free)
+                                                                → Embeddings (deterministic)
+                                                                  Cost: $0/month
+```
+
+See **[FREE_TIER_DEPLOYMENT.md](./FREE_TIER_DEPLOYMENT.md)** for the complete step-by-step guide.
+
+### Paid Production (1M+ MAU)
+
+Designed for AWS ECS Fargate + RDS PostgreSQL + pgvector + Redis + Celery.
+
+See **[PRODUCTION_ARCHITECTURE.md](./PRODUCTION_ARCHITECTURE.md)** for the full 11-week migration plan.
+
+### Vercel (current dev deployment)
 
 The app is deployed on Vercel as a Python serverless function + static SPA:
 
 ```bash
 # Set environment variables in Vercel dashboard:
 #   OPENROUTER_API_KEY, JWT_SECRET_KEY, COHERE_API_KEY,
-#   PINECONE_API_KEY, TAVILY_API_KEY, CORS_ORIGINS
+#   TAVILY_API_KEY, CORS_ORIGINS
 
 # Or deploy via CLI:
 vercel --prod

@@ -3,9 +3,6 @@ from urllib.parse import urlparse
 from app.ingestion.manifest import DEFAULT_MANIFEST_DIR, list_manifests, load_manifest
 from app.ingestion.sources import DEFAULT_SOURCES
 from app.models import SourceMetadata
-from app.retrieval.store import HybridStore
-
-
 def _domain_from_url(url: str) -> str:
     parsed = urlparse(url)
     return parsed.netloc or ""
@@ -35,7 +32,7 @@ def _latest_manifest_entries(
     return latest
 
 
-def build_source_registry(store: HybridStore) -> list[SourceMetadata]:
+def build_source_registry(store: object) -> list[SourceMetadata]:
     """Merge canonical default sources, live index state, and ingestion manifests."""
     indexed_docs = {doc["source_id"]: doc for doc in store.list_documents()}
     manifest_by_source = _latest_manifest_entries()
@@ -89,7 +86,7 @@ def build_source_registry(store: HybridStore) -> list[SourceMetadata]:
     return registry
 
 
-def get_source_by_id(store: HybridStore, source_id: str) -> SourceMetadata | None:
+def get_source_by_id(store: object, source_id: str) -> SourceMetadata | None:
     for source in build_source_registry(store):
         if source.source_id == source_id:
             return source

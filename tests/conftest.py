@@ -100,7 +100,6 @@ def settings(tmp_path):
     bootstrap()
     return Settings(
         cohere_api_key=None,
-        pinecone_api_key=None,
         database_url=db_url,
     )
 

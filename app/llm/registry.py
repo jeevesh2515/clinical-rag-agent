@@ -133,7 +133,7 @@ MODELS: list[ModelSpec] = [
 
 
 # Default to the most capable verified free model — best clinical RAG at zero cost.
-DEFAULT_MODEL_ID = "openrouter-nemotron-nano-30b"
+DEFAULT_MODEL_ID = "openrouter-nemotron-ultra-550b"
 
 
 def get_spec(model_id: str | None) -> ModelSpec:
@@ -169,13 +169,15 @@ def list_models_for_api(settings: Settings) -> list[dict]:
     out = []
     for m in MODELS:
         llm = get_llm(m.id, settings)
-        out.append({
-            "id": m.id,
-            "label": m.label,
-            "provider": m.provider,
-            "description": m.description,
-            "badge": m.badge,
-            "is_configured": llm.is_configured,
-        })
+        if llm.is_configured:  # Only return configured models
+            out.append({
+                "id": m.id,
+                "label": m.label,
+                "provider": m.provider,
+                "description": m.description,
+                "badge": m.badge,
+                "is_configured": llm.is_configured,
+            })
     return out
+
 

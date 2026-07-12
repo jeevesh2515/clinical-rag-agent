@@ -510,8 +510,20 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
 
 // ─── Citation Card (collapsible, premium medical style) ───────────────────────
 
-function CitationCard({ citation, index }: { citation: Citation; index: number }) {
+function CitationCard({ citation, index, isHighlighted }: { citation: Citation; index: number; isHighlighted?: boolean }) {
   const [open, setOpen] = useState(false) // Default collapsed for better screen fit
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  // Scroll and expand if highlighted
+  useEffect(() => {
+    if (isHighlighted) {
+      setOpen(true)
+      const t = setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 100)
+      return () => clearTimeout(t)
+    }
+  }, [isHighlighted])
 
   // Detect guideline organization name for clean badge display
   const getOrgBadge = (sourceId: string, orgName?: string) => {
@@ -529,7 +541,15 @@ function CitationCard({ citation, index }: { citation: Citation; index: number }
   const isOkf = citation.source_type === 'okf'
 
   return (
-    <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white overflow-hidden clinical-shadow transition-all duration-300">
+    <div 
+      ref={cardRef}
+      className={cn(
+        "bg-white dark:bg-slate-900 border-2 overflow-hidden clinical-shadow transition-all duration-300",
+        isHighlighted
+          ? "border-brand-accent ring-2 ring-brand-accent/20 bg-brand-accent/5 dark:bg-brand-accent/5"
+          : "border-[#1a1a1a] dark:border-white"
+      )}
+    >
       {/* Card Header (Clickable row) */}
       <div 
         onClick={() => setOpen(!open)}
@@ -625,8 +645,8 @@ function CitationCard({ citation, index }: { citation: Citation; index: number }
 
 // ─── Message Bubble ───────────────────────────────────────────────────────────
 
-function MessageBubble({ message, onCitationClick, mode, username }: {
-  message: ChatMessage; onCitationClick: (c: Citation[]) => void; mode: 'patient' | 'clinician'; username: string
+function MessageBubble({ message, onCitationClick, onCitationIndexClick, mode, username }: {
+  message: ChatMessage; onCitationClick: (c: Citation[]) => void; onCitationIndexClick?: (index: number) => void; mode: 'patient' | 'clinician'; username: string
 }) {
   const isUser = message.role === 'user'
   const isClinician = mode === 'clinician' && !isUser
@@ -675,7 +695,11 @@ function MessageBubble({ message, onCitationClick, mode, username }: {
                 </div>
               )}
 
-              <Markdown content={message.content} />
+              <Markdown 
+                content={message.content} 
+                citations={message.citations}
+                onCitationClick={onCitationIndexClick}
+              />
 
               {/* Badges row */}
               {(message.citations?.length || message.knowledge_path?.path || message.safety_flags?.medical_disclaimer) && (
@@ -735,12 +759,23 @@ function TypingIndicator() {
 
 type EvidenceTab = 'sources' | 'tools' | 'safety' | 'knowledge'
 
-function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, knowledgePath }: {
+function EvidencePanel({ 
+  isOpen, 
+  onClose, 
+  citations, 
+  toolTrace, 
+  safetyFlags, 
+  knowledgePath,
+  activeTab,
+  setActiveTab,
+  highlightedCitationIndex
+}: {
   isOpen: boolean; onClose: () => void
   citations: Citation[]; toolTrace: ToolTrace[]
   safetyFlags: SafetyFlags | null; knowledgePath: KnowledgePath | null
+  activeTab: EvidenceTab; setActiveTab: (tab: EvidenceTab) => void
+  highlightedCitationIndex: number | null
 }) {
-  const [tab, setTab] = useState<EvidenceTab>('sources')
   const [lisinoprilDosage, setLisinoprilDosage] = useState(20)
 
   const tabs: { id: EvidenceTab; label: string; icon: IconType; count: number }[] = useMemo(() => [
@@ -773,10 +808,10 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
             {tabs.map(t => (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => setActiveTab(t.id)}
                 className={cn(
                   'flex-1 flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold transition-all whitespace-nowrap',
-                  tab === t.id
+                  activeTab === t.id
                     ? 'text-[#1a1a1a] dark:text-white border-b-4 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 border-t-2 border-t-[#1a1a1a] dark:border-t-white'
                     : 'text-[#1a1a1a]/60 dark:text-white/60 hover:text-[#1a1a1a] dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 border-b-4 border-transparent border-t-2 border-t-transparent opacity-low'
                 )}
@@ -786,7 +821,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                 {t.count > 0 && (
                   <span className={cn(
                     'px-1.5 py-0.5 text-[10px] font-bold border-2',
-                    tab === t.id
+                    activeTab === t.id
                       ? 'bg-brand-accent text-white border-[#1a1a1a] dark:border-white'
                       : 'bg-white dark:bg-slate-800 text-[#1a1a1a] dark:text-white border-[#1a1a1a]/20 dark:border-white/20'
                   )}>{t.count}</span>
@@ -797,7 +832,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto scroll-premium p-6 space-y-6 bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
-            {tab === 'sources' && (
+            {activeTab === 'sources' && (
               <>
                 {/* Titration Sandbox */}
                 <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-5 space-y-6 mb-8 transition-all duration-1000">
@@ -840,11 +875,18 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                 {citations.length === 0 ? (
                   <EmptyEvidence icon={BookOpen} title="No citations yet" subtitle="Ask a clinical question to see source material" />
                 ) : (
-                  citations.map((c, i) => <CitationCard key={i} citation={c} index={i} />)
+                  citations.map((c, i) => (
+                    <CitationCard 
+                      key={i} 
+                      citation={c} 
+                      index={i} 
+                      isHighlighted={highlightedCitationIndex === i}
+                    />
+                  ))
                 )}
               </>
             )}
-            {tab === 'tools' && (
+            {activeTab === 'tools' && (
               toolTrace.length === 0 ? (
                 <EmptyEvidence icon={Zap} title="No tools used" subtitle="Tools will appear here if the agent called them" />
               ) : toolTrace.map((t, i) => (
@@ -877,7 +919,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                 </div>
               ))
             )}
-            {tab === 'safety' && (
+            {activeTab === 'safety' && (
               <div className="space-y-4">
                 <div className={cn(
                   'flex items-start gap-3 p-4 border-2 border-[#1a1a1a] dark:border-white clinical-shadow',
@@ -916,7 +958,7 @@ function EvidencePanel({ isOpen, onClose, citations, toolTrace, safetyFlags, kno
                 {!safetyFlags && <EmptyEvidence icon={Shield} title="No safety data" />}
               </div>
             )}
-            {tab === 'knowledge' && (
+            {activeTab === 'knowledge' && (
               <div className="space-y-4">
                 {knowledgePath ? (
                   <>
@@ -1677,8 +1719,11 @@ export default function App() {
   const [isReliefMode, setIsReliefMode] = useState(false)
   const [models, setModels] = useState<ModelSpec[]>([])
   const [selectedModelId, setSelectedModelId] = useState<string>(
-    () => localStorage.getItem('cw_model_id') || 'openrouter-llama-3.1-8b'
+    () => localStorage.getItem('cw_model_id') || 'openrouter-nemotron-ultra-550b'
   )
+  const [evidenceTab, setEvidenceTab] = useState<EvidenceTab>('sources')
+  const [highlightedCitationIndex, setHighlightedCitationIndex] = useState<number | null>(null)
+
 
   const toggleReliefMode = () => {
     const next = !isReliefMode
@@ -2104,6 +2149,17 @@ export default function App() {
                   mode={mode}
                   username={user?.username || 'You'}
                   onCitationClick={c => { setPanelCitations(c); setEvidencePanelOpen(true) }}
+                  onCitationIndexClick={(index) => {
+                    if (msg.citations) {
+                      setPanelCitations(msg.citations)
+                      setPanelTools(msg.tool_trace || [])
+                      setPanelSafety(msg.safety_flags || null)
+                      setPanelKnowledge(msg.knowledge_path || null)
+                      setEvidencePanelOpen(true)
+                      setEvidenceTab('sources')
+                      setHighlightedCitationIndex(index)
+                    }
+                  }}
                 />
               ))}
               {isLoading && <TypingIndicator />}
@@ -2175,6 +2231,9 @@ export default function App() {
         toolTrace={panelTools}
         safetyFlags={panelSafety}
         knowledgePath={panelKnowledge}
+        activeTab={evidenceTab}
+        setActiveTab={setEvidenceTab}
+        highlightedCitationIndex={highlightedCitationIndex}
       />
 
       <ProfileModal

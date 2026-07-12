@@ -44,13 +44,32 @@ class Settings(BaseSettings):
     langchain_project: str = "clinical-rag-agent"
     langchain_endpoint: str = "https://api.smith.langchain.com"
 
+    # Alias / alternate names copied from LangSmith UI
+    langsmith_tracing: str | None = Field(default=None)
+    langsmith_api_key: str | None = Field(default=None, repr=False)
+    langsmith_project: str | None = Field(default=None)
+    langsmith_endpoint: str | None = Field(default=None)
+
     def __init__(self, **values):
         super().__init__(**values)
-        if self.langchain_tracing_v2 and self.langchain_api_key:
+        # Standardise key values between LANGCHAIN_ and LANGSMITH_ env prefixes
+        tracing_str = self.langsmith_tracing
+        tracing_enabled = self.langchain_tracing_v2 or (
+            tracing_str.lower() == "true" if tracing_str else False
+        )
+        api_key = self.langchain_api_key or self.langsmith_api_key
+        project = self.langsmith_project or self.langchain_project or "clinical-rag-agent"
+        endpoint = self.langsmith_endpoint or self.langchain_endpoint or "https://api.smith.langchain.com"
+
+        # Strip any quotes from the project name (e.g. '"clinical-rag-agent"')
+        if project:
+            project = project.strip("\"'")
+
+        if tracing_enabled and api_key:
             os.environ["LANGCHAIN_TRACING_V2"] = "true"
-            os.environ["LANGCHAIN_API_KEY"] = self.langchain_api_key
-            os.environ["LANGCHAIN_PROJECT"] = self.langchain_project
-            os.environ["LANGCHAIN_ENDPOINT"] = self.langchain_endpoint
+            os.environ["LANGCHAIN_API_KEY"] = api_key
+            os.environ["LANGCHAIN_PROJECT"] = project
+            os.environ["LANGCHAIN_ENDPOINT"] = endpoint
 
 
 @lru_cache

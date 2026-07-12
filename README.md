@@ -365,16 +365,8 @@ Two production options — pick the one that fits your budget.
 ```
 Frontend (Vercel) → Backend (Render) → Database (Neon pgvector) → LLM (OpenRouter free)
                                                                 → Embeddings (deterministic)
-                                                                  Cost: $0/month
+                                                                   Cost: $0/month
 ```
-
-See **[FREE_TIER_DEPLOYMENT.md](./FREE_TIER_DEPLOYMENT.md)** for the complete step-by-step guide.
-
-### Paid Production (1M+ MAU)
-
-Designed for AWS ECS Fargate + RDS PostgreSQL + pgvector + Redis + Celery.
-
-See **[PRODUCTION_ARCHITECTURE.md](./PRODUCTION_ARCHITECTURE.md)** for the full 11-week migration plan.
 
 ### Vercel (current dev deployment)
 

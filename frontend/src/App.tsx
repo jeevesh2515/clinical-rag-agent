@@ -339,10 +339,10 @@ function CopyButton({ text }: { text: string }) {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, onOpenProfile, isLoading }: {
+function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, onOpenProfile, onLogoClick, isLoading }: {
   isOpen: boolean; onToggle: () => void; user: UserProfile; conversations: ConversationSummary[]
   currentConvId: string | null; onNewChat: () => void; onSelectConv: (id: string) => void
-  onDeleteConv: (id: string) => void; onLogout: () => void; onOpenProfile: () => void; isLoading: boolean
+  onDeleteConv: (id: string) => void; onLogout: () => void; onOpenProfile: () => void; onLogoClick?: () => void; isLoading: boolean
 }) {
   const [search, setSearch] = useState('')
   const [hoveredConv, setHoveredConv] = useState<string | null>(null)
@@ -364,9 +364,9 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       {/* Brand */}
       <div className="flex items-center justify-between px-4 py-6 border-b-2 border-white/20">
         <button 
-          onClick={onLogout}
+          onClick={onLogoClick}
           className="group flex items-center gap-3 min-w-0 flex-1 text-left focus:outline-none"
-          title="Back to Homepage (Logout)"
+          title="Back to Homepage"
         >
           <div className="w-8 h-8 border-2 border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
             <Stethoscope size={16} className="text-white transition-transform group-hover:rotate-[15deg]" />
@@ -1699,7 +1699,7 @@ function BreathingShader() {
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [page, setPage] = useState<'landing' | 'login' | 'signup'>('landing')
+  const [page, setPage] = useState<'landing' | 'login' | 'signup' | 'dashboard'>('landing')
   const [isRestoringSession, setIsRestoringSession] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [evidencePanelOpen, setEvidencePanelOpen] = useState(false)
@@ -1756,6 +1756,7 @@ export default function App() {
           setUser(u)
           const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
           setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+          setPage('dashboard')
         })
         .catch(() => {
           // Token may be expired or this is a cold start — retry once
@@ -1765,10 +1766,12 @@ export default function App() {
                 setUser(u)
                 const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
                 setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+                setPage('dashboard')
               })
               .catch(() => {
                 localStorage.removeItem('cw_token')
                 localStorage.removeItem('cw_remember')
+                setPage('landing')
               })
               .finally(() => setIsRestoringSession(false))
           }, 1500)
@@ -1809,6 +1812,7 @@ export default function App() {
       setUser(u)
       const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
       setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+      setPage('dashboard')
     } catch {
       throw new Error('Failed to load user profile')
     }
@@ -1822,6 +1826,7 @@ export default function App() {
       setUser(u)
       const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
       setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+      setPage('dashboard')
     } catch {
       throw new Error('Failed to load user profile')
     }
@@ -1923,28 +1928,82 @@ export default function App() {
   const canCollapseLeft = sidebarOpen
   const isClinicianMode = mode === 'clinician'
 
-  if (!user) {
-    if (isRestoringSession) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-[#1a1a1a] dark:border-white bg-brand-accent flex items-center justify-center animate-pulse">
-              <Stethoscope size={20} className="text-white" />
-            </div>
-            <p className="text-sm font-bold text-[#1a1a1a] dark:text-white uppercase tracking-wider animate-pulse">
-              Restoring session&hellip;
-            </p>
+  if (isRestoringSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-[#1a1a1a] dark:border-white bg-brand-accent flex items-center justify-center animate-pulse">
+            <Stethoscope size={20} className="text-white" />
           </div>
+          <p className="text-sm font-bold text-[#1a1a1a] dark:text-white uppercase tracking-wider animate-pulse">
+            Restoring session&hellip;
+          </p>
         </div>
-      )
-    }
-    if (page === 'landing') {
-      return <LandingPage onLogin={() => setPage('login')} onRegister={() => setPage('signup')} />
-    }
-    if (page === 'login') {
-      return <LoginPage onLogin={handleLogin} onSwitchToSignup={() => setPage('signup')} onBackToHome={() => setPage('landing')} />
-    }
-    return <SignupPage onSignup={handleSignup} onSwitchToLogin={() => setPage('login')} onBackToHome={() => setPage('landing')} />
+      </div>
+    )
+  }
+
+  // Redirect if logged in trying to view login/signup
+  if (user && (page === 'login' || page === 'signup')) {
+    setTimeout(() => setPage('dashboard'), 0)
+    return null
+  }
+
+  // Redirect to login if accessing dashboard without user session
+  if (!user && page === 'dashboard') {
+    setTimeout(() => setPage('login'), 0)
+    return null
+  }
+
+  if (page === 'landing') {
+    return (
+      <>
+        <LandingPage 
+          onLogin={() => setPage('login')} 
+          onRegister={() => setPage('signup')} 
+          currentUser={user}
+          onGoToDashboard={() => setPage('dashboard')}
+          onShowProfile={() => setIsProfileModalOpen(true)}
+        />
+        {user && (
+          <ProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+            user={user!}
+            onUpdateUser={(updated) => setUser(updated)}
+            onChatAboutDoc={handleChatAboutDoc}
+          />
+        )}
+      </>
+    )
+  }
+
+  if (page === 'login') {
+    return (
+      <LoginPage 
+        onLogin={handleLogin} 
+        onSwitchToSignup={() => setPage('signup')} 
+        onBackToHome={() => setPage('landing')} 
+        currentUser={user}
+        onShowProfile={() => setIsProfileModalOpen(true)}
+        onGoToDashboard={() => setPage('dashboard')}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
+  if (page === 'signup') {
+    return (
+      <SignupPage 
+        onSignup={handleSignup} 
+        onSwitchToLogin={() => setPage('login')} 
+        onBackToHome={() => setPage('landing')} 
+        currentUser={user}
+        onShowProfile={() => setIsProfileModalOpen(true)}
+        onGoToDashboard={() => setPage('dashboard')}
+        onLogout={handleLogout}
+      />
+    )
   }
 
   return (
@@ -1979,10 +2038,11 @@ export default function App() {
       )}
 
       <Sidebar
-        isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user}
+        isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} user={user!}
         conversations={conversations} currentConvId={currentConvId} onNewChat={handleNewChat}
         onSelectConv={handleSelectConv} onDeleteConv={handleDeleteConv} onLogout={handleLogout}
         onOpenProfile={() => setIsProfileModalOpen(true)}
+        onLogoClick={() => setPage('landing')}
         isLoading={isFetchingConvs}
       />
 
@@ -2001,9 +2061,9 @@ export default function App() {
               </button>
             )}
             <button 
-              onClick={handleLogout}
+              onClick={() => setPage('landing')}
               className="group flex items-center justify-center shrink-0 focus:outline-none"
-              title="Back to Homepage (Logout)"
+              title="Back to Homepage"
             >
               <div className={cn(
                 'w-10 h-10 flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150',
@@ -2121,9 +2181,9 @@ export default function App() {
               <PanelLeft size={20} />
             </button>
             <button
-              onClick={handleLogout}
+              onClick={() => setPage('landing')}
               className="group flex items-center gap-2 text-left focus:outline-none"
-              title="Back to Homepage (Logout)"
+              title="Back to Homepage"
             >
               <div className="w-7 h-7 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
                 <Stethoscope size={13} className="text-white transition-transform group-hover:rotate-[15deg]" />
@@ -2239,7 +2299,7 @@ export default function App() {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        user={user}
+        user={user!}
         onUpdateUser={(updated) => setUser(updated)}
         onChatAboutDoc={handleChatAboutDoc}
       />

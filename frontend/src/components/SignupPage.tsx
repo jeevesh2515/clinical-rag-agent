@@ -12,13 +12,35 @@ const FEATURES = [
   { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-600 dark:text-violet-400' },
 ]
 
+interface UserProfile {
+  id: string
+  username: string
+  email: string
+  full_name?: string
+  date_of_birth?: string
+  notes?: string
+  roles?: string[]
+}
+
 interface SignupPageProps {
   onSignup: (token: string) => Promise<void>
   onSwitchToLogin: () => void
   onBackToHome?: () => void
+  currentUser?: UserProfile | null
+  onShowProfile?: () => void
+  onGoToDashboard?: () => void
+  onLogout?: () => void
 }
 
-export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: SignupPageProps) {
+export default function SignupPage({ 
+  onSignup, 
+  onSwitchToLogin, 
+  onBackToHome, 
+  currentUser, 
+  onShowProfile, 
+  onGoToDashboard, 
+  onLogout 
+}: SignupPageProps) {
   const { theme } = useTheme()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -140,6 +162,14 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
             ← Back to Home
           </button>
           <div className="flex items-center gap-3">
+            {currentUser && (
+              <button
+                onClick={onShowProfile}
+                className="flex items-center gap-2 px-3 py-1.5 bg-brand-accent text-white border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all mr-2"
+              >
+                Profile
+              </button>
+            )}
             <span className="text-xs text-clinical-black dark:text-white font-code-sm font-bold uppercase select-none">
               {theme === 'dark' ? 'Dark' : 'Light'}
             </span>
@@ -148,160 +178,198 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome }: 
         </div>
 
         <div className="w-full max-w-md border-4 border-clinical-black dark:border-white p-8 bg-white dark:bg-slate-900 my-8 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-colors duration-300">
-          <div className="mb-6">
-            <h2 className="font-headline-xl text-headline-xl font-black text-clinical-black dark:text-white uppercase">Create Account</h2>
-            <p className="text-on-surface-variant dark:text-slate-400 text-xs font-bold font-code-sm uppercase mt-1">Get started with a custom clinical account</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
-                Account Scope / Role
-              </label>
-              <select
-                value={role}
-                onChange={e => setRole(e.target.value as any)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
-              >
-                <option value="patient">Patient (Normal User)</option>
-                <option value="clinician">Clinician (Medical Staff)</option>
-                <option value="admin">Administrator (System Control)</option>
-                <option value="care_coordinator">Care Coordinator (Operations)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
-                Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                required
-                placeholder="Choose a username"
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                placeholder="Enter your email"
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  placeholder="Create a password"
-                  className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
-                />
+          {currentUser ? (
+            <div className="space-y-6 text-center py-4">
+              <div className="w-16 h-16 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white mx-auto shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] font-bold">
+                <Stethoscope size={30} className="text-white" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-headline-xl text-headline-xl font-black uppercase text-clinical-black dark:text-white">
+                  Already Signed In
+                </h3>
+                <p className="text-sm font-bold text-on-surface-variant dark:text-slate-400 font-code-sm uppercase">
+                  You are logged in as <span className="text-brand-accent">{currentUser.username}</span>
+                </p>
+              </div>
+              <div className="flex flex-col gap-4 pt-2">
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                  onClick={onGoToDashboard}
+                  className="w-full py-4 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  Return to Dashboard
+                </button>
+                <button
+                  onClick={onShowProfile}
+                  className="w-full py-4 bg-white dark:bg-slate-900 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-855 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
+                >
+                  Open Profile
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="w-full py-2.5 text-xs text-rose-500 hover:text-rose-600 font-bold font-code-sm uppercase tracking-wider transition-colors"
+                >
+                  Sign Out
                 </button>
               </div>
             </div>
+          ) : (
+            <>
+              <div className="mb-6">
+                <h2 className="font-headline-xl text-headline-xl font-black text-clinical-black dark:text-white uppercase">Create Account</h2>
+                <p className="text-on-surface-variant dark:text-slate-400 text-xs font-bold font-code-sm uppercase mt-1">Get started with a custom clinical account</p>
+              </div>
 
-            <div>
-              <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  required
-                  placeholder="Repeat your password"
-                  className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
-                />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
+                    Account Scope / Role
+                  </label>
+                  <select
+                    value={role}
+                    onChange={e => setRole(e.target.value as any)}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
+                  >
+                    <option value="patient">Patient (Normal User)</option>
+                    <option value="clinician">Clinician (Medical Staff)</option>
+                    <option value="admin">Administrator (System Control)</option>
+                    <option value="care_coordinator">Care Coordinator (Operations)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    required
+                    placeholder="Choose a username"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    placeholder="Enter your email"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      required
+                      placeholder="Create a password"
+                      className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      required
+                      placeholder="Repeat your password"
+                      className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                    >
+                      {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {password && (
+                  <div className="p-3 bg-stone-50 dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold font-code-sm uppercase">
+                      <span>Strength: {strengthLabel}</span>
+                      <div className="w-24 h-2 bg-stone-200 dark:bg-slate-800 border border-clinical-black dark:border-slate-700 flex">
+                        <div className={`h-full ${strengthColor}`} style={{ width: `${(strength / 5) * 100}%` }} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-code-sm uppercase font-bold text-clinical-black/70 dark:text-slate-400">
+                      <div className="flex items-center gap-1">
+                        {passwordChecks.length ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                        <span>Min 8 chars</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {passwordChecks.upper ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                        <span>1 Upper</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {passwordChecks.lower ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                        <span>1 Lower</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {passwordChecks.number ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
+                        <span>1 Number</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 dark:bg-rose-955/30 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold text-xs uppercase animate-fade-in-up">
+                    <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+                    <p>{error}</p>
+                  </div>
+                )}
+
                 <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center justify-center gap-2"
                 >
-                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {isLoading ? (
+                    <><Loader2 size={16} className="animate-spin" /> Registering&hellip;</>
+                  ) : (
+                    'Create Account'
+                  )}
                 </button>
-              </div>
-            </div>
+              </form>
 
-            {password && (
-              <div className="p-3 bg-stone-50 dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-800 space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold font-code-sm uppercase">
-                  <span>Strength: {strengthLabel}</span>
-                  <div className="w-24 h-2 bg-stone-200 dark:bg-slate-800 border border-clinical-black dark:border-slate-700 flex">
-                    <div className={`h-full ${strengthColor}`} style={{ width: `${(strength / 5) * 100}%` }} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-code-sm uppercase font-bold text-clinical-black/70 dark:text-slate-400">
-                  <div className="flex items-center gap-1">
-                    {passwordChecks.length ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
-                    <span>Min 8 chars</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {passwordChecks.upper ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
-                    <span>1 Upper</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {passwordChecks.lower ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
-                    <span>1 Lower</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {passwordChecks.number ? <CheckCircle2 size={10} className="text-emerald-600" /> : <div className="w-2 h-2 border border-clinical-black dark:border-slate-700" />}
-                    <span>1 Number</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 dark:bg-rose-955/30 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold text-xs uppercase animate-fade-in-up">
-                <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
-                <p>{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <><Loader2 size={16} className="animate-spin" /> Registering&hellip;</>
-              ) : (
-                'Create Account'
-              )}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-xs font-bold text-on-surface-variant dark:text-slate-400 font-code-sm uppercase">
-            Already have an account?{' '}
-            <button
-              onClick={onSwitchToLogin}
-              className="font-bold text-brand-accent hover:underline hover:text-brand-accent/80 transition-colors"
-            >
-              Sign in
-            </button>
-          </p>
+              <p className="mt-6 text-center text-xs font-bold text-on-surface-variant dark:text-slate-400 font-code-sm uppercase">
+                Already have an account?{' '}
+                <button
+                  onClick={onSwitchToLogin}
+                  className="font-bold text-brand-accent hover:underline hover:text-brand-accent/80 transition-colors"
+                >
+                  Sign in
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -2,9 +2,23 @@ import { useEffect, useState, useRef } from 'react'
 import { Stethoscope } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
+interface UserProfile {
+  id: string
+  username: string
+  email: string
+  roles: string[]
+  is_active: boolean
+  full_name?: string
+  date_of_birth?: string
+  notes?: string
+}
+
 interface LandingPageProps {
   onLogin: () => void
   onRegister: () => void
+  currentUser?: UserProfile | null
+  onGoToDashboard?: () => void
+  onShowProfile?: () => void
 }
 
 function AnimatedCounter({ 
@@ -59,7 +73,7 @@ function AnimatedCounter({
   )
 }
 
-export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
+export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDashboard, onShowProfile }: LandingPageProps) {
   const [activeSection, setActiveSection] = useState('hero')
   const [scrollProgress, setScrollProgress] = useState(0)
   const [scrollOffset, setScrollOffset] = useState(0)
@@ -233,18 +247,39 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <button 
-              onClick={onLogin} 
-              className="px-4 py-2 font-label-md text-label-md border-2 border-clinical-black dark:border-white bg-white dark:bg-slate-900 text-clinical-black dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150"
-            >
-              Login
-            </button>
-            <button 
-              onClick={onRegister} 
-              className="px-4 py-2 font-label-md text-label-md bg-clinical-black dark:bg-brand-accent text-white border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150"
-            >
-              Register
-            </button>
+            {currentUser ? (
+              <>
+                <button 
+                  onClick={onGoToDashboard} 
+                  className="px-4 py-2 font-label-md text-label-md border-2 border-clinical-black dark:border-white bg-white dark:bg-slate-900 text-clinical-black dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150 font-bold uppercase tracking-wider"
+                  title="Go to dashboard workstation"
+                >
+                  Dashboard
+                </button>
+                <button 
+                  onClick={onShowProfile} 
+                  className="px-4 py-2 font-label-md text-label-md bg-brand-accent text-white border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150 uppercase tracking-wider font-bold"
+                  title="View your user profile"
+                >
+                  Profile ({currentUser.username})
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={onLogin} 
+                  className="px-4 py-2 font-label-md text-label-md border-2 border-clinical-black dark:border-white bg-white dark:bg-slate-900 text-clinical-black dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={onRegister} 
+                  className="px-4 py-2 font-label-md text-label-md bg-clinical-black dark:bg-brand-accent text-white border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150"
+                >
+                  Register
+                </button>
+              </>
+            )}
           </div>
         </div>
         {/* Scroll Progress Bar */}
@@ -273,10 +308,12 @@ export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
                 <button 
-                  onClick={onLogin}
+                  onClick={currentUser ? onGoToDashboard : onLogin}
                   className="group relative px-8 py-4 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center gap-2 overflow-hidden"
                 >
-                  <span className="relative z-10 uppercase font-bold tracking-wide">Initialize Interface</span>
+                  <span className="relative z-10 uppercase font-bold tracking-wide">
+                    {currentUser ? 'Return to Workstation' : 'Initialize Interface'}
+                  </span>
                   <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">terminal</span>
                 </button>
                 <button 

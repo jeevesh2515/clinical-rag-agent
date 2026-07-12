@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 
 from pydantic import Field
@@ -36,6 +37,20 @@ class Settings(BaseSettings):
         default="http://localhost:5173,https://clinical-workflows.vercel.app,https://clinical-workflows-*.vercel.app",
         description="Comma-separated list of allowed CORS origins. Default includes local frontend dev server.",
     )
+
+    # LangSmith Observability
+    langchain_tracing_v2: bool = Field(default=False)
+    langchain_api_key: str | None = Field(default=None, repr=False)
+    langchain_project: str = "clinical-rag-agent"
+    langchain_endpoint: str = "https://api.smith.langchain.com"
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        if self.langchain_tracing_v2 and self.langchain_api_key:
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = self.langchain_api_key
+            os.environ["LANGCHAIN_PROJECT"] = self.langchain_project
+            os.environ["LANGCHAIN_ENDPOINT"] = self.langchain_endpoint
 
 
 @lru_cache

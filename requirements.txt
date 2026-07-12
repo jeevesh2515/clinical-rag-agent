@@ -15,4 +15,5 @@ bcrypt>=4.2.0
 python-multipart>=0.0.9
 email-validator>=2.2.0
 slowapi>=0.1.9
+langsmith>=0.1.0
 

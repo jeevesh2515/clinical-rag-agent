@@ -629,21 +629,19 @@ class ClinicalRAGAgent:
         if state.get("mode") == "patient":
             mode_instruction = (
                 "FORMAT FOR PATIENT (Empathetic, Simple, Clear):\n"
-                "1. Provide a brief 1-2 sentence friendly summary at the very top under a header '### Summary'.\n"
-                "2. Use plain, warm language suitable for a patient preparing to speak with their doctor (grade 6-8 reading level).\n"
-                "3. Avoid clinical jargon. If you must use a medical term (like 'systolic' or 'diastolic'), explain it immediately in parentheses.\n"
-                "4. Frame numbers and targets in simple bullet points. DO NOT use raw markdown tables or complex flowcharts.\n"
-                "5. Focus on lifestyle recommendations, home BP tracking tips, and practical questions the patient can ask their doctor.\n"
-                "6. Make sure to end with a warm recommendation to consult a licensed clinician."
+                "1. Use plain, warm language suitable for a patient preparing to speak with their doctor (grade 6-8 reading level).\n"
+                "2. Avoid clinical jargon. If you must use a medical term (like 'systolic' or 'diastolic'), explain it immediately in parentheses.\n"
+                "3. Frame numbers and targets in simple bullet points. DO NOT use raw markdown tables or complex flowcharts.\n"
+                "4. Focus on lifestyle recommendations, home BP tracking tips, and practical questions the patient can ask their doctor.\n"
+                "5. Make sure to end with a warm recommendation to consult a licensed clinician."
             )
         else:
             mode_instruction = (
                 "FORMAT FOR CLINICIAN (Precise, Structured, Highly Professional):\n"
-                "1. Provide a concise, bulleted clinical summary of key recommendations at the very top under a header '### Clinical Summary'.\n"
-                "2. Use formal care-team language for a clinician or care-coordinator review.\n"
-                "3. Use specific medical terminology and provide exact targets (e.g. systolic/diastolic thresholds) and drug classes (e.g. ACEi, ARB, CCB).\n"
-                "4. Organize clinical evidence using subheadings (e.g., '### Target Blood Pressure', '### Pharmacological Targets') for rapid scanning.\n"
-                "5. Cite the exact chunk IDs (e.g., [nice-ng136:p3:c001]) directly inline next to each target or agent recommendation."
+                "1. Use formal care-team language for a clinician or care-coordinator review.\n"
+                "2. Use specific medical terminology and provide exact targets (e.g. systolic/diastolic thresholds) and drug classes (e.g. ACEi, ARB, CCB).\n"
+                "3. Organize clinical evidence using subheadings (e.g., '### Target Blood Pressure', '### Pharmacological Targets') for rapid scanning.\n"
+                "4. Cite the exact chunk IDs (e.g., [nice-ng136:p3:c001]) directly inline next to each target or agent recommendation."
             )
 
         has_okf = any(

@@ -96,12 +96,14 @@ class HybridStore:
             for chunk_id, chunk in self._chunks.items():
                 if chunk_id not in {item.chunk_id for item in chunks}:
                     continue
+                # Strip None values to comply with Pinecone metadata type restrictions
+                metadata_clean = {k: v for k, v in asdict(chunk).items() if v is not None}
                 vectors.append(
                     {
                         "id": chunk_id,
                         "values": self._dense[chunk_id],
                         "sparse_values": self._sparse[chunk_id],
-                        "metadata": asdict(chunk),
+                        "metadata": metadata_clean,
                     }
                 )
             for start in range(0, len(vectors), 100):

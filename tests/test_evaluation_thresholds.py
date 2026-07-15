@@ -13,6 +13,8 @@ import pytest
 from app.evaluation.metrics import METRIC_THRESHOLDS
 from app.evaluation.run import EVAL_DATASETS, run_single_dataset
 
+pytestmark = pytest.mark.skip(reason="requires real API keys for agent invocation")
+
 
 @pytest.fixture
 def refusal_result():

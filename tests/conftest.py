@@ -66,7 +66,8 @@ def _clean_db_per_test():
     3. Delete the persistent SQLite file (if any).
     4. Re-bootstrap tables so the default DB is ready.
     """
-    os.environ.pop("DATABASE_URL", None)
+    # Force SQLite for all tests — the .env file may contain a PostgreSQL URL.
+    os.environ["DATABASE_URL"] = "sqlite:///./test_clinical_demo.db"
     # Clear the lru_cache on ``get_settings`` so the next call re-reads env.
     from app.core.config import get_settings
 
@@ -75,12 +76,14 @@ def _clean_db_per_test():
 
     db_path = _resolve_persistent_db_path()
     if db_path is not None and db_path.exists():
-        # Truncate rather than unlink so any open connections in the WAL
-        # don't trip over a missing file mid-test.
         try:
             db_path.unlink()
         except IsADirectoryError:
             pass
+    # Also clean the test DB if it exists
+    test_db = Path.cwd() / "test_clinical_demo.db"
+    if test_db.exists():
+        test_db.unlink()
 
     bootstrap()
     yield
@@ -100,7 +103,14 @@ def settings(tmp_path):
     bootstrap()
     return Settings(
         cohere_api_key=None,
+        openrouter_api_key=None,
+        openai_api_key=None,
+        anthropic_api_key=None,
+        google_api_key=None,
+        tavily_api_key=None,
         database_url=db_url,
+        langsmith_tracing=None,
+        langchain_tracing_v2=False,
     )
 
 

@@ -2,6 +2,10 @@
 .env
 .env.*
 !.env.example
+.neon
+# Accidental root-level Node files (backend is Python)
+package.json
+package-lock.json
 
 # Python/runtime artifacts
 .venv/

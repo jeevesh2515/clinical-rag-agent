@@ -192,7 +192,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
     <div className="bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md selection:bg-brand-accent selection:text-white min-h-screen flex flex-col transition-colors duration-300">
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-b border-clinical-black dark:border-slate-800 shadow-sm transition-colors duration-300">
-        <div className="flex justify-between items-center px-gutter py-3 max-w-screen-2xl mx-auto w-full">
+        <div className="flex justify-between items-center px-gutter py-3 max-w-6xl mx-auto w-full">
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="group flex items-center gap-3 text-left focus:outline-none"

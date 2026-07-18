@@ -50,7 +50,7 @@ export default function SignupPage({
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [role, setRole] = useState<'patient' | 'clinician'>('patient')
+  const [role, setRole] = useState<'patient' | 'clinician' | 'admin' | 'care_coordinator'>('patient')
 
   const passwordChecks = {
     length: password.length >= 8,
@@ -115,7 +115,7 @@ export default function SignupPage({
   return (
     <div className="min-h-screen flex bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md transition-colors duration-300">
       {/* Left - Brand Side */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-800 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
+      <div className="hidden md:flex md:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-800 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
         <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
           <button 
             onClick={onBackToHome}
@@ -153,7 +153,7 @@ export default function SignupPage({
       </div>
 
       {/* Right - Form Side */}
-      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 overflow-y-auto transition-colors duration-300 relative pt-20">
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 overflow-y-auto transition-colors duration-300 relative pt-20">
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
           <button
             onClick={onBackToHome}
@@ -227,10 +227,12 @@ export default function SignupPage({
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as any)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-955 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
                   >
                     <option value="patient">Patient (Normal User)</option>
                     <option value="clinician">Clinician (Medical Staff)</option>
+                    <option value="admin">Administrator (System Control)</option>
+                    <option value="care_coordinator">Care Coordinator (Operations)</option>
                   </select>
                 </div>
 

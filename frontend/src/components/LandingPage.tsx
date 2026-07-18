@@ -192,7 +192,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
     <div className="bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md selection:bg-brand-accent selection:text-white min-h-screen flex flex-col transition-colors duration-300">
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-b border-clinical-black dark:border-slate-800 shadow-sm transition-colors duration-300">
-        <div className="flex justify-between items-center px-gutter py-3 max-w-6xl mx-auto w-full">
+        <div className="flex justify-between items-center px-gutter py-3 max-w-7xl mx-auto w-full">
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="group flex items-center gap-3 text-left focus:outline-none"
@@ -294,7 +294,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
       <main className="pt-16 flex-grow">
         {/* Hero Section */}
         <section id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-gutter py-20 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-colors duration-300">
-          <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="relative z-10 max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 parallax-element" data-speed="0.05">
               <div className="inline-block px-3 py-1 bg-brand-accent text-white font-code-sm text-code-sm uppercase tracking-widest neo-brutal-shadow-sm font-bold">
                 Precision Hypertension RAG

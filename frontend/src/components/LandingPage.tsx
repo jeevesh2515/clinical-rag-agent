@@ -366,9 +366,9 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Hybrid Retrieval */}
-              <div id="retrieval" className="md:col-span-8 group relative p-8 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
+              <div id="retrieval" className="md:col-span-8 group relative p-8 overflow-hidden bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
                 <div className="tipped-label dark:bg-white dark:text-slate-950 dark:border-white">V3_RETRIEVAL</div>
-                <div className="flex flex-col md:flex-row gap-8">
+                <div className="flex flex-col md:flex-row gap-8 min-w-0">
                   <div className="flex-1 space-y-4">
                     <span className="material-symbols-outlined text-4xl text-brand-accent">layers</span>
                     <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Hybrid Retrieval</h3>
@@ -380,7 +380,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                   </div>
                   <div className="w-full md:w-44 h-48 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0">
                     <img 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 dark:invert dark:opacity-85 dark:contrast-125 dark:brightness-95 transition-all duration-500" 
+                      className="w-full h-full max-w-full max-h-full object-cover grayscale group-hover:grayscale-0 dark:invert dark:opacity-85 dark:contrast-125 dark:brightness-95 transition-all duration-500" 
                       alt="Technical illustration representing Hybrid Retrieval" 
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHfzT8ed21I3l9fZvTedw9-x6BODLmDa9b-Zmi9N-jl_xgCe_6CvtWX9iRWCZyyfEPrVweqsbs77CaZoFgsOVs1iRet9TCx1j1Zj4NiqD7-8_gnB3qYzmoWRWW-SA-tYgu6hJBT5ba62hYuXA-czO52G1W3vFc1SAm-iaJSuEe-VwlyKgN2EAeKxw-apbjFW5M0BYBWiAiWUqFcqYuXGPzbxvOy3OK34N7IwINDMOi_UuNxbCtEyYt"
                     />

@@ -12,35 +12,17 @@ const FEATURES = [
   { icon: Brain, text: 'RAG + OKF retrieval', color: 'text-violet-600 dark:text-violet-400' },
 ]
 
-interface UserProfile {
-  id: string
-  username: string
-  email: string
-  full_name?: string
-  date_of_birth?: string
-  notes?: string
-  roles?: string[]
-}
-
 interface SignupPageProps {
   onSignup: (token: string) => Promise<void>
   onSwitchToLogin: () => void
   onBackToHome?: () => void
-  currentUser?: UserProfile | null
+  currentUser?: any
   onShowProfile?: () => void
   onGoToDashboard?: () => void
   onLogout?: () => void
 }
 
-export default function SignupPage({ 
-  onSignup, 
-  onSwitchToLogin, 
-  onBackToHome, 
-  currentUser, 
-  onShowProfile, 
-  onGoToDashboard, 
-  onLogout 
-}: SignupPageProps) {
+export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, currentUser, onGoToDashboard, onLogout }: SignupPageProps) {
   const { theme } = useTheme()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -115,7 +97,7 @@ export default function SignupPage({
   return (
     <div className="min-h-screen flex bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md transition-colors duration-300">
       {/* Left - Brand Side */}
-      <div className="hidden md:!flex md:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-800 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
+      <div className="hidden lg:!flex lg:w-1/2 relative overflow-hidden bg-surface-container-low dark:bg-slate-900 border-r-4 border-clinical-black dark:border-slate-800 bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] justify-center items-center transition-colors duration-300">
         <div className="relative flex flex-col justify-center px-16 py-16 w-full max-w-xl">
           <button 
             onClick={onBackToHome}
@@ -153,7 +135,7 @@ export default function SignupPage({
       </div>
 
       {/* Right - Form Side */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 overflow-y-auto transition-colors duration-300 relative pt-20">
+      <div className="flex-grow flex flex-col justify-center items-center p-8 bg-white dark:bg-slate-950 overflow-y-auto transition-colors duration-300 relative pt-20">
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
           <button
             onClick={onBackToHome}
@@ -162,14 +144,6 @@ export default function SignupPage({
             ← Back to Home
           </button>
           <div className="flex items-center gap-3">
-            {currentUser && (
-              <button
-                onClick={onShowProfile}
-                className="flex items-center gap-2 px-3 py-1.5 bg-brand-accent text-white border-2 border-clinical-black dark:border-white text-xs font-bold font-code-sm uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all mr-2"
-              >
-                Profile
-              </button>
-            )}
             <span className="text-xs text-clinical-black dark:text-white font-code-sm font-bold uppercase select-none">
               {theme === 'dark' ? 'Dark' : 'Light'}
             </span>
@@ -180,33 +154,25 @@ export default function SignupPage({
         <div className="w-full max-w-md border-4 border-clinical-black dark:border-white p-8 bg-white dark:bg-slate-900 my-8 neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-colors duration-300">
           {currentUser ? (
             <div className="space-y-6 text-center py-4">
-              <div className="w-16 h-16 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white mx-auto shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] font-bold">
-                <Stethoscope size={30} className="text-white" />
+              <div className="w-16 h-16 bg-brand-accent/10 text-brand-accent rounded-none border-2 border-clinical-black dark:border-white flex items-center justify-center mx-auto">
+                <Shield size={32} />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-headline-xl text-headline-xl font-black uppercase text-clinical-black dark:text-white">
-                  Already Signed In
-                </h3>
-                <p className="text-sm font-bold text-on-surface-variant dark:text-slate-400 font-code-sm uppercase">
-                  You are logged in as <span className="text-brand-accent">{currentUser.username}</span>
+              <div>
+                <h3 className="text-lg font-bold font-headline-md uppercase text-clinical-black dark:text-white">Already Signed In</h3>
+                <p className="text-xs text-on-surface-variant dark:text-slate-400 font-bold font-code-sm uppercase mt-1">
+                  Logged in as <span className="text-brand-accent">{currentUser.username}</span> ({currentUser.role})
                 </p>
               </div>
-              <div className="flex flex-col gap-4 pt-2">
+              <div className="space-y-3">
                 <button
                   onClick={onGoToDashboard}
-                  className="w-full py-4 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
+                  className="w-full py-3 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none transition-all duration-150 flex items-center justify-center gap-2 font-bold uppercase tracking-wider"
                 >
-                  Return to Dashboard
-                </button>
-                <button
-                  onClick={onShowProfile}
-                  className="w-full py-4 bg-white dark:bg-slate-900 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-855 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
-                >
-                  Open Profile
+                  Go to Dashboard
                 </button>
                 <button
                   onClick={onLogout}
-                  className="w-full py-2.5 text-xs text-rose-500 hover:text-rose-600 font-bold font-code-sm uppercase tracking-wider transition-colors"
+                  className="w-full py-3 bg-white dark:bg-slate-900 text-clinical-black dark:text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none transition-all duration-150 flex items-center justify-center gap-2 font-bold uppercase tracking-wider"
                 >
                   Sign Out
                 </button>
@@ -227,7 +193,7 @@ export default function SignupPage({
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as any)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-955 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
                   >
                     <option value="patient">Patient (Normal User)</option>
                     <option value="clinician">Clinician (Medical Staff)</option>

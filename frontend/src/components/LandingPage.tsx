@@ -203,7 +203,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             </div>
             <span className="font-headline-md text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight">Clinical Workflows</span>
           </button>
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:!flex items-center gap-8">
             <a
               href="#retrieval"
               className={`font-label-md text-label-md transition-all py-1 border-b-2 ${

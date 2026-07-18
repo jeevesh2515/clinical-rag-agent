@@ -2067,7 +2067,7 @@ export default function App() {
       {/* Main Chat Area */}
       <main className="flex flex-col flex-1 min-w-0 relative bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
         {/* Header */}
-        <header className="hidden lg:flex items-center justify-between px-6 py-3.5 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
+        <header className="hidden lg:!flex items-center justify-between px-6 py-3.5 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
           <div className="flex items-center gap-3 min-w-0 mr-4">
             {!canCollapseLeft && (
               <button
@@ -2096,7 +2096,7 @@ export default function App() {
               </h2>
               <p className={cn(
                 "font-code-sm text-body-sm text-[#1a1a1a]/70 dark:text-white/70 items-center gap-1 uppercase tracking-wider mt-1 opacity-low truncate whitespace-nowrap",
-                evidencePanelOpen ? "hidden xl:flex" : "flex"
+                evidencePanelOpen ? "hidden xl:!flex" : "flex"
               )}>
                 <span className={cn('w-2 h-2 shrink-0', isClinicianMode ? 'bg-slate-500' : 'bg-brand-accent')}></span>
                 <span className={cn(
@@ -2137,7 +2137,7 @@ export default function App() {
 
             {/* Model Picker */}
             {models.length > 0 && (
-              <div className="relative shrink-0 hidden sm:block">
+              <div className="relative shrink-0 hidden sm:!block">
                 <select
                   value={selectedModelId}
                   onChange={e => {
@@ -2201,7 +2201,7 @@ export default function App() {
         </header>
 
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20">
+        <header className="lg:!hidden flex items-center justify-between px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20">
           <div className="flex items-center gap-2">
             <button onClick={() => setSidebarOpen(true)} className="text-[#1a1a1a] dark:text-white">
               <PanelLeft size={20} />

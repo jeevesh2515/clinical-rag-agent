@@ -2,9 +2,9 @@ name: CI/CD Quality Gate & Docker Release
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ '**' ]
 
 jobs:
   validate:

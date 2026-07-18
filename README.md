@@ -9,7 +9,7 @@
 <br>
 
 [![Live Demo](https://img.shields.io/badge/demo-clinical--workflows.vercel.app-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://clinical-workflows.vercel.app)
-[![Tests](https://img.shields.io/badge/tests-222%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/tests-213%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)]()
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)]()
 [![LangGraph](https://img.shields.io/badge/LangGraph-✓-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)]()

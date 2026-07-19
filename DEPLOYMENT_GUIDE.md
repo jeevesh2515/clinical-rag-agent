@@ -1,52 +1,126 @@
 # Clinical RAG Workflow Assistant — Deployment & Keys Guide
 
-This guide describes how to configure, set up, and place API keys to run the guideline-grounded Hypertension Follow-up Assistant.
+This guide describes how the application is deployed in production and how to configure API keys.
 
 ---
 
-## 1. Quick Start: Local Configuration (.env)
+## 1. Live Deployment
 
-Duplicate the `.env.example` template to create your active `.env` file:
+| Component | URL | Platform |
+|---|---|---|
+| Frontend + Backend | https://clinical-workflows.vercel.app | Vercel (free tier) |
+| API Base Path | https://clinical-workflows.vercel.app/api | Vercel Python serverless |
+| Health Check | https://clinical-workflows.vercel.app/api/health | Returns `{"status":"ok",...}` |
+
+### Architecture
+
+```
+Browser → Vercel CDN → [ /assets/* → static cache (1 year) ]
+                      → [ /api/*    → api/index.py (Python serverless) ]
+                      → [ /*        → index.html SPA fallback ]
+```
+
+**vercel.json** routes:
+- `/api/(.*)` → Python serverless (`api/index.py`)
+- `/assets/(.*)` → static assets with immutable cache (1 year)
+- `/*` → SPA fallback (`frontend/dist/index.html`)
+
+A keep-warm cron pings `/api/warmup` daily at 8am UTC to reduce cold starts.
+
+### Performance Baselines (July 2026)
+
+| Measure | Observed |
+|---|---|
+| Health check (warm) | 170-310ms |
+| Frontend HTML (warm) | ~195ms |
+| JS bundle (1MB) | ~195ms |
+| Query response (no API key) | ~260ms (extractive fallback) |
+| Cold start (first request after idle) | 3-8s (Vercel serverless) |
+
+### Current Limitations (no API keys in production)
+
+- No OpenRouter API key configured → LLM generation falls back to extractive summarization
+- No documents ingested → queries return "out_of_domain" intent
+- To enable full functionality, add environment variables in Vercel dashboard
+
+---
+
+## 2. Local Configuration (.env)
+
+Duplicate `.env.example` to `.env`:
+
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` in a text editor and fill in the required keys based on your choice of models.
+Then fill in the required keys:
 
-### Key Types and Descriptions
-
-| Key / Env Var | Provider / Service | Where to Obtain | Usage & Purpose |
-| --- | --- | --- | --- |
-| **`OPENROUTER_API_KEY`** | OpenRouter (Free tier) | [openrouter.ai/keys](https://openrouter.ai/keys) | **Required for local startup.** Enables access to Llama 3.1 8B, Gemma 3, and DeepSeek R1 free of cost. |
-| **`COHERE_API_KEY`** | Cohere | [dashboard.cohere.com](https://dashboard.cohere.com) | **Highly Recommended.** Used for hybrid RAG embeddings (`embed-v4.0`) and reranking (`rerank-v3.0`). |
-| **`OPENAI_API_KEY`** | OpenAI | [platform.openai.com](https://platform.openai.com) | **Optional.** Unlocks GPT-4o / GPT-4o-mini in the model selection picker. |
-| **`ANTHROPIC_API_KEY`**| Anthropic | [console.anthropic.com](https://console.anthropic.com) | **Optional.** Unlocks Claude 3.5 Sonnet / Claude 3 Opus in the picker. |
-| **`GOOGLE_API_KEY`** | Google Gemini | [aistudio.google.com](https://aistudio.google.com) | **Optional.** Unlocks Gemini 1.5 Pro / Gemini 1.5 Flash in the picker. |
+| Key | Provider | Obtain At | Required |
+|---|---|---|---|
+| `OPENROUTER_API_KEY` | OpenRouter | https://openrouter.ai/keys | Yes (LLM) |
+| `COHERE_API_KEY` | Cohere | https://dashboard.cohere.com | Recommended (embeddings) |
+| `JWT_SECRET_KEY` | Self-generated | `openssl rand -hex 32` | Yes (auth) |
+| `OPENAI_API_KEY` | OpenAI | https://platform.openai.com | Optional |
+| `ANTHROPIC_API_KEY` | Anthropic | https://console.anthropic.com | Optional |
+| `GOOGLE_API_KEY` | Google AI | https://aistudio.google.com | Optional |
 
 ---
 
-## 2. Running via Docker (Production Deployment)
+## 3. Deploy to Vercel
 
-For a fully containerized build hosting both the React front-end and the FastAPI back-end under a single host:
-
-### Building and Running the Stack
 ```bash
-# Build the production-ready container (uses multi-stage to compile Vite + Python)
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy (from project root)
+vercel --prod
+```
+
+Vercel auto-detects the project from `vercel.json`. The deployment includes:
+- Python serverless runtime for the API
+- Static file serving for the frontend build
+
+### Environment Variables (set in Vercel Dashboard)
+
+```
+OPENROUTER_API_KEY=sk-or-v1-...
+COHERE_API_KEY=...
+JWT_SECRET_KEY=...
+CORS_ORIGINS=https://clinical-workflows.vercel.app
+```
+
+---
+
+## 4. Running via Docker
+
+```bash
 docker compose -f docker-compose.prod.yml up --build -d
 ```
 
-- **Host URL**: `http://localhost:8000` serves the built React web application.
-- **API Endpoint**: `http://localhost:8000/api` is reverse-proxied to the FastAPI server.
-- **Healthcheck status**: Check docker container status: `docker ps` will show `healthy` once the DB is verified and the OKF bundle is verified on boot.
+- Host: `http://localhost:8000`
+- API: `http://localhost:8000/api`
+- Health: `docker ps` shows `healthy` once DB + OKF verified
 
 ---
 
-## 3. Continuous Integration (GitHub Actions)
+## 5. Continuous Integration
 
-A CI quality gate is configured under `.github/workflows/docker-deploy.yml`. 
-Every Pull Request or Push to `main`/`master` will trigger a pipeline that runs:
-1. Python syntax linter (`ruff`).
-2. Typechecker (`pyright`).
-3. Rule validation for all 28 canonical OKF files (`make okf-check`).
-4. Full backend test suites (`pytest`).
-5. A dry-run Docker compilation of the multi-stage image.
+GitHub Actions workflows in `.github/workflows/`:
+- **ci.yml** — Runs on push to any branch: lint, test, frontend build
+- **docker-deploy.yml** — Docker build on main branch only
+
+---
+
+## 6. Uptime Monitoring (Recommended)
+
+Set up a free UptimeRobot monitor to ping every 5 minutes:
+
+1. Create account at https://uptimerobot.com
+2. Add new monitor: **HTTP(s)** → `https://clinical-workflows.vercel.app/api/health`
+3. Interval: **5 minutes**
+4. Alert contacts: **Email** (free tier)
+
+This prevents excessive cold starts during working hours.

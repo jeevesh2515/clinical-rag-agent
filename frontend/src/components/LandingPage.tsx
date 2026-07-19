@@ -366,7 +366,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Hybrid Retrieval */}
-              <div id="retrieval" className="md:col-span-8 group relative p-8 overflow-hidden bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
+              <div id="retrieval" className="md:col-span-8 relative p-8 overflow-hidden bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
                 <div className="tipped-label dark:bg-white dark:text-slate-950 dark:border-white">V3_RETRIEVAL</div>
                 <div className="flex flex-col md:flex-row gap-8 min-w-0">
                   <div className="flex-1 space-y-4">
@@ -378,7 +378,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                       <span className="px-2 py-1 bg-surface-container-highest dark:bg-slate-950 border border-clinical-black dark:border-slate-700 font-code-sm text-body-sm text-clinical-black dark:text-white">VECTOR_V4</span>
                     </div>
                   </div>
-                  <div className="w-72 h-72 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0">
+                  <div className="w-72 h-72 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0 group">
                     <div className="absolute inset-0 z-10 pointer-events-none transition-all duration-500 bg-transparent group-hover:bg-blue-500/30 dark:group-hover:bg-orange-500/60"></div>
                     <img 
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 

@@ -380,7 +380,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                   </div>
                   <div className="w-72 h-72 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0 group">
                     <img 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:sepia group-hover:saturate-[2.5] transition-all duration-500" 
                       alt="Technical illustration representing Hybrid Retrieval" 
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHfzT8ed21I3l9fZvTedw9-x6BODLmDa9b-Zmi9N-jl_xgCe_6CvtWX9iRWCZyyfEPrVweqsbs77CaZoFgsOVs1iRet9TCx1j1Zj4NiqD7-8_gnB3qYzmoWRWW-SA-tYgu6hJBT5ba62hYuXA-czO52G1W3vFc1SAm-iaJSuEe-VwlyKgN2EAeKxw-apbjFW5M0BYBWiAiWUqFcqYuXGPzbxvOy3OK34N7IwINDMOi_UuNxbCtEyYt"
                     />

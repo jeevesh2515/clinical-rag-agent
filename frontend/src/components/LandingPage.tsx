@@ -378,7 +378,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                       <span className="px-2 py-1 bg-surface-container-highest dark:bg-slate-950 border border-clinical-black dark:border-slate-700 font-code-sm text-body-sm text-clinical-black dark:text-white">VECTOR_V4</span>
                     </div>
                   </div>
-                  <div className="w-full md:w-72 h-72 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0">
+                  <div className="w-72 h-72 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0">
                     <div className="absolute inset-0 z-10 pointer-events-none transition-all duration-500 bg-transparent group-hover:bg-blue-500/30 dark:group-hover:bg-orange-500/60"></div>
                     <img 
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 

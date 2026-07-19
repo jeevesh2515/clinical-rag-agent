@@ -23,4 +23,4 @@ if os.environ.get("VERCEL") and not os.environ.get("UPLOAD_DIR"):
 # Mark as Vercel so the app can adjust behaviour accordingly
 os.environ.setdefault("APP_ENV", "production")
 
-from app.main import app as app
+from app.main import app as app  # noqa: E402

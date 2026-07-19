@@ -10,6 +10,7 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-clinical--workflows.vercel.app-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://clinical-workflows.vercel.app)
 [![Tests](https://img.shields.io/badge/tests-213%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)]()
+[![Day 19](https://img.shields.io/badge/day-19%20complete-8b5cf6?style=for-the-badge)]()
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)]()
 [![LangGraph](https://img.shields.io/badge/LangGraph-✓-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)]()
@@ -275,14 +276,14 @@ Synthetic patient cases with guideline-based care gap analysis:
 | **Frontend** | React 18 + TypeScript 5 | Modern SPA with dark/light mode |
 | **Styling** | Tailwind CSS 4 + Lucide icons | Responsive, accessible UI |
 | **Build** | Vite 6 | Fast dev server + optimized builds |
-| **CI** | GitHub Actions | Lint + 222 tests + frontend build |
+| **CI** | GitHub Actions | Lint + 213 tests + frontend build |
 | **Deployment** | Vercel (frontend) / Render (backend) | Python serverless + static SPA |
 
 ---
 
 ## Evaluation & Quality
 
-**222 tests** across the entire stack — run in CI on every push.
+**213 tests** across the entire stack — run in CI on every push.
 
 | Gate | Metric | Threshold | Status |
 |------|--------|-----------|--------|
@@ -428,7 +429,7 @@ curl -X POST http://127.0.0.1:8000/api/query \
 | `make install` | Install Python dependencies |
 | `make run-backend` | Start Uvicorn dev server on :8000 |
 | `make run-frontend` | Start Vite dev server on :5173 |
-| `make test` | Run all 222 tests |
+| `make test` | Run all 213 tests |
 | `make lint` | Ruff linting (non-fatal) |
 | `make okf-check` | Validate 27 OKF concept files |
 | `make ci` | Full CI pipeline: lint → test → build-frontend |

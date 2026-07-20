@@ -26,7 +26,6 @@ from app.auth.models import (
     RegisterUser,
     Token,
     UserPublic,
-    UserInDB,
     UserRole,
     UserUpdate,
 )

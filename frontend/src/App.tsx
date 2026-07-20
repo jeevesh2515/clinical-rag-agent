@@ -2091,7 +2091,7 @@ export default function App() {
       />
 
       {/* Main Chat Area */}
-      <main className="flex flex-col flex-1 min-w-0 relative bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
+      <main className="flex flex-col flex-1 min-w-0 bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
         {/* Header */}
         <header className="hidden lg:!flex items-center justify-between px-6 py-3.5 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
           <div className="flex items-center gap-3 min-w-0 mr-4">
@@ -2269,7 +2269,7 @@ export default function App() {
           {messages.length === 0 ? (
             <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
           ) : (
-            <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto pb-44 animate-message transition-all duration-1000">
+            <div className="px-4 sm:px-8 py-6 sm:py-8 space-y-8 max-w-3xl mx-auto animate-message transition-all duration-1000">
               {messages.map((msg, idx) => {
                 const prevUserMsg = msg.role === 'assistant' && idx > 0 && messages[idx - 1].role === 'user' ? messages[idx - 1] : null
                 return (
@@ -2301,7 +2301,7 @@ export default function App() {
         </div>
 
         {/* Composer */}
-        <div className="absolute bottom-0 w-full bg-white dark:bg-slate-950 pt-2 pb-2.5 px-4 md:px-6 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000">
+        <div className="w-full bg-white dark:bg-slate-950 pt-2 pb-2.5 px-4 md:px-6 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000 shrink-0">
           <div className="max-w-3xl mx-auto">
             <div className={cn(
               'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-1 pr-2.5 pl-2 flex items-end gap-2 clinical-shadow',

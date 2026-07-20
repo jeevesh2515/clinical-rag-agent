@@ -90,7 +90,6 @@ interface ModelSpec {
   label: string
   provider: string
   description: string
-  badge?: string
   is_configured: boolean
 }
 
@@ -119,15 +118,6 @@ const SUGGESTED_QUESTIONS = [
   { icon: Brain, text: 'What are the first-line medications for hypertension?', category: 'Treatment', tone: 'text-emerald-650 dark:text-emerald-400' },
   { icon: Stethoscope, text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-550 dark:text-cyan-400' },
   { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-brand-accent dark:text-brand-accent' },
-]
-
-const CASES = [
-  { id: '', label: 'No case selected' },
-  { id: 'htn-001', label: 'htn-001 — 55M Stage 1 HTN' },
-  { id: 'htn-002', label: 'htn-002 — 68F HTN + CKD' },
-  { id: 'htn-003', label: 'htn-003 — 32F HTN + Pregnancy' },
-  { id: 'htn-004', label: 'htn-004 — 72M HTN + Diabetes' },
-  { id: 'htn-005', label: 'htn-005 — 48M Resistant HTN' },
 ]
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -269,12 +259,11 @@ class ApiClient {
     conversationId: string,
     question: string,
     mode: string,
-    caseId?: string,
     modelId?: string,
   ): Promise<ChatMessage> {
     const res = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/message`, {
       method: 'POST', headers: this.headers(),
-      body: JSON.stringify({ question, mode, case_id: caseId, model_id: modelId }),
+      body: JSON.stringify({ question, mode, model_id: modelId }),
     })
     if (!res.ok) throw new Error('Failed to send message')
     return res.json()
@@ -1690,7 +1679,6 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [isFetchingConvs, setIsFetchingConvs] = useState(false)
   const [mode, setMode] = useState<'patient' | 'clinician'>('patient')
-  const [caseId, setCaseId] = useState('')
   const [panelCitations, setPanelCitations] = useState<Citation[]>([])
   const [panelTools, setPanelTools] = useState<ToolTrace[]>([])
   const [panelSafety, setPanelSafety] = useState<SafetyFlags | null>(null)
@@ -1905,7 +1893,7 @@ export default function App() {
         setCurrentConvId(convId)
         setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
-      const assistantMsg = await api.sendMessage(convId, question, mode, caseId || undefined, selectedModelId)
+      const assistantMsg = await api.sendMessage(convId, question, mode, selectedModelId)
       assistantMsg.mode = mode
       assistantMsg.question = question
       setMessages(prev => [...prev, assistantMsg])
@@ -1938,7 +1926,7 @@ export default function App() {
         setCurrentConvId(convId)
         setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
-      const assistantMsg = await api.sendMessage(convId, question, newMode, caseId || undefined, selectedModelId)
+      const assistantMsg = await api.sendMessage(convId, question, newMode, selectedModelId)
       assistantMsg.mode = newMode
       assistantMsg.question = question
       setMessages(prev => [...prev, assistantMsg])
@@ -2093,7 +2081,10 @@ export default function App() {
       {/* Main Chat Area */}
       <main className="flex flex-col flex-1 min-w-0 bg-white dark:bg-slate-950 transition-all duration-1000" id="main-feed">
         {/* Header */}
-        <header className="hidden lg:!flex items-center justify-between px-6 py-3.5 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000">
+        <header className={cn(
+          "hidden lg:!flex items-center justify-between px-4 xl:px-6 py-3.5 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all duration-1000",
+          evidencePanelOpen ? "flex-wrap gap-y-2" : ""
+        )}>
           <div className="flex items-center gap-3 min-w-0 mr-4">
             {!canCollapseLeft && (
               <button
@@ -2117,7 +2108,10 @@ export default function App() {
               </div>
             </button>
             <div className="min-w-0">
-              <h2 className="font-headline-md text-headline-md font-bold truncate max-w-xs sm:max-w-sm md:max-w-md text-[#1a1a1a] dark:text-white whitespace-nowrap">
+              <h2 className={cn(
+                "font-headline-md text-headline-md font-bold truncate text-[#1a1a1a] dark:text-white whitespace-nowrap",
+                evidencePanelOpen ? "max-w-[180px] lg:max-w-[260px]" : "max-w-xs sm:max-w-sm md:max-w-md"
+              )}>
                 {currentConv?.title || 'Clinical Workflows'}
               </h2>
               <p className={cn(
@@ -2137,12 +2131,13 @@ export default function App() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 xl:gap-4 shrink-0">
+          <div className="flex items-center gap-1.5 xl:gap-3 shrink-0">
             {/* Pressure Relief Toggle */}
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "relief-toggle-btn relative flex items-center gap-2 px-3 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden shrink-0",
+                "relief-toggle-btn relative flex items-center gap-2 px-2 xl:px-3 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden shrink-0",
+                evidencePanelOpen ? "hidden xl:!flex" : "flex",
                 isReliefMode 
                   ? "bg-[#008080] text-white shadow-none border-[#008080]"
                   : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none"
@@ -2163,19 +2158,22 @@ export default function App() {
 
             {/* Model Picker */}
             {models.length > 0 && (
-              <div className="relative shrink-0 hidden sm:!block">
+              <div className={cn(
+                "relative shrink-0",
+                evidencePanelOpen ? "hidden xl:!block" : "hidden sm:!block"
+              )}>
                 <select
                   value={selectedModelId}
                   onChange={e => {
                     setSelectedModelId(e.target.value)
                     localStorage.setItem('cw_model_id', e.target.value)
                   }}
-                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-2.5 py-1.5 pr-7 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[160px] cursor-pointer"
+                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-2 py-1.5 pr-6 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[120px] xl:max-w-[160px] cursor-pointer"
                   title="Select AI model"
                 >
                   {models.map(m => (
                     <option key={m.id} value={m.id} disabled={!m.is_configured}>
-                      {m.label}{m.badge ? ` [${m.badge}]` : ''}{!m.is_configured ? ' ✗' : ''}
+                      {m.label}{!m.is_configured ? ' ✗' : ''}
                     </option>
                   ))}
                 </select>
@@ -2185,21 +2183,16 @@ export default function App() {
               </div>
             )}
 
-            <ThemeToggle />
-            <select
-              value={caseId}
-              onChange={e => setCaseId(e.target.value)}
-              className="text-[12px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-gray-700 dark:text-slate-300 px-2.5 py-1.5 focus:outline-none transition-all max-w-[110px] sm:max-w-[150px] xl:max-w-[200px] clinical-shadow font-code-sm uppercase font-bold text-[#1a1a1a] dark:text-white shrink-0"
-            >
-              {CASES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
+            <div className={cn(evidencePanelOpen ? "hidden lg:!block" : "block")}>
+              <ThemeToggle />
+            </div>
             <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow shrink-0">
               {(['patient', 'clinician'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    'px-2.5 xl:px-4 py-1.5 text-xs xl:text-sm font-label-md transition-all uppercase font-bold',
+                    'px-2 xl:px-4 py-1.5 text-xs xl:text-sm font-label-md transition-all uppercase font-bold',
                     mode === m
                       ? isClinicianMode
                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'

@@ -56,14 +56,14 @@ def _router(tmp_path) -> QueryRouter:
 def test_router_routes_okf_via_tag_match(tmp_path):
     router = _router(tmp_path)
     decision = router.classify("What is the target BP in CKD?")
-    assert decision.path == "okf"
+    assert decision.path == "okf_then_rag"
     assert "bp" in decision.matched_tags or "classification" in decision.matched_tags
 
 
 def test_router_routes_okf_via_keywords(tmp_path):
     router = _router(tmp_path)
     decision = router.classify("What is the first-line dosage for ACE inhibitors?")
-    assert decision.path == "okf"
+    assert decision.path == "okf_then_rag"
 
 
 def test_router_routes_rag_when_no_okf_keywords(tmp_path):
@@ -81,7 +81,7 @@ def test_router_routes_okf_then_rag_when_mixed(tmp_path):
 def test_router_high_stakes_contraindication(tmp_path):
     router = _router(tmp_path)
     decision = router.classify("Is ACEi contraindicated in pregnancy?")
-    assert decision.path == "okf"
+    assert decision.path == "okf_then_rag"
 
 
 def test_router_returns_reason(tmp_path):

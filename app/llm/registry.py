@@ -44,7 +44,6 @@ MODELS: list[ModelSpec] = [
         provider="cohere",
         description="Default · grounded, fast, long context",
         model_param="command-a-03-2025",
-        badge="Default",
     ),
     ModelSpec(
         id="cohere-command-r",
@@ -103,7 +102,6 @@ MODELS: list[ModelSpec] = [
         provider="openrouter",
         description="Nvidia Nemotron-3 550B — best clinical accuracy, 1M context, free",
         model_param="nvidia/nemotron-3-ultra-550b-a55b:free",
-        badge="Free",
     ),
     ModelSpec(
         id="openrouter-nemotron-nano-30b",
@@ -111,7 +109,6 @@ MODELS: list[ModelSpec] = [
         provider="openrouter",
         description="Nvidia Nemotron-3 Nano 30B — fast, accurate, great for RAG",
         model_param="nvidia/nemotron-3-nano-30b-a3b:free",
-        badge="Free",
     ),
     ModelSpec(
         id="openrouter-gemma-4-26b",
@@ -119,7 +116,6 @@ MODELS: list[ModelSpec] = [
         provider="openrouter",
         description="Google Gemma 4 26B — latest Google model, excellent reasoning",
         model_param="google/gemma-4-26b-a4b-it:free",
-        badge="Free",
     ),
     ModelSpec(
         id="openrouter-llama-3.3-70b",
@@ -127,7 +123,6 @@ MODELS: list[ModelSpec] = [
         provider="openrouter",
         description="Meta Llama 3.3 70B — strong reasoning, 131K context",
         model_param="meta-llama/llama-3.3-70b-instruct:free",
-        badge="Free",
     ),
 ]
 

@@ -4,13 +4,13 @@
 
 ### Production-Grade Agentic RAG for Hypertension Care
 
-**An evidence-based clinical workflow assistant** combining hybrid retrieval, curated medical knowledge, LangGraph orchestration, and safety-first guardrails — delivered via a modern AI chat interface.
+**An evidence-based clinical workflow assistant** combining hybrid retrieval, curated medical knowledge, LangGraph orchestration, and safety-first guardrails — delivered via a modern AI chat interface. Ready to deploy at **$0/month**.
 
 <br>
 
 [![Live Demo](https://img.shields.io/badge/demo-clinical--workflows.vercel.app-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://clinical-workflows.vercel.app)
 [![Tests](https://img.shields.io/badge/tests-213%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)]()
-[![Day 19](https://img.shields.io/badge/day-19%20complete-8b5cf6?style=for-the-badge)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)]()
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)]()
 [![LangGraph](https://img.shields.io/badge/LangGraph-✓-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)]()
@@ -18,6 +18,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)]()
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)]()
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)]()
+[![LangSmith](https://img.shields.io/badge/LangSmith-Evaluator-F5C300?style=for-the-badge&logo=langchain&logoColor=white)]()
 [![Vercel](https://img.shields.io/badge/deployed-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)]()
 
 <br>
@@ -29,36 +30,60 @@
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [Why This Exists](#why-this-exists)
 - [Quick Start](#quick-start)
+- [How to Use](#how-to-use)
 - [Architecture](#architecture)
-- [Security & Safety](#security--safety)
 - [Features](#features)
+- [Security & Safety](#security--safety)
 - [API](#api)
 - [Stack](#stack)
 - [Evaluation & Quality](#evaluation--quality)
-- [Environment](#environment)
+- [Deployment](#deployment)
 - [Project Structure](#project-structure)
+- [Limitations](#limitations)
 - [License](#license)
 
 ---
 
 ## Overview
 
-Clinical Workflows is an **agentic RAG system** for hypertension chronic-care. It ingests clinical guidelines (NICE, WHO, CDC), chunks them with full citation provenance, and answers clinical questions through a LangGraph agent that routes queries between a **curated OKF knowledge spine** and **hybrid vector + BM25 retrieval**.
+Clinical Workflows is an **agentic RAG system** for hypertension chronic-care follow-up. It ingests clinical guidelines (NICE, WHO, CDC), chunks them with full citation provenance, and answers clinical questions through a LangGraph agent that routes queries between a **curated OKF knowledge spine** and **hybrid vector + BM25 retrieval**.
 
-Every claim is traced to a source document. Every unsafe request (diagnosis, prescribing, emergency triage) is **refused before generation**. Every response includes citations, tool traces, and safety flags.
+Every claim traces to a source document. Every unsafe request (diagnosis, prescribing, emergency triage) is **refused before generation**. Every response includes citations, tool traces, and safety flags. The LLM is optional — deterministic fallbacks work without any API key.
 
 ### What makes it different?
 
 | Feature | Why it matters |
 |---------|---------------|
 | **Safety-first routing** | Unsafe requests refused before any retrieval or LLM call |
-| **OKF knowledge spine** | 27 curated concept files for canonical facts (BP categories, drug classes) — no embedding dependency |
+| **OKF knowledge spine** | 27 curated concept files for canonical facts — no embedding lottery |
 | **Hybrid retrieval** | Cohere embeddings + BM25 with adaptive alpha fusion |
 | **Full citation provenance** | Every claim traceable to source document, version, and license |
-| **Clinical calculators** | Built-in eGFR (CKD-EPI), MAP, pulse pressure, and BMI — computed deterministically |
-| **Care gap detection** | Identify missing guideline-recommended care from synthetic patient cases |
-| **Structured observability** | Per-node latency breakdown, JSON-structured logs, streaming SSE |
+| **Clinical calculators** | Built-in eGFR (CKD-EPI), MAP, pulse pressure, BMI — computed deterministically |
+| **Care gap detection** | Identify missing guideline-recommended care from patient descriptions |
+| **LLM-as-Judge eval** | LangSmith evaluators for faithfulness, relevancy, harmfulness — plus code-based metrics |
+| **Works without API keys** | DummyEvalLLM + hash embeddings = fully functional offline |
+
+### Who is this for?
+
+- **Clinicians** — get guideline-backed answers with citations for hypertension follow-up
+- **Patients** — understand your condition in plain language (not medical advice)
+- **Developers** — study a production-grade RAG architecture you can deploy for free
+- **Interviewers** — evaluate a senior-level AI engineering portfolio project
+
+---
+
+## Why This Exists
+
+Generic chatbots cannot safely answer clinical questions. They may hallucinate drug interactions, miss contraindications, or give dangerous advice. Clinical Workflows is designed to be **bounded, traceable, and safe by construction**:
+
+- It **only answers from indexed guidelines** — not from the LLM's training data
+- It **refuses unsafe requests** before any processing happens
+- It **shows citations** so you can verify every claim
+- It **works without API keys** — no paid services required
+
+**This is not medical advice.** Always consult a licensed healthcare provider.
 
 ---
 
@@ -67,38 +92,69 @@ Every claim is traced to a source document. Every unsafe request (diagnosis, pre
 ### Prerequisites
 - Python 3.12
 - Node.js 20+
-- A free [OpenRouter API key](https://openrouter.ai/keys) (for AI generation)
+- (Optional) [OpenRouter API key](https://openrouter.ai/keys) for AI generation
 
-### Backend
+### Run the full stack locally
 
 ```bash
-# Create virtual environment and install deps
+# Terminal 1 — Backend
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# Configure environment
 cp .env.example .env
-# Edit .env — add your OPENROUTER_API_KEY at minimum
-
-# Run the server
 make run-backend
-# → http://127.0.0.1:8000/docs
+# → http://127.0.0.1:8000/docs (API docs)
+
+# Terminal 2 — Frontend
+cd frontend && npm install && npm run dev
+# → http://localhost:5173 (Chat UI)
 ```
 
-### Frontend
+The Vite dev server proxies `/api/*` to the backend automatically. Open the frontend URL and start asking clinical questions.
+
+### Or run with Docker
 
 ```bash
-cd frontend
-npm install
-npm run dev
-# → http://localhost:5173
+docker compose up
+# → http://localhost:8000
 ```
 
-The Vite dev server proxies `/api/*` to the backend automatically.
+---
+
+## How to Use
+
+### Asking clinical questions
+
+The chat interface supports natural language. Just describe what you want to know:
+
+| You type | The system does |
+|----------|----------------|
+| "What is the target BP for a CKD patient?" | Retrieves from guidelines + OKF, shows citations |
+| "Calculate eGFR for a 65yo male, creatinine 1.2" | Runs the deterministic calculator, shows formula and result |
+| "What are the first-line drugs for hypertension?" | Returns curated knowledge from OKF concept files |
+| "I'm a 55-year-old male with stage 1 hypertension on lisinopril 10mg — what should my BP target be?" | Understands the free-text description and answers from guidelines |
+| "Can you prescribe metformin?" | **Refuses** — no prescribing allowed. Explains why. |
+
+### Patient vs Clinician mode
+
+Toggle between **Patient** (plain language, educational) and **Clinician** (care-team detail, clinical terminology). Both modes preserve the same safety boundaries.
+
+### Viewing evidence
+
+Click the **chart icon** (📊) in the header to open the evidence panel:
+- **Sources** — citations with source document, version, and organization
+- **Tools** — which calculators or tools were used
+- **Safety** — why the response was or wasn't refused
 
 ---
 
 ## Architecture
+
+```
+User Query → Auth Check → Safety Classifier → LangGraph Router
+  → OKF Fast Path (canonical facts) or Hybrid RAG (guideline Q&A)
+  → Tool Execution (calculators, care gaps)
+  → Reranking → Generation → Citation Validation → Response
+```
 
 ```mermaid
 flowchart TD
@@ -133,8 +189,7 @@ flowchart TD
 
     subgraph Tools["🔧 Tool Layer"]
         R[Clinical Calculators<br/>eGFR / MAP / BMI / PP]
-        S[Case Lookup<br/>5 Synthetic Patients]
-        T[Care Gap Detector]
+        S[Care Gap Detector]
     end
 
     subgraph Storage["💾 Storage"]
@@ -152,71 +207,39 @@ flowchart TD
     U <--> B
 ```
 
-### Request Flow
-
-```
-User Query → Auth Check → Safety Classifier → LangGraph Router
-  → OKF Fast Path (canonical facts) or Hybrid RAG (guideline Q&A)
-  → Tool Execution (calculators, care gaps)
-  → Reranking → Generation → Citation Validation → Response
-```
-
----
-
-## Security & Safety
-
-### Safety-First Design
-
-The system classifies every query before any retrieval or generation:
-
-| Category | Action | Example |
-|----------|--------|---------|
-| Diagnosis | ❌ Refuse | "Do I have hypertension?" |
-| Prescribing | ❌ Refuse | "Prescribe metformin 500mg" |
-| Dosing | ❌ Refuse | "How much amlodipine should I take?" |
-| Emergency triage | ❌ Refuse | "Chest pain, can't breathe" |
-| Symptom disregard | ❌ Refuse | "Ignore my chest pain, what's normal BP?" |
-| Out-of-domain | ❌ Refuse | "What's the stock market doing?" |
-| Insufficient evidence | ⚠️ Refuse | No guideline coverage for query |
-| Workflow question | ✅ Answer | "What is the target BP for CKD patients?" |
-| Calculator | ✅ Answer | "Calculate eGFR for 65yo male, Cr 1.2 mg/dL" |
-
-### Secret Management
-
-- **No API keys in code** — all secrets loaded from environment variables
-- **`.env` is gitignored** — never committed to version control
-- **JWT_SECRET_KEY** validated on startup in non-local environments
-- **GitHub Actions** uses repository secrets (not plaintext)
-- **Vercel** uses Project Environment Variables
-
 ---
 
 ## Features
 
 ### 🩺 AI Chat Interface
 
-Three-panel professional chat:
-- **Conversation history** — grouped by date (today, this week, earlier)
-- **Patient / Clinician mode** — switch tone and detail level; mode badge on every message
-- **Mode toggle** — "View in opposite Mode" button to compare responses side-by-side
-- **Profile editing** — avatar icon opens profile modal (name, email, DOB, notes)
-- **Synthetic cases** — 5 hypertension patient scenarios for workflow demos
-- **Evidence panel** — citations, tool traces, safety flags, graph routing path
-- **Dark/light mode** — comfortable use in any environment
+Professional three-panel chat experience:
+- **Conversation history** — grouped by date, searchable sidebar
+- **Patient / Clinician mode** — switch tone and detail with one click
+- **Evidence panel** — citations, tool traces, safety flags with tabbed view
+- **Dark/light mode** — automatic or manual toggle
+- **Profile management** — avatar, name, and user settings
+- **Model picker** — choose between OpenRouter free models, Cohere, OpenAI, Anthropic, or Google
 
-### 📚 Knowledge Spine (OKF)
+### 📚 Dual Knowledge Retrieval
 
-27 curated concept files with YAML frontmatter and `[[wikilinks]]` cross-references. Covers:
+Every question searches **two** knowledge stores simultaneously:
 
+**OKF Knowledge Spine** — 27 curated concept files with YAML frontmatter and `[[wikilinks]]`:
 ```
-BP Categories | Drug Classes | Contraindications ✦
+BP Categories | Drug Classes | Contraindications
 Treatment Protocols | Comorbidities | Risk Stratification
-Lifestyle Interventions | Follow-up Schedules | Referral Criteria
+Diagnostic Thresholds | Follow-up Schedules | Referral Criteria
 ```
+
+**Hybrid Vector Search** — Cohere embeddings + BM25 with adaptive alpha fusion:
+- Dense retrieval captures semantic meaning
+- Sparse retrieval captures exact clinical terms
+- Min-max normalized score fusion prevents either signal from dominating
 
 ### 🔧 Clinical Calculators
 
-Built-in deterministic calculators — no LLM dependency:
+Built-in deterministic calculators — no LLM dependency, always available:
 
 | Calculator | Formula | Example |
 |-----------|---------|---------|
@@ -227,12 +250,58 @@ Built-in deterministic calculators — no LLM dependency:
 
 ### 🏷️ Care Gap Detection
 
-Synthetic patient cases with guideline-based care gap analysis:
+Analyze patient descriptions against guideline-based care gap rules:
 - Missing statin therapy for diabetic patients
 - Uncontrolled BP on monotherapy
 - Missing ACEi/ARB for CKD patients
 - Lost to follow-up
 - Inadequate medication titration
+
+### 🤖 LLM-as-Judge Evaluation
+
+LangSmith-powered evaluators measure response quality automatically:
+
+| Evaluator | Type | What it measures |
+|-----------|------|-----------------|
+| Faithfulness | LLM-as-Judge | Are claims supported by retrieved context? |
+| Answer Relevancy | LLM-as-Judge | Does the answer address the question? |
+| Harmfulness | LLM-as-Judge | Is the answer safe and appropriate? |
+| Citation Accuracy | Code-based | Are citations present for answerable questions? |
+| Refusal Correctness | Code-based | Are unsafe requests correctly refused? |
+| Latency | Code-based | What's the end-to-end response time? |
+
+---
+
+## Security & Safety
+
+### Safety-First Design
+
+The system classifies every query **before any retrieval or generation**. Refusal is a safety feature, not a failure:
+
+| Category | Action | Example |
+|----------|--------|---------|
+| Diagnosis | ❌ Refuse | "Do I have hypertension?" |
+| Prescribing | ❌ Refuse | "Prescribe metformin 500mg" |
+| Dosing | ❌ Refuse | "How much amlodipine should I take?" |
+| Emergency triage | ❌ Refuse | "Chest pain, can't breathe" |
+| Symptom disregard | ❌ Refuse | "Ignore my chest pain" |
+| Out-of-domain | ❌ Refuse | "What's the stock market doing?" |
+| Insufficient evidence | ⚠️ Refuse | No guideline coverage for this query |
+| Clinical question | ✅ Answer | "What is the target BP for CKD patients?" |
+| Calculator | ✅ Answer | "Calculate eGFR for 65yo male, Cr 1.2" |
+
+### Secret Management
+
+- **No API keys in code** — all secrets from environment variables
+- **`.env` is gitignored** — never committed to version control
+- **`JWT_SECRET_KEY`** validated on startup in non-local environments
+
+### Free Tier Security
+
+- Deploy uses auth-enabled endpoints
+- Rate limiting on registration (3/min) and login (10/min)
+- CORS restricted to known origins
+- Educational disclaimer on every response
 
 ---
 
@@ -242,7 +311,7 @@ Synthetic patient cases with guideline-based care gap analysis:
 |--------|------|---------|
 | `GET` | `/api/health` | System health + OKF status |
 | `GET` | `/api/ready` | Readiness probe (DB + OKF) |
-| `GET` | `/api/models` | Available models + configuration status |
+| `GET` | `/api/models` | Available models + configuration |
 | `POST` | `/api/query` | Answer a clinical question |
 | `POST` | `/api/query/stream` | Streaming SSE variant |
 | `POST` | `/api/chat/conversations` | Create conversation |
@@ -252,7 +321,6 @@ Synthetic patient cases with guideline-based care gap analysis:
 | `POST` | `/api/auth/register` | Register user |
 | `POST` | `/api/auth/token` | Login (OAuth2 password flow) |
 | `GET` | `/api/auth/users/me` | Current user profile |
-| `GET` | `/api/cases` | List synthetic patient cases |
 | `GET` | `/api/eval/results` | Latest evaluation results |
 | `GET` | `/api/documents` | Indexed documents |
 | `GET` | `/api/sources` | Source registry |
@@ -269,15 +337,15 @@ Synthetic patient cases with guideline-based care gap analysis:
 | **Sparse Retrieval** | BM25 | Keyword-based term matching |
 | **Hybrid Fusion** | Weighted alpha (0.55) | Min-max normalized score fusion |
 | **Reranking** | Cohere rerank-v3.5 | Cross-encoder relevance scoring |
-| **Generation** | OpenRouter (free) / Cohere / OpenAI | LLM-based answer generation |
+| **Generation** | OpenRouter (free) / Cohere / OpenAI / Anthropic / Google | LLM-based answer generation |
+| **Evaluation** | LangSmith + deterministic | LLM-as-Judge + code-based metrics |
 | **Knowledge Spine** | OKF (YAML + wikilinks) | 27 curated concept files |
-| **Vector Store** | HybridStore (in-memory) or PgVectorStore (pgvector) | BM25 + dense embeddings |
+| **Vector Store** | HybridStore (in-memory) + PgVectorStore | BM25 + dense embeddings |
 | **Auth** | JWT + OAuth2 + bcrypt | Role-based access control |
-| **Frontend** | React 18 + TypeScript 5 | Modern SPA with dark/light mode |
-| **Styling** | Tailwind CSS 4 + Lucide icons | Responsive, accessible UI |
+| **Frontend** | React 18 + TypeScript 5 + Tailwind 4 | Modern SPA with dark/light mode |
 | **Build** | Vite 6 | Fast dev server + optimized builds |
-| **CI** | GitHub Actions | Lint + 213 tests + frontend build |
-| **Deployment** | Vercel (frontend) / Render (backend) | Python serverless + static SPA |
+| **CI** | Ruff + pytest + OKF validation | Quality gates on every push |
+| **Deployment** | Vercel (frontend) / Render (backend) | Free tier hosting |
 
 ---
 
@@ -285,104 +353,60 @@ Synthetic patient cases with guideline-based care gap analysis:
 
 **213 tests** across the entire stack — run in CI on every push.
 
+### Quality Gates
+
 | Gate | Metric | Threshold | Status |
 |------|--------|-----------|--------|
 | Refusal correctness | Unsafe requests correctly refused | ≥ 0.95 | ✅ |
-| Tool selection | Queries with correct tool call | ≥ 0.90 | ✅ |
-| Citation presence | Answerable with ≥ 1 citation | ≥ 0.95 | ✅ |
+| Tool selection | Correct tool call for calculator queries | ≥ 0.90 | ✅ |
+| Citation presence | Answerable questions have ≥ 1 citation | ≥ 0.95 | ✅ |
 | Intent accuracy | Correct intent label | ≥ 0.90 | ✅ |
-| Prompt injection | Injection attempts detected | ≥ 0.95 | ✅ |
+| Prompt injection | Injection attempts detected and refused | ≥ 0.95 | ✅ |
 | Care gap detection | Expected gaps identified | ≥ 0.80 | ✅ |
 
-**55 evaluation questions** across 6 datasets: `python -m app.evaluation.run`
+### Evaluation Datasets
 
-### Code Quality
+**55 evaluation questions** across 6 datasets covering guideline questions, refusals, prompt injection, insufficient evidence, tool routing, and workflow cases.
 
-- **Ruff** linting (line-length 100, target py312)
-- **Pyright** type checking (strict configuration)
-- **OKF validation** — `make okf-check` validates all 27 concept files
-- **Formatting** — Prettier for frontend, Ruff for Python
+```bash
+# Run the full evaluation suite
+python -m app.evaluation.run
 
----
-
-## Environment
-
-| Variable | Required | Default | Purpose |
-|----------|----------|---------|---------|
-| `OPENROUTER_API_KEY` | ✅ | — | Free LLM generation (get at [openrouter.ai](https://openrouter.ai/keys)) |
-| `JWT_SECRET_KEY` | ✅ | (generated) | Auth token signing — generate with `secrets.token_urlsafe(48)` |
-| `DATABASE_URL` | — | `sqlite:///./clinical_demo.db` | Database connection (use `postgresql://...` for free-tier pgvector on Neon/Supabase) |
-| `VECTOR_STORE` | — | `auto` | `auto` uses pgvector when DATABASE_URL starts with `postgresql://`; `memory` forces in-memory; `pgvector` forces pgvector |
-
-| `COHERE_API_KEY` | — | — | Embedding + reranking + generation |
-| `TAVILY_API_KEY` | — | — | Web search tool |
-| `APP_ENV` | — | `local` | Environment mode |
-| `CORS_ORIGINS` | — | `http://localhost:5173` | Allowed origins |
-
----
-
-## Project Structure
-
+# Run a single dataset
+python -m app.evaluation.run --dataset data/eval/golden_guideline_questions.jsonl
 ```
-├── api/index.py                    # Vercel serverless entry
-├── app/
-│   ├── agents/                     # LangGraph agent, citation validator
-│   ├── api/                        # FastAPI routes + dependencies
-│   ├── auth/                       # JWT auth, bcrypt, RBAC
-│   ├── cases/                      # 5 synthetic patient cases
-│   ├── chat/                       # Conversation CRUD, message history
-│   ├── core/                       # Config (pydantic-settings), logging
-│   ├── evaluation/                 # 55-question eval harness + metrics
-│   ├── ingestion/                  # PDF loader, chunker, manifest, source registry
-│   ├── llm/                        # Cohere, OpenAI, Anthropic, Gemini, OpenRouter
-│   ├── models.py                   # Pydantic schemas
-│   ├── okf/                        # Open Knowledge Format module
-│   ├── personalization/            # Per-user document index
-│   ├── retrieval/                  # HybridStore, PgVectorStore, embeddings, BM25, reranker
-│   ├── safety/                     # Intent classifier + refusal engine
-│   └── tools/                      # eGFR, MAP, BMI, PP calculators + care gaps
-├── frontend/                       # React 18 + TypeScript + Tailwind
-│   └── src/
-│       ├── components/             # Chat, sidebar, evidence panel
-│       ├── hooks/                  # API, auth, chat React hooks
-│       └── types/                  # TypeScript definitions
-├── hypertension-okf/               # 27 curated OKF concept files
-├── data/                           # Source documents + eval datasets
-├── tests/                          # 222 passing tests
-├── vercel.json                     # Vercel config
-├── Makefile                        # Common commands
-├── .env.example                    # Environment template
-└── Dockerfile                      # Container build
+
+### LangSmith Evaluators (optional)
+
+```bash
+# Requires LANGSMITH_API_KEY in .env
+python -m app.evaluation.run_langsmith
 ```
+
+This runs all 6 evaluators (faithfulness, answer_relevancy, harmfulness, citation_accuracy, refusal_correctness, latency) using LLM-as-Judge scoring.
 
 ---
 
 ## Deployment
 
-Two production options — pick the one that fits your budget.
+### Option 1: Free Tier ($0/month)
 
-### Free Tier (recommended for dev/portfolio)
+Deploy the full system at zero cost:
 
 ```
-Frontend (Vercel) → Backend (Render) → Database (Neon pgvector) → LLM (OpenRouter free)
-                                                                → Embeddings (deterministic)
-                                                                   Cost: $0/month
+Vercel (static frontend) → Render (FastAPI backend, 750h/month)
+  → Neon (PostgreSQL + pgvector, 500MB free)
+  → OpenRouter (free LLM models)
+  ↕ Works without any API keys (deterministic fallbacks)
 ```
 
-### Vercel (current dev deployment)
+Full step-by-step guide at [`.planning/FREE_TIER_DEPLOYMENT.md`](.planning/FREE_TIER_DEPLOYMENT.md)
 
-The app is deployed on Vercel as a Python serverless function + static SPA:
+### Option 2: Vercel (current deployment)
 
-```bash
-# Set environment variables in Vercel dashboard:
-#   OPENROUTER_API_KEY, JWT_SECRET_KEY, COHERE_API_KEY,
-#   TAVILY_API_KEY, CORS_ORIGINS
+The app is deployed on Vercel as a Python serverless function + static SPA. The live demo is at [clinical-workflows.vercel.app](https://clinical-workflows.vercel.app).
 
-# Or deploy via CLI:
-vercel --prod
-```
-
-### Docker
+### Option 3: Docker
 
 ```bash
 docker compose up
@@ -391,34 +415,43 @@ docker compose up
 
 ---
 
-## Demo Script
+## Project Structure
 
-```bash
-# 1. Ingest guidelines
-curl -X POST http://127.0.0.1:8000/api/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"use_default_sources": true}'
-
-# 2. Ask a clinical question
-curl -X POST http://127.0.0.1:8000/api/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is the target BP for CKD patients?", "mode": "clinician"}'
-
-# 3. Check care gaps for a patient case
-curl -X POST http://127.0.0.1:8000/api/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What care gaps exist?", "mode": "clinician", "case_id": "htn-001"}'
-
-# 4. Use a clinical calculator
-curl -X POST http://127.0.0.1:8000/api/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Calculate eGFR for 65yo female, creatinine 1.2 mg/dL"}'
-
-# 5. Test safety — this will be refused
-curl -X POST http://127.0.0.1:8000/api/query \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Can you prescribe metformin for me?"}'
 ```
+├── app/
+│   ├── agents/          # LangGraph agent + citation validator
+│   ├── api/             # FastAPI routes + dependencies
+│   ├── auth/            # JWT auth, bcrypt, RBAC
+│   ├── cases/           # Synthetic patient case models
+│   ├── chat/            # Conversation CRUD
+│   ├── core/            # Config + logging
+│   ├── evaluation/      # 55-question harness + metrics + LangSmith eval
+│   ├── ingestion/       # PDF loader, chunker, manifest, registry
+│   ├── llm/             # Cohere, OpenAI, Anthropic, Gemini, OpenRouter
+│   ├── models.py        # Pydantic schemas
+│   ├── okf/             # Open Knowledge Format module
+│   ├── retrieval/       # HybridStore, PgVectorStore, BM25
+│   ├── safety/          # Intent classifier + refusal engine
+│   └── tools/           # eGFR, MAP, BMI, PP calculators
+├── frontend/            # React 18 + TypeScript + Tailwind
+├── hypertension-okf/    # 27 curated OKF concept files
+├── tests/               # 213 tests
+├── .planning/           # Docs: architecture, deployment, daily learnings
+├── vercel.json          # Vercel deployment config
+├── Makefile             # Common commands
+├── .env.example         # Environment template
+└── Dockerfile           # Container build
+```
+
+---
+
+## Limitations
+
+- **Hypertension only** — the OKF knowledge spine and guidelines focus on hypertension. Other conditions are not covered.
+- **Synthetic patients** — no real patient data. Case descriptions are fully synthetic.
+- **Not medical advice** — this is an educational tool. Always consult a licensed healthcare provider.
+- **No HIPAA compliance** — not designed for production clinical use without additional controls.
+- **Free tier cold starts** — Render and Neon free tiers sleep after 15min/5min of inactivity.
 
 ---
 
@@ -434,12 +467,13 @@ curl -X POST http://127.0.0.1:8000/api/query \
 | `make okf-check` | Validate 27 OKF concept files |
 | `make ci` | Full CI pipeline: lint → test → build-frontend |
 | `python -m app.evaluation.run` | Run 55-question evaluation suite |
+| `python -m app.evaluation.run_langsmith` | Run LangSmith LLM-as-Judge evaluators |
 
 ---
 
 ## License
 
-MIT — for educational and portfolio purposes. Not intended for clinical use.
+MIT — for educational and portfolio purposes. **Not intended for clinical use.**
 
 Clinical guidelines referenced (NICE, WHO, CDC) carry their own license terms — see their respective websites for redistribution permissions.
 

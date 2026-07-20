@@ -44,7 +44,7 @@ def test_interface_search_okf_path(tmp_path):
     interface = _build_interface(tmp_path)
     result = interface.search("What are the BP categories?")
     assert result.decision is not None
-    assert result.decision.path == "okf"
+    assert result.decision.path == "okf_then_rag"
     assert len(result.okf_docs) >= 1
 
 

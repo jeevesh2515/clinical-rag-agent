@@ -59,7 +59,7 @@ class QueryRouter:
         if matched_tags:
             okf_paths = self._resolve_okf_paths(matched_tags)
             return RouterDecision(
-                path="okf",
+                path="okf_then_rag",
                 reason=f"OKF has concepts matching topic tags: {', '.join(matched_tags)}",
                 matched_tags=matched_tags,
                 okf_concepts=okf_paths,
@@ -74,14 +74,14 @@ class QueryRouter:
             matched = self._match_by_title(query_lower)
             if matched:
                 return RouterDecision(
-                    path="okf",
+                    path="okf_then_rag",
                     reason=f"Canonical query matched title: {matched}",
                     matched_tags=matched_tags,
                     okf_concepts=matched,
                 )
             return RouterDecision(
-                path="okf",
-                reason="Query appears canonical (high keyword match) — routing to OKF",
+                path="okf_then_rag",
+                reason="Query appears canonical (high keyword match) — routing to OKF + RAG",
                 matched_tags=matched_tags,
                 okf_concepts=[],
             )
@@ -101,7 +101,7 @@ class QueryRouter:
         if okf_heavy:
             matched = self._match_by_title(query_lower)
             return RouterDecision(
-                path="okf",
+                path="okf_then_rag",
                 reason=f"OKF keywords detected ({okf_keyword_score} matches)",
                 matched_tags=matched_tags,
                 okf_concepts=matched or [],

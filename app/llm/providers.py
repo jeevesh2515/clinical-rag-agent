@@ -273,3 +273,23 @@ class OpenRouterLLM:
             return (data["choices"][0]["message"]["content"] or "").strip()
         except Exception as exc:
             raise ProviderError(f"OpenRouter chat failed: {exc}") from exc
+
+
+class DummyEvalLLM:
+    """Deterministic fallback for eval scoring when no real LLM is configured."""
+    is_configured = False
+
+    def chat(self, messages, **kwargs) -> str:
+        return "0.5"
+
+
+def get_llm_for_eval(settings: Settings | None = None) -> CohereLLM | OpenRouterLLM | DummyEvalLLM:
+    """Cheapest available LLM for evaluator scoring."""
+    if settings is None:
+        from app.core.config import get_settings
+        settings = get_settings()
+    if settings.openrouter_api_key:
+        return OpenRouterLLM("openrouter/neversleep/llama-3.1-lumimaid-8b", settings)
+    if settings.cohere_api_key:
+        return CohereLLM("command-a-03-2025", settings)
+    return DummyEvalLLM()

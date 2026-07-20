@@ -25,7 +25,7 @@ from app.auth.models import (
     LoginUser,
     RegisterUser,
     Token,
-    User as UserModel,
+    UserPublic,
     UserInDB,
     UserRole,
     UserUpdate,
@@ -50,14 +50,16 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def _to_user_model(user: OrmUser) -> UserInDB:
-    """Map an ORM ``User`` row to the public ``UserInDB`` Pydantic model."""
+def _to_user_public(user: OrmUser) -> UserPublic:
+    """Map an ORM ``User`` row to the public ``UserPublic`` Pydantic model.
+    
+    This intentionally omits hashed_password from the response.
+    """
     valid_roles = {r.value for r in UserRole}
-    return UserInDB(
+    return UserPublic(
         id=user.id,
         username=user.username,
         email=user.email,
-        hashed_password=user.hashed_password,
         roles=[UserRole(r) for r in user.roles if r in valid_roles],
         is_active=user.is_active,
         full_name=user.full_name,
@@ -131,9 +133,9 @@ async def get_current_active_clinician(
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
 
-@router.post("/register", response_model=UserModel, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 @limiter.limit("3/minute")
-async def register_user(request: Request, payload: RegisterUser, db: Session = Depends(get_db)) -> UserInDB:
+async def register_user(request: Request, payload: RegisterUser, db: Session = Depends(get_db)) -> UserPublic:
     if get_user_by_username(db, payload.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered"
@@ -159,7 +161,7 @@ async def register_user(request: Request, payload: RegisterUser, db: Session = D
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return _to_user_model(new_user)
+    return _to_user_public(new_user)
 
 
 @router.post("/token", response_model=Token)
@@ -202,17 +204,17 @@ async def login_json(request: Request, payload: LoginUser, db: Session = Depends
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/users/me", response_model=UserModel)
-async def read_users_me(current_user: OrmUser = Depends(get_current_active_user)) -> UserInDB:
-    return _to_user_model(current_user)
+@router.get("/users/me", response_model=UserPublic)
+async def read_users_me(current_user: OrmUser = Depends(get_current_active_user)) -> UserPublic:
+    return _to_user_public(current_user)
 
 
-@router.put("/users/me", response_model=UserModel)
+@router.put("/users/me", response_model=UserPublic)
 async def update_profile(
     payload: UserUpdate,
     current_user: OrmUser = Depends(get_current_active_user),
     db: Session = Depends(get_db),
-) -> UserInDB:
+) -> UserPublic:
     if payload.full_name is not None:
         current_user.full_name = payload.full_name
     if payload.date_of_birth is not None:
@@ -228,11 +230,11 @@ async def update_profile(
         current_user.email = payload.email
     db.commit()
     db.refresh(current_user)
-    return _to_user_model(current_user)
+    return _to_user_public(current_user)
 
 
-@router.get("/users/me/clinician", response_model=UserModel)
+@router.get("/users/me/clinician", response_model=UserPublic)
 async def read_users_me_clinician(
     current_user: OrmUser = Depends(get_current_active_clinician),
-) -> UserInDB:
-    return _to_user_model(current_user)
+) -> UserPublic:
+    return _to_user_public(current_user)

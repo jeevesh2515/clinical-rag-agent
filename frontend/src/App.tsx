@@ -1728,8 +1728,11 @@ export default function App() {
   }, [inputValue])
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('cw_token')
+    const savedToken = localStorage.getItem('cw_token') || sessionStorage.getItem('cw_token')
     if (savedToken) {
+      // Normalise: always keep the token in localStorage for consistent access
+      localStorage.setItem('cw_token', savedToken)
+      sessionStorage.removeItem('cw_token')
       api.setToken(savedToken)
       api.getCurrentUser()
         .then(u => {
@@ -1751,6 +1754,7 @@ export default function App() {
               .catch(() => {
                 localStorage.removeItem('cw_token')
                 localStorage.removeItem('cw_remember')
+                sessionStorage.removeItem('cw_token')
                 setPage('landing')
               })
               .finally(() => setIsRestoringSession(false))
@@ -1786,30 +1790,50 @@ export default function App() {
 
   const handleLogin = async (token: string) => {
     localStorage.setItem('cw_token', token)
+    sessionStorage.removeItem('cw_token')
     api.setToken(token)
-    try {
-      const u = await api.getCurrentUser()
-      setUser(u)
-      const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
-      setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
-      setPage('dashboard')
-    } catch {
-      throw new Error('Failed to load user profile')
+    // Retry up to 2 times to handle Vercel cold starts
+    let lastError: Error | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const u = await api.getCurrentUser()
+        setUser(u)
+        const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
+        setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+        setPage('dashboard')
+        return
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error('Failed to load user profile')
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+        }
+      }
     }
+    throw lastError || new Error('Failed to load user profile')
   }
 
   const handleSignup = async (token: string) => {
     localStorage.setItem('cw_token', token)
+    sessionStorage.removeItem('cw_token')
     api.setToken(token)
-    try {
-      const u = await api.getCurrentUser()
-      setUser(u)
-      const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
-      setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
-      setPage('dashboard')
-    } catch {
-      throw new Error('Failed to load user profile')
+    // Retry up to 2 times to handle Vercel cold starts
+    let lastError: Error | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const u = await api.getCurrentUser()
+        setUser(u)
+        const primaryRole = u.roles && u.roles[0] ? u.roles[0] : 'patient'
+        setMode(primaryRole === 'clinician' ? 'clinician' : 'patient')
+        setPage('dashboard')
+        return
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error('Failed to load user profile')
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+        }
+      }
     }
+    throw lastError || new Error('Failed to load user profile')
   }
 
   const handleChatAboutDoc = (filename: string) => {
@@ -1822,7 +1846,9 @@ export default function App() {
   }
 
   const handleLogout = () => {
-    setUser(null); api.setToken(null); localStorage.removeItem('cw_token')
+    setUser(null); api.setToken(null)
+    localStorage.removeItem('cw_token')
+    sessionStorage.removeItem('cw_token')
     setConversations([]); setMessages([]); setCurrentConvId(null)
     setPage('landing')
   }
@@ -2197,6 +2223,13 @@ export default function App() {
             >
               <BarChart3 size={18} />
             </button>
+            <button 
+              onClick={() => setIsProfileModalOpen(true)}
+              className="w-10 h-10 bg-brand-accent hover:bg-brand-accent/90 text-white flex items-center justify-center font-bold text-sm border-2 border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all duration-150 uppercase shrink-0"
+              title={`${user?.username || 'User'}'s Profile`}
+            >
+              {user ? getInitials(user.username) : 'U'}
+            </button>
           </div>
         </header>
 
@@ -2217,9 +2250,18 @@ export default function App() {
               <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white group-hover:text-brand-accent transition-colors uppercase">Clinical Workflows</span>
             </button>
           </div>
-          <button onClick={() => setEvidencePanelOpen(!evidencePanelOpen)} className="text-[#1a1a1a] dark:text-white">
-            <Info size={18} />
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setEvidencePanelOpen(!evidencePanelOpen)} className="text-[#1a1a1a] dark:text-white">
+              <Info size={18} />
+            </button>
+            <button 
+              onClick={() => setIsProfileModalOpen(true)}
+              className="w-7 h-7 bg-brand-accent text-white flex items-center justify-center font-bold text-[10px] border-2 border-[#1a1a1a] dark:border-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] uppercase shrink-0"
+              title={`${user?.username || 'User'}'s Profile`}
+            >
+              {user ? getInitials(user.username) : 'U'}
+            </button>
+          </div>
         </header>
 
         {/* Messages */}

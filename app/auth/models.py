@@ -15,7 +15,22 @@ class UserRole(str, Enum):
     care_coordinator = "care_coordinator"
 
 
+class UserPublic(BaseModel):
+    """Public-facing user model — never exposes hashed_password."""
+    id: str = Field(..., description="Unique identifier for the user")
+    username: str = Field(..., description="Username for login")
+    email: str = Field(..., description="User's email address")
+    roles: List[UserRole] = Field(default_factory=list, description="List of roles assigned to the user")
+    is_active: bool = Field(True, description="Whether the user account is active")
+    full_name: Optional[str] = Field(None, description="Display name (optional)")
+    primary_role: str = Field("patient", description="Primary role used for routing and gating")
+    date_of_birth: Optional[str] = Field(None, description="Date of birth (YYYY-MM-DD, patient profiles)")
+    notes: Optional[str] = Field(None, description="Free-form profile notes")
+    created_at: Optional[str] = Field(None, description="Account creation timestamp (ISO-8601)")
+
+
 class User(BaseModel):
+    """Internal user model — includes hashed_password for auth logic."""
     id: str = Field(..., description="Unique identifier for the user")
     username: str = Field(..., description="Username for login")
     email: str = Field(..., description="User's email address")

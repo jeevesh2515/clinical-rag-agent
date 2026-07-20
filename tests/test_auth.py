@@ -37,7 +37,7 @@ class TestAuthenticationEndpoints:
         data = response.json()
         assert data["username"] == "testuser"
         assert data["email"] == "test@example.com"
-        assert "hashed_password" in data
+        assert "hashed_password" not in data
 
     def test_register_duplicate_user(self, client):
         client.post(

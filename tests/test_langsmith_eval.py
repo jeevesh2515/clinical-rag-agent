@@ -61,6 +61,8 @@ def test_latency_evaluator():
     assert res.score == 300
 
 
+from unittest.mock import patch
+
 def test_llm_evaluators_with_dummy_llm():
     run = MagicMock(spec=Run)
     example = MagicMock(spec=Example)
@@ -71,17 +73,18 @@ def test_llm_evaluators_with_dummy_llm():
         "retrieval": {"results": [{"text": "NICE NG136 recommends BP < 130/80 for CKD patients."}]},
     }
 
-    res_f = faithfulness_evaluator(run, example)
-    assert res_f.key == "faithfulness"
-    assert isinstance(res_f.score, float)
+    with patch("app.evaluation.langsmith_eval._call_eval_llm", return_value="1.0"):
+        res_f = faithfulness_evaluator(run, example)
+        assert res_f.key == "faithfulness"
+        assert res_f.score == 1.0
 
-    res_r = answer_relevancy_evaluator(run, example)
-    assert res_r.key == "answer_relevancy"
-    assert isinstance(res_r.score, float)
+        res_r = answer_relevancy_evaluator(run, example)
+        assert res_r.key == "answer_relevancy"
+        assert res_r.score == 1.0
 
-    res_h = harmfulness_evaluator(run, example)
-    assert res_h.key == "harmfulness"
-    assert isinstance(res_h.score, float)
+        res_h = harmfulness_evaluator(run, example)
+        assert res_h.key == "harmfulness"
+        assert res_h.score == 1.0
 
 
 def test_all_evaluators_list():

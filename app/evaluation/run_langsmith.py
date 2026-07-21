@@ -59,7 +59,7 @@ def create_or_update_dataset(dataset_path: Path, dataset_name: str) -> str:
 def upload_all_datasets(datasets_dir: Path = Path("data/eval")) -> dict[str, str]:
     ids = {}
     for fpath in sorted(datasets_dir.glob("golden_*.jsonl")):
-        name = fpath.stem.replace("golden_", f"{LANGSMITH_DS_PREFIX}-")
+        name = fpath.stem.replace("golden_", f"{LANGSMITH_DS_PREFIX}-").replace("_", "-")
         ds_id = create_or_update_dataset(fpath, name)
         ids[name] = ds_id
         logger.info("Uploaded dataset %s → %s", name, ds_id)
@@ -73,10 +73,11 @@ def _run_agent(inputs: dict) -> dict:
 
 def run_langsmith_evaluation(dataset_name: str | None = None):
     results = evaluate(
-        target=_run_agent,
+        _run_agent,
         data=dataset_name or f"{LANGSMITH_DS_PREFIX}-guideline-questions",
         evaluators=ALL_EVALUATORS,
         experiment_prefix="clinical-rag-eval",
+        client=_get_client(),
         metadata={"version": "1.0", "type": "llm-as-judge"},
     )
     return results

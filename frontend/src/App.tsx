@@ -111,7 +111,7 @@ interface Conversation {
 
 const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
 
-const SUGGESTED_QUESTIONS = [
+const CLINICIAN_SUGGESTED_QUESTIONS = [
   { icon: Heart, text: 'When should drug treatment be considered for Stage 1 hypertension?', category: 'Guidelines', tone: 'text-rose-500 dark:text-rose-400' },
   { icon: Activity, text: 'What is the BP target for patients with CKD Stage 3?', category: 'Targets', tone: 'text-amber-600 dark:text-amber-400' },
   { icon: FlaskRound, text: 'Calculate MAP for blood pressure 140/90', category: 'Calculator', tone: 'text-violet-500 dark:text-violet-400' },
@@ -119,6 +119,16 @@ const SUGGESTED_QUESTIONS = [
   { icon: Stethoscope, text: 'What follow-up schedule is recommended after starting antihypertensives?', category: 'Follow-up', tone: 'text-cyan-550 dark:text-cyan-400' },
   { icon: BookOpen, text: 'Summarize NICE NG136 guidelines for hypertension management', category: 'NICE', tone: 'text-brand-accent dark:text-brand-accent' },
 ]
+
+const PATIENT_SUGGESTED_QUESTIONS = [
+  { icon: Heart, text: 'What lifestyle changes help lower blood pressure naturally?', category: 'Lifestyle', tone: 'text-rose-500 dark:text-rose-400' },
+  { icon: Activity, text: 'How do I correctly measure blood pressure at home?', category: 'Home Care', tone: 'text-amber-600 dark:text-amber-400' },
+  { icon: Stethoscope, text: 'What questions should I ask my doctor about my high blood pressure?', category: 'Doctor Prep', tone: 'text-cyan-550 dark:text-cyan-400' },
+  { icon: Brain, text: 'What do my systolic and diastolic numbers mean?', category: 'Understanding BP', tone: 'text-emerald-650 dark:text-emerald-400' },
+  { icon: FlaskRound, text: 'What is the DASH diet and how does salt affect BP?', category: 'Diet & Salt', tone: 'text-violet-500 dark:text-violet-400' },
+  { icon: BookOpen, text: 'What are warning signs when I should seek urgent medical care?', category: 'Safety Warning', tone: 'text-rose-600 dark:text-rose-400' },
+]
+
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -1013,7 +1023,9 @@ function EmptyEvidence({ icon: Icon, title, subtitle }: { icon: IconType; title:
 
 // ─── Welcome Screen ──────────────────────────────────────────────────────────
 
-function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) => void }) {
+function WelcomeScreen({ mode, onQuestionClick }: { mode: 'patient' | 'clinician'; onQuestionClick: (text: string) => void }) {
+  const questions = mode === 'patient' ? PATIENT_SUGGESTED_QUESTIONS : CLINICIAN_SUGGESTED_QUESTIONS
+
   return (
     <div className="flex-1 overflow-y-auto scroll-premium">
       <div className="flex flex-col items-center justify-center min-h-full text-center px-3 sm:px-4 pt-4 sm:pt-6 pb-16 sm:pb-20 max-w-3xl mx-auto">
@@ -1025,10 +1037,12 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
         </div>
 
         <h1 className="font-headline-xl text-lg sm:text-2xl font-black text-clinical-black dark:text-white uppercase mb-1 sm:mb-2">
-          How can I help you today?
+          {mode === 'patient' ? 'Hypertension Care & Education' : 'How can I help you today?'}
         </h1>
         <p className="text-gray-500 dark:text-slate-400 text-[12px] sm:text-[13px] leading-relaxed mb-2 sm:mb-3 max-w-lg px-2 sm:px-0">
-          Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-slate-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-slate-300">WHO</span> guidelines — with citations you can verify.
+          {mode === 'patient'
+            ? 'Plain-language health education, home blood pressure monitoring guidance, and preparation for your doctor visits — grounded in trusted guidelines with citations.'
+            : <>Evidence-based hypertension management assistant grounded in <span className="font-semibold text-gray-700 dark:text-slate-300">NICE</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ACC/AHA</span>, <span className="font-semibold text-gray-700 dark:text-slate-300">ESC/ESH</span>, and <span className="font-semibold text-gray-700 dark:text-slate-300">WHO</span> guidelines — with citations you can verify.</>}
         </p>
 
         {/* Trust strip */}
@@ -1039,9 +1053,11 @@ function WelcomeScreen({ onQuestionClick }: { onQuestionClick: (text: string) =>
         </div>
 
         {/* Suggested questions */}
-        <p className="text-[9px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 sm:mb-2.5">Try asking</p>
+        <p className="text-[9px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2 sm:mb-2.5">
+          {mode === 'patient' ? 'Common Patient Questions' : 'Try asking'}
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full px-1 sm:px-0">
-          {SUGGESTED_QUESTIONS.map((q, i) => (
+          {questions.map((q, i) => (
             <button
               key={i}
               onClick={() => onQuestionClick(q.text)}
@@ -2287,7 +2303,7 @@ export default function App() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium bg-[#fafafa] dark:bg-slate-950 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-all duration-1000">
           {messages.length === 0 ? (
-            <WelcomeScreen onQuestionClick={(text) => setInputValue(text)} />
+            <WelcomeScreen mode={mode} onQuestionClick={(text) => setInputValue(text)} />
           ) : (
             <div className="px-2 sm:px-8 py-4 sm:py-8 space-y-5 sm:space-y-8 max-w-3xl mx-auto animate-message transition-all duration-1000">
               {messages.map((msg, idx) => {

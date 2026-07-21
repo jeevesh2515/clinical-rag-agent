@@ -17,13 +17,23 @@ from langsmith import Client, evaluate
 from app.evaluation.langsmith_eval import ALL_EVALUATORS
 from app.evaluation.run import load_dataset
 
+from app.core.config import get_settings
+
 logger = logging.getLogger(__name__)
 
 LANGSMITH_DS_PREFIX = "clinical-rag"
 
 
+def _get_client() -> Client:
+    settings = get_settings()
+    key = settings.langsmith_api_key or settings.langchain_api_key
+    if key:
+        key = key.strip()
+    return Client(api_key=key)
+
+
 def create_or_update_dataset(dataset_path: Path, dataset_name: str) -> str:
-    client = Client()
+    client = _get_client()
     items = load_dataset(dataset_path)
     try:
         ds = client.create_dataset(dataset_name=dataset_name, description=f"Clinical RAG: {dataset_name}")

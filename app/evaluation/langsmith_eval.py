@@ -5,7 +5,7 @@ import logging
 from langsmith.evaluation import EvaluationResult
 from langsmith.schemas import Example, Run
 
-from app.llm.providers import get_llm_for_eval
+from app.llm.providers import ChatMessage, get_llm_for_eval
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def _parse_score(score_str: str, default: float = 0.0) -> float:
 
 def _call_eval_llm(prompt: str) -> str:
     llm = get_llm_for_eval()
-    return llm.chat([{"role": "user", "content": prompt}], temperature=0.0)
+    return llm.chat([ChatMessage(role="user", content=prompt)], temperature=0.0)
 
 
 # ── LLM-as-Judge Evaluators ──────────────────────────────────────────

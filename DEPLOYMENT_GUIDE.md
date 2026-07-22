@@ -119,8 +119,29 @@ OPENROUTER_API_KEY=sk-or-v1-...
 COHERE_API_KEY=...
 JWT_SECRET_KEY=generate-a-secure-random-32-byte-key
 CORS_ORIGINS=https://clinical-workflows.vercel.app,http://localhost:5173
-DATABASE_URL=sqlite:///./clinical_demo.db
+DATABASE_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech:5432/neondb?sslmode=require
 ```
+
+---
+
+## 5. Neon PostgreSQL Permanent Cloud Persistence ($0/month)
+
+To ensure zero data loss across all serverless restarts, devices, and browser logouts:
+
+1. Create a free account at [neon.tech](https://neon.tech).
+2. Create a PostgreSQL project and copy your connection string:
+   `postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech:5432/neondb?sslmode=require`
+3. Add `DATABASE_URL` to Vercel and Render environment variables.
+4. The backend automatically creates `users`, `conversations`, and `messages` tables and enables `pgvector` for permanent vector embeddings.
+
+---
+
+## 6. Multi-Session Hybrid Persistence Architecture
+
+The application implements a dual-layer storage system:
+- **Instant Client Restoration (`cw_storage_${user}_*`)**: Restores conversations, notes stacks, BMI vitals, and profile fields immediately upon login without waiting for network calls.
+- **Zero-Overwrite Protection**: Prevents empty serverless sync responses from wiping local history.
+- **Global Safety Backup Keys (`cw_conv_list_backup`, `cw_profile_backup`, `cw_notes_stack_backup`)**: Preserves all user data across logins, browser restarts, and serverless cold starts.
 
 ---
 

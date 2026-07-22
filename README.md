@@ -243,6 +243,11 @@ npm run dev
 ## Features
 
 - 💻 **Claude-Style Workstation Interface:** Sliding conversation drawer, dark/light theme, suggested queries grid, and real-time evidence drawer.
+- 📋 **Clinical Notes Stack & History:** Dedicated chronological notes stack in user profile with timestamps, single-click "Consult AI with Note" integration, and individual note management.
+- 🧘 **Pressure Relief / Calmness Mode:** One-click toggle transforming workstation UI into a calm, glassmorphic teal layout with 100% smooth curved pill edges on all buttons, toggle segments, and controls.
+- ⚖️ **Clinical BMI Assessor & Profile Vitals:** High-converting landing page teaser + in-app BMI calculator saving height, weight, BMI classification, and SBP impact to persistent user profile.
+- 🔄 **Multi-Session Hybrid Data Persistence:** Instant local restoration with background cloud database sync, protected by zero-overwrite guardrails and global safety backups across logins and cold starts.
+- 📱 **Mobile Safari & Cross-Device Optimization:** Full mobile responsive navigation and Safari `Load failed` network error handling for 100% sign-up and login reliability on mobile devices.
 - 📊 **Tabbed Evidence Panel:** View citations with full provenance, executed tools, safety classification details, and raw knowledge paths.
 - 👥 **Clinician vs. Patient Modes:** Toggle response persona between clinical detail (medical jargon, lab units) and plain-language patient education.
 - 🔐 **JWT Authentication & RBAC:** Role-Based Access Control (`Clinician`, `Patient`, `Admin`) with bcrypt password security.
@@ -252,6 +257,7 @@ npm run dev
 
 ## Security & Safety
 
+- 🛡️ **Pre-LLM Safety Firewall:** Deterministic query classification (`app/safety/classifier.py`) detecting prompt injections, system prompt hijacking, and unsafe medical requests before LLM execution.
 - 🔒 **Zero Code Key Leakage:** All keys managed strictly via `.env` files.
 - 🛑 **Rate Limiting:** Protects auth endpoints (`/register` 3/min, `/login` 10/min) using IP rate-limiting middleware.
 - 🌐 **CORS Configuration:** Strictly restricted origin policies in production environments.
@@ -269,7 +275,10 @@ npm run dev
 | `/api/query/stream` | `POST` | Server-Sent Events (SSE) streaming query endpoint |
 | `/api/auth/register` | `POST` | Create new user account with role selection |
 | `/api/auth/token` | `POST` | OAuth2 password bearer token authentication |
-| `/api/chat/conversations` | `GET`/`POST` | List or create chat conversations |
+| `/api/auth/users/me` | `GET`/`PUT` | Retrieve or update user profile, clinical notes & health vitals |
+| `/api/uploads` | `GET`/`POST` | Upload or list clinical prescriptions, reports, & doctor notes |
+| `/api/chat/conversations` | `GET`/`POST` | List or create persistent chat conversations |
+| `/api/chat/conversations/{id}` | `GET`/`DELETE` | Retrieve or delete conversation message history |
 | `/api/sources` | `GET` | List active guideline source registry & metadata |
 | `/api/eval/results` | `GET` | View latest automated evaluation benchmark scores |
 
@@ -284,6 +293,7 @@ Agent Engine:    LangGraph Stateful DAG Orchestrator
 Knowledge Layer: Open Knowledge Format (OKF) | 27 Concept Files | YAML + Wikilinks
 Retrieval:       Cohere Embeddings v3.0 | BM25 Sparse | Cohere Rerank v3.5
 Quality Harness: Pytest (219 tests) | LangSmith LLM-as-Judge | Ruff | Pyright
+Persistence:     Multi-Session Hybrid Storage | Zero-Overwrite Guardrails | Backup Keys
 Deployment:      Vercel (Frontend & Serverless) | Render | Neon PostgreSQL ($0/month)
 ```
 

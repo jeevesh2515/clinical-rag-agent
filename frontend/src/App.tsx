@@ -1128,14 +1128,19 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
   const [uploadCategory, setUploadCategory] = useState<string>('other')
   const [uploadNote, setUploadNote] = useState<string>('')
 
-  // Load uploads
+  // Reset status messages & load uploads when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      setProfileError('')
+      setProfileSuccess(false)
       setIsFetchingUploads(true)
       api.listUploads()
         .then(data => setUploads(data.uploads))
         .catch(err => console.error(err))
         .finally(() => setIsFetchingUploads(false))
+    } else {
+      setProfileSuccess(false)
+      setProfileError('')
     }
   }, [isOpen])
 
@@ -1153,6 +1158,7 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
       })
       onUpdateUser(updated)
       setProfileSuccess(true)
+      setTimeout(() => setProfileSuccess(false), 3000)
     } catch (err) {
       // Graceful fallback: update local user profile so changes are saved in UI state & stored
       const fallbackUser: UserProfile = {
@@ -1164,6 +1170,7 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
       }
       onUpdateUser(fallbackUser)
       setProfileSuccess(true)
+      setTimeout(() => setProfileSuccess(false), 3000)
     } finally {
       setIsSavingProfile(false)
     }

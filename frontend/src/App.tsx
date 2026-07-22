@@ -1584,157 +1584,7 @@ function ClinicalCatPet() {
   )
 }
 
-// ─── Respiratory Rhythm Shader (Enhanced) ─────────────────────────────────────
-function BreathingShader() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null
-    if (!gl) return
-
-    let animationFrameId: number
-
-    const resizeCanvas = () => {
-      const w = canvas.clientWidth || window.innerWidth
-      const h = canvas.clientHeight || window.innerHeight
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w
-        canvas.height = h
-      }
-    }
-
-    const ro = new ResizeObserver(() => resizeCanvas())
-    ro.observe(canvas)
-    resizeCanvas()
-
-    const vs = `
-      attribute vec2 a_position;
-      varying vec2 v_texCoord;
-      void main() {
-        v_texCoord = a_position * 0.5 + 0.5;
-        gl_Position = vec4(a_position, 0.0, 1.0);
-      }
-    `
-
-    // Ultra-calm ambient shader with serene teal palette and soft drifting specks
-    const fs = `
-      precision highp float;
-      varying vec2 v_texCoord;
-      uniform float u_time;
-      uniform vec2 u_resolution;
-
-      float hash(vec2 p) {
-        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-      }
-
-      void main() {
-          vec2 uv = v_texCoord;
-          float aspect = u_resolution.x / u_resolution.y;
-          vec2 pos = uv;
-          pos.x *= aspect;
-
-          // Slow, ultra-calm ambient wave
-          float wave1 = sin(uv.x * 2.5 + u_time * 0.12) * 0.08;
-          float wave2 = cos(uv.y * 2.0 - u_time * 0.1) * 0.08;
-
-          // Soothing, even medical teal/cyan & deep oceanic slate palette
-          vec3 deep  = vec3(0.04, 0.22, 0.28);   // deep tranquil teal
-          vec3 mid   = vec3(0.08, 0.42, 0.46);   // calm teal
-          vec3 light = vec3(0.65, 0.88, 0.92);   // soft serene cyan
-
-          // Even, gentle gradient flow
-          vec3 bg = mix(deep, mid, uv.y + wave1);
-          bg = mix(bg, light, (uv.x + wave2) * 0.25);
-
-          // Soft ambient central aura (broad and soothing)
-          vec2 center = vec2(0.5 * aspect, 0.5);
-          float dist = distance(pos, center);
-          float aura = exp(-dist * 1.8) * 0.15;
-          bg += vec3(0.2, 0.7, 0.75) * aura;
-
-          // Floating particles — slow, peaceful drifting light specks
-          for (int i = 0; i < 20; i++) {
-            float fi = float(i);
-            float px = hash(vec2(fi, 0.0));
-            float py = hash(vec2(fi, 1.0));
-            float speed = 0.03 + hash(vec2(fi, 2.0)) * 0.05;
-            float size = 0.006 + hash(vec2(fi, 3.0)) * 0.012;
-
-            vec2 p = vec2(px * aspect, fract(py - u_time * speed * 0.1));
-            p.x = px * aspect + sin(u_time * 0.08 + fi) * 0.04;
-
-            float d = distance(pos, p);
-            float particle = smoothstep(size, 0.0, d);
-            float twinkle = 0.6 + 0.4 * sin(u_time * 1.2 + fi * 2.0);
-            bg += vec3(0.4, 0.85, 0.85) * particle * twinkle * 0.2;
-          }
-
-          // Subtle vignette for depth
-          bg *= (1.0 - dist * 0.35);
-
-          gl_FragColor = vec4(bg, 0.82);
-      }
-    `
-
-    const compileShader = (type: number, src: string) => {
-      const shader = gl.createShader(type)
-      if (!shader) return null
-      gl.shaderSource(shader, src)
-      gl.compileShader(shader)
-      return shader
-    }
-
-    const prog = gl.createProgram()
-    if (!prog) return
-
-    const vertexShader = compileShader(gl.VERTEX_SHADER, vs)
-    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fs)
-    if (!vertexShader || !fragmentShader) return
-
-    gl.attachShader(prog, vertexShader)
-    gl.attachShader(prog, fragmentShader)
-    gl.linkProgram(prog)
-    gl.useProgram(prog)
-
-    const buf = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW)
-
-    const pos = gl.getAttribLocation(prog, 'a_position')
-    gl.enableVertexAttribArray(pos)
-    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
-
-    const uTime = gl.getUniformLocation(prog, 'u_time')
-    const uRes = gl.getUniformLocation(prog, 'u_resolution')
-
-    const render = (time: number) => {
-      if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-        resizeCanvas()
-      }
-      gl.viewport(0, 0, canvas.width, canvas.height)
-      if (uTime) gl.uniform1f(uTime, time * 0.001)
-      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-      animationFrameId = requestAnimationFrame(render)
-    }
-
-    animationFrameId = requestAnimationFrame(render)
-
-    return () => {
-      cancelAnimationFrame(animationFrameId)
-      ro.disconnect()
-    }
-  }, [])
-
-  return (
-    <div className="absolute inset-0 w-full h-full -z-10 pointer-events-none transition-opacity duration-1000 opacity-80">
-      <canvas ref={canvasRef} className="block w-full h-full" />
-    </div>
-  )
-}
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
@@ -2240,32 +2090,7 @@ export default function App() {
   return (
       <div className="flex h-screen overflow-hidden relative bg-white dark:bg-slate-950">
       {isReliefMode && (
-        <>
-          <BreathingShader />
-          <ClinicalCatPet />
-          {/* Breath Guide */}
-          <div className="relief-breath-guide">
-            <div className="breath-ring" />
-            <span className="breath-label-in">breathe in</span>
-            <span className="breath-label-out">breathe out</span>
-          </div>
-          {/* CSS Floating Particles */}
-          <div className="relief-particles">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="relief-particle"
-                style={{
-                  left: `${(i * 8.3 + 3) % 100}%`,
-                  width: `${3 + (i % 3) * 2}px`,
-                  height: `${3 + (i % 3) * 2}px`,
-                  animationDuration: `${6 + (i % 4) * 3}s`,
-                  animationDelay: `${i * 0.6}s`,
-                }}
-              />
-            ))}
-          </div>
-        </>
+        <ClinicalCatPet />
       )}
 
       <Sidebar
@@ -2335,11 +2160,11 @@ export default function App() {
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "relief-toggle-btn relative flex items-center gap-2 px-3 py-1.5 border-2 rounded-full transition-all font-bold text-xs uppercase tracking-wider overflow-hidden shrink-0 shadow-sm hover:scale-105 active:scale-95",
+                "relief-toggle-btn relative flex items-center gap-2 px-2 xl:px-3 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden shrink-0",
                 evidencePanelOpen ? "hidden xl:!flex" : "flex",
                 isReliefMode 
                   ? "bg-[#008080] text-white shadow-none border-[#008080]"
-                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow"
+                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none"
               )}
             >
               {isReliefMode && (
@@ -2351,8 +2176,8 @@ export default function App() {
                   </span>
                 </>
               )}
-              <span className="material-symbols-outlined text-[18px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
-              <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Calming Mode' : 'Calmness'}</span>
+              <span className="material-symbols-outlined text-[20px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
+              <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Calmness' : 'Pressure Relief'}</span>
             </button>
 
             {/* Model Picker */}
@@ -2367,7 +2192,7 @@ export default function App() {
                     setSelectedModelId(e.target.value)
                     localStorage.setItem('cw_model_id', e.target.value)
                   }}
-                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-3 py-1.5 pr-7 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[120px] xl:max-w-[160px] cursor-pointer"
+                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-2 py-1.5 pr-6 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[120px] xl:max-w-[160px] cursor-pointer"
                   title="Select AI model"
                 >
                   {models.map(m => (
@@ -2376,7 +2201,7 @@ export default function App() {
                     </option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
                   <ChevronDown size={10} className="text-[#1a1a1a] dark:text-white" />
                 </div>
               </div>
@@ -2386,14 +2211,14 @@ export default function App() {
               <ThemeToggle />
             </div>
 
-            {/* Mode Switcher Container — rounded-full pill styling */}
-            <div className="flex items-center border-2 border-[#1a1a1a] dark:border-white p-0.5 bg-[#f0f0f0] dark:bg-slate-800 rounded-full clinical-shadow shrink-0">
+            {/* Mode Switcher Container */}
+            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow shrink-0">
               {(['patient', 'clinician'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    'px-3 xl:px-4 py-1 text-xs xl:text-sm font-label-md transition-all uppercase font-bold rounded-full',
+                    'px-2 xl:px-4 py-1.5 text-xs xl:text-sm font-label-md transition-all uppercase font-bold',
                     mode === m
                       ? isClinicianMode
                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
@@ -2406,24 +2231,24 @@ export default function App() {
               ))}
             </div>
 
-            {/* Evidence Panel Button — rounded-full styling */}
+            {/* Evidence Panel Button */}
             <button
               onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
               className={cn(
-                'w-9 h-9 flex items-center justify-center border-2 rounded-full transition-all shrink-0 hover:scale-105 active:scale-95',
+                'w-10 h-10 flex items-center justify-center border-2 transition-all shrink-0',
                 evidencePanelOpen
                   ? 'bg-brand-accent text-white border-brand-accent shadow-none'
-                  : 'bg-white dark:bg-slate-900 text-brand-accent dark:text-brand-accent border-brand-accent dark:border-brand-accent shadow-[2px_2px_0px_0px_rgba(255,51,102,1)]'
+                  : 'bg-white dark:bg-slate-900 text-brand-accent dark:text-brand-accent border-brand-accent dark:border-brand-accent shadow-[2px_2px_0px_0px_rgba(255,51,102,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none'
               )}
               title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
             >
-              <BarChart3 size={16} />
+              <BarChart3 size={18} />
             </button>
 
-            {/* Profile Avatar Button — rounded-full styling */}
+            {/* Profile Avatar Button */}
             <button 
               onClick={() => setIsProfileModalOpen(true)}
-              className="w-9 h-9 bg-brand-accent hover:bg-brand-accent/90 text-white flex items-center justify-center font-bold text-sm border-2 border-[#1a1a1a] dark:border-white rounded-full shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:scale-105 active:scale-95 transition-all duration-150 uppercase shrink-0"
+              className="w-10 h-10 bg-brand-accent hover:bg-brand-accent/90 text-white flex items-center justify-center font-bold text-sm border-2 border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all duration-150 uppercase shrink-0"
               title={`${user?.username || 'User'}'s Profile`}
             >
               {user ? getInitials(user.username) : 'U'}

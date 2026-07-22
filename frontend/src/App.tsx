@@ -1616,7 +1616,101 @@ function ClinicalCatPet() {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
-// ─── Main App ─────────────────────────────────────────────────────────────────
+// ─── Local Storage & Hybrid Sync Persistence ────────────────────────────────
+function getStorageKey(u: UserProfile | null, suffix: string): string | null {
+  if (!u) return null
+  const identifier = (u.username || u.email || u.id || 'user').toLowerCase().trim()
+  return `cw_storage_${identifier.replace(/[^a-zA-Z0-9_-]/g, '_')}_${suffix}`
+}
+
+function loadLocalConvs(u: UserProfile | null): ConversationSummary[] {
+  const primaryKey = getStorageKey(u, 'conv_list')
+  if (!primaryKey) return []
+  try {
+    const raw = localStorage.getItem(primaryKey)
+    if (raw) return JSON.parse(raw)
+
+    const usernameClean = (u?.username || u?.email || '').toLowerCase().trim().replace(/[^a-zA-Z0-9_-]/g, '_')
+    if (usernameClean) {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('cw_storage_') && key.endsWith('_conv_list')) {
+          if (key.toLowerCase().includes(usernameClean)) {
+            const legacyRaw = localStorage.getItem(key)
+            if (legacyRaw) {
+              const parsed = JSON.parse(legacyRaw)
+              localStorage.setItem(primaryKey, legacyRaw)
+              return parsed
+            }
+          }
+        }
+      }
+    }
+  } catch {}
+  return []
+}
+
+function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
+  const key = getStorageKey(u, 'conv_list')
+  if (!key) return
+  try {
+    localStorage.setItem(key, JSON.stringify(convs))
+  } catch {}
+}
+
+function loadLocalConvDetail(u: UserProfile | null, convId: string): Conversation | null {
+  const primaryKey = getStorageKey(u, `conv_${convId}`)
+  if (!primaryKey) return null
+  try {
+    const raw = localStorage.getItem(primaryKey)
+    if (raw) return JSON.parse(raw)
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.includes(`_conv_${convId}`)) {
+        const legacyRaw = localStorage.getItem(key)
+        if (legacyRaw) {
+          const parsed = JSON.parse(legacyRaw)
+          localStorage.setItem(primaryKey, legacyRaw)
+          return parsed
+        }
+      }
+    }
+  } catch {}
+  return null
+}
+
+function saveLocalConvDetail(u: UserProfile | null, convId: string, conv: Conversation) {
+  const key = getStorageKey(u, `conv_${convId}`)
+  if (!key) return
+  try {
+    localStorage.setItem(key, JSON.stringify(conv))
+  } catch {}
+}
+
+function saveLocalUserProfile(u: UserProfile | null) {
+  const key = getStorageKey(u, 'profile')
+  if (!key || !u) return
+  try {
+    localStorage.setItem(key, JSON.stringify({
+      full_name: u.full_name,
+      email: u.email,
+      date_of_birth: u.date_of_birth,
+      notes: u.notes,
+      health_vitals: u.health_vitals
+    }))
+  } catch {}
+}
+
+function loadLocalUserProfile(u: UserProfile | null): Partial<UserProfile> | null {
+  const key = getStorageKey(u, 'profile')
+  if (!key) return null
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return null
+}
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -1647,7 +1741,9 @@ export default function App() {
 
   const handleSaveVitals = async (vitals: HealthVitals) => {
     if (user) {
-      setUser(prev => prev ? { ...prev, health_vitals: vitals } : null)
+      const updatedUser = { ...user, health_vitals: vitals }
+      setUser(updatedUser)
+      saveLocalUserProfile(updatedUser)
       try {
         await api.updateProfile({ health_vitals: vitals })
       } catch (err) {
@@ -1716,19 +1812,43 @@ export default function App() {
     }
   }, [])
 
-  // Always retrieve user conversations directly from database API
+  // Multi-session persistence: load conversations & user profile details immediately
   useEffect(() => {
     if (user) {
       setIsFetchingConvs(true)
+
+      // 1. Immediately restore user profile details (full_name, date_of_birth, notes, health_vitals)
+      const cachedProfile = loadLocalUserProfile(user)
+      if (cachedProfile) {
+        setUser(prev => prev ? {
+          ...prev,
+          full_name: prev.full_name || cachedProfile.full_name,
+          date_of_birth: prev.date_of_birth || cachedProfile.date_of_birth,
+          notes: prev.notes || cachedProfile.notes,
+          health_vitals: prev.health_vitals || cachedProfile.health_vitals
+        } : prev)
+      }
+
+      // 2. Immediately restore conversations into left sidebar
+      const localConvs = loadLocalConvs(user)
+      if (localConvs.length > 0) {
+        setConversations(localConvs)
+      }
+
+      // 3. Fetch remote conversations from API & merge with local conversations
       api.listConversations()
         .then(remoteConvs => {
-          const sorted = [...remoteConvs].sort((a, b) =>
+          const map = new Map<string, ConversationSummary>()
+          localConvs.forEach(c => map.set(c.id, c))
+          remoteConvs.forEach(c => map.set(c.id, c))
+          const merged = Array.from(map.values()).sort((a, b) =>
             new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
           )
-          setConversations(sorted)
+          setConversations(merged)
+          saveLocalConvs(user, merged)
         })
         .catch(() => {
-          setConversations([])
+          if (localConvs.length > 0) setConversations(localConvs)
         })
         .finally(() => setIsFetchingConvs(false))
 
@@ -1817,32 +1937,45 @@ export default function App() {
 
   const handleSelectConv = async (id: string) => {
     setCurrentConvId(id)
+    let conv: Conversation | null = null
     try {
-      const conv = await api.getConversation(id)
-      if (conv) {
-        const msgs = (conv.messages || []).map(m => {
-          if (!m.mode) m.mode = m.role === 'assistant' ? 'patient' : undefined
-          return m
-        })
-        setMessages(msgs)
-        const last = conv.messages?.[conv.messages.length - 1]
-        if (last?.role === 'assistant') {
-          setPanelCitations(last.citations || [])
-          setPanelTools(last.tool_trace || [])
-          setPanelSafety(last.safety_flags || null)
-        }
-        setEvidencePanelOpen(true)
-      } else {
-        setMessages([])
+      conv = await api.getConversation(id)
+      if (conv && conv.messages && conv.messages.length > 0) {
+        saveLocalConvDetail(user, id, conv)
       }
-    } catch {
+    } catch {}
+
+    if (!conv || !conv.messages || conv.messages.length === 0) {
+      conv = loadLocalConvDetail(user, id)
+    }
+
+    if (conv) {
+      const msgs = (conv.messages || []).map(m => {
+        if (!m.mode) m.mode = m.role === 'assistant' ? 'patient' : undefined
+        return m
+      })
+      setMessages(msgs)
+      const last = conv.messages?.[conv.messages.length - 1]
+      if (last?.role === 'assistant') {
+        setPanelCitations(last.citations || [])
+        setPanelTools(last.tool_trace || [])
+        setPanelSafety(last.safety_flags || null)
+      }
+      setEvidencePanelOpen(true)
+    } else {
       setMessages([])
     }
   }
 
   const handleDeleteConv = async (id: string) => {
     try { await api.deleteConversation(id) } catch {}
-    setConversations(prev => prev.filter(c => c.id !== id))
+    setConversations(prev => {
+      const updated = prev.filter(c => c.id !== id)
+      saveLocalConvs(user, updated)
+      return updated
+    })
+    const key = getStorageKey(user, `conv_${id}`)
+    if (key) localStorage.removeItem(key)
     if (currentConvId === id) { setCurrentConvId(null); setMessages([]) }
   }
 
@@ -1876,20 +2009,24 @@ export default function App() {
       const finalMsgs = [...updatedMsgs, assistantMsg]
       setMessages(finalMsgs)
 
-      // Fetch fresh updated conversations from database API
-      const remoteConvs = await api.listConversations().catch(() => [])
-      if (remoteConvs.length > 0) {
-        setConversations(remoteConvs)
-      } else {
-        setConversations(prev => {
-          const map = new Map<string, ConversationSummary>()
-          prev.forEach(c => map.set(c.id, c))
-          map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
-          return Array.from(map.values()).sort((a, b) =>
-            new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
-          )
-        })
-      }
+      saveLocalConvDetail(user, convId, {
+        id: convId,
+        title: convTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: finalMsgs,
+      })
+
+      setConversations(prev => {
+        const map = new Map<string, ConversationSummary>()
+        prev.forEach(c => map.set(c.id, c))
+        map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
+        const newList = Array.from(map.values()).sort((a, b) =>
+          new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
+        )
+        saveLocalConvs(user, newList)
+        return newList
+      })
 
       setPanelCitations(assistantMsg.citations || [])
       setPanelTools(assistantMsg.tool_trace || [])
@@ -1927,20 +2064,24 @@ export default function App() {
       const finalMsgs = [...messages, assistantMsg]
       setMessages(finalMsgs)
 
-      // Fetch fresh updated conversations from database API
-      const remoteConvs = await api.listConversations().catch(() => [])
-      if (remoteConvs.length > 0) {
-        setConversations(remoteConvs)
-      } else {
-        setConversations(prev => {
-          const map = new Map<string, ConversationSummary>()
-          prev.forEach(c => map.set(c.id, c))
-          map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
-          return Array.from(map.values()).sort((a, b) =>
-            new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
-          )
-        })
-      }
+      saveLocalConvDetail(user, convId, {
+        id: convId,
+        title: convTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: finalMsgs,
+      })
+
+      setConversations(prev => {
+        const map = new Map<string, ConversationSummary>()
+        prev.forEach(c => map.set(c.id, c))
+        map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
+        const newList = Array.from(map.values()).sort((a, b) =>
+          new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
+        )
+        saveLocalConvs(user, newList)
+        return newList
+      })
 
       setPanelCitations(assistantMsg.citations || [])
       setPanelTools(assistantMsg.tool_trace || [])

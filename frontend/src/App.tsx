@@ -113,7 +113,7 @@ interface Conversation {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
+const API_BASE = (import.meta.env.VITE_API_URL as string) || (import.meta.env.VITE_API_BASE_URL as string) || ''
 
 const CLINICIAN_SUGGESTED_QUESTIONS = [
   { icon: Heart, text: 'When should drug treatment be considered for Stage 1 hypertension?', category: 'Guidelines', tone: 'text-rose-500 dark:text-rose-400' },

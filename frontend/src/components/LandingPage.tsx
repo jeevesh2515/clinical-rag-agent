@@ -306,7 +306,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                   <span className="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1">terminal</span>
                 </button>
                 <button 
-                  onClick={() => window.open('https://github.com', '_blank')}
+                  onClick={() => window.open('https://github.com/jeevesh2515/clinical-rag-agent', '_blank')}
                   className="px-8 py-4 bg-white dark:bg-slate-900 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
                 >
                   View Whitepaper
@@ -553,7 +553,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             <h4 className="font-label-md text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Connect</h4>
             <div className="flex gap-4">
               <button 
-                onClick={() => window.open('https://github.com', '_blank')}
+                onClick={() => window.open('https://github.com/jeevesh2515/clinical-rag-agent', '_blank')}
                 className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
                 <span className="material-symbols-outlined text-clinical-black dark:text-white">link</span>

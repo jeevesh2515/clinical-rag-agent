@@ -369,15 +369,37 @@
 .relief-mode .rounded-none,
 .relief-mode .rounded-sm,
 .relief-mode .rounded-lg,
-.relief-mode .rounded-xl {
-  border-radius: 32px !important;
+.relief-mode .rounded-xl,
+.relief-mode .rounded-2xl,
+.relief-mode button,
+.relief-mode input,
+.relief-mode textarea,
+.relief-mode select,
+.relief-mode a,
+.relief-mode .relief-toggle-btn {
+  border-radius: 9999px !important;
 }
 
-/* Relief toggle button — keep teal border in both modes */
-.relief-mode .relief-toggle-btn {
-  border-radius: 32px !important;
-  border-width: 1px !important;
-  border-color: #008080 !important;
+.relief-mode .border,
+.relief-mode .border-2,
+.relief-mode .border-4,
+.relief-mode .brutalist-border,
+.relief-mode .brutal-border,
+.relief-mode .border-r,
+.relief-mode .border-l,
+.relief-mode .border-t,
+.relief-mode .border-b,
+.relief-mode .border-r-2,
+.relief-mode .border-l-2,
+.relief-mode .border-t-2,
+.relief-mode .border-b-2 {
+  border-radius: 28px !important;
+}
+
+.relief-mode div > button,
+.relief-mode div > input,
+.relief-mode form > button {
+  border-radius: 9999px !important;
 }
 .dark.relief-mode .relief-toggle-btn {
   border-color: #008080 !important;

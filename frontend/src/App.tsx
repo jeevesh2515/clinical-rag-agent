@@ -1101,6 +1101,42 @@ function WelcomeScreen({ mode, onQuestionClick }: { mode: 'patient' | 'clinician
   )
 }
 
+interface NoteItem {
+  id: string
+  text: string
+  created_at: string
+}
+
+function loadLocalNotesStack(u: UserProfile | null): NoteItem[] {
+  let list: NoteItem[] = []
+  const key = getStorageKey(u, 'notes_stack')
+  if (key) {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw) list = JSON.parse(raw)
+    } catch {}
+  }
+  if (!list || list.length === 0) {
+    try {
+      const backup = localStorage.getItem('cw_notes_stack_backup')
+      if (backup) list = JSON.parse(backup)
+    } catch {}
+  }
+  return list
+}
+
+function saveLocalNotesStack(u: UserProfile | null, stack: NoteItem[]) {
+  const key = getStorageKey(u, 'notes_stack')
+  if (key) {
+    try {
+      localStorage.setItem(key, JSON.stringify(stack))
+    } catch {}
+  }
+  try {
+    localStorage.setItem('cw_notes_stack_backup', JSON.stringify(stack))
+  } catch {}
+}
+
 // ─── Profile Modal ──────────────────────────────────────────────────────────
 
 function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onOpenBmiModal }: {
@@ -1119,6 +1155,11 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
   const [profileError, setProfileError] = useState('')
   const [profileSuccess, setProfileSuccess] = useState(false)
 
+  // Clinical Notes Stack state
+  const [notesStack, setNotesStack] = useState<NoteItem[]>(() => loadLocalNotesStack(user))
+  const [activeRightTab, setActiveRightTab] = useState<'notes' | 'documents'>('notes')
+  const [stackNoteInput, setStackNoteInput] = useState('')
+
   // Uploads state
   const [uploads, setUploads] = useState<any[]>([])
   const [isFetchingUploads, setIsFetchingUploads] = useState(false)
@@ -1128,11 +1169,13 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
   const [uploadCategory, setUploadCategory] = useState<string>('other')
   const [uploadNote, setUploadNote] = useState<string>('')
 
-  // Reset status messages & load uploads when modal opens/closes
+  // Sync notes stack & uploads when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setProfileError('')
       setProfileSuccess(false)
+      const loadedStack = loadLocalNotesStack(user)
+      if (loadedStack.length > 0) setNotesStack(loadedStack)
       setIsFetchingUploads(true)
       api.listUploads()
         .then(data => setUploads(data.uploads))
@@ -1142,13 +1185,36 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
       setProfileSuccess(false)
       setProfileError('')
     }
-  }, [isOpen])
+  }, [isOpen, user?.username, user?.id])
+
+  const handlePushNote = (textToPush: string) => {
+    if (!textToPush.trim()) return
+    const newNote: NoteItem = {
+      id: `note-${Date.now()}`,
+      text: textToPush.trim(),
+      created_at: new Date().toISOString()
+    }
+    const updated = [newNote, ...notesStack.filter(n => n.text !== textToPush.trim())]
+    setNotesStack(updated)
+    saveLocalNotesStack(user, updated)
+  }
+
+  const handleDeleteNote = (id: string) => {
+    const updated = notesStack.filter(n => n.id !== id)
+    setNotesStack(updated)
+    saveLocalNotesStack(user, updated)
+  }
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setProfileError('')
     setProfileSuccess(false)
     setIsSavingProfile(true)
+
+    if (notes.trim()) {
+      handlePushNote(notes.trim())
+    }
+
     try {
       const updated = await api.updateProfile({
         full_name: fullName,
@@ -1192,7 +1258,6 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
       setUploads(prev => [newUpload, ...prev])
       setSelectedFile(null)
       setUploadNote('')
-      // Clear file input
       const fileInput = document.getElementById('profile-file-input') as HTMLInputElement
       if (fileInput) fileInput.value = ''
     } catch (err) {
@@ -1284,14 +1349,28 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider font-label-md mb-1">
-                  Notes & Description (Clinical Details)
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider font-label-md">
+                    Notes & Description (Clinical Details)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (notes.trim()) {
+                        handlePushNote(notes)
+                        setActiveRightTab('notes')
+                      }
+                    }}
+                    className="text-[10px] font-bold uppercase bg-brand-accent text-white px-2 py-0.5 border border-clinical-black hover:bg-brand-accent/90"
+                  >
+                    + Push to Stack
+                  </button>
+                </div>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   placeholder="Add details regarding symptoms, medication history, or notes for simulated consultation."
-                  rows={4}
+                  rows={3}
                   className="w-full px-3 py-2 bg-white border-2 border-clinical-black text-xs font-bold font-code-sm focus:outline-none focus:border-brand-accent rounded-none"
                 />
               </div>
@@ -1368,121 +1447,219 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
             </form>
           </div>
 
-          {/* Column 2: Document Ingestion */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider font-headline-lg border-b-2 border-clinical-black pb-1">
-              Personal Documents (RAG)
-            </h3>
-            
-            {/* Upload form */}
-            <form onSubmit={handleUploadSubmit} className="p-4 border-2 border-clinical-black bg-stone-50 space-y-3">
-              <span className="text-[10px] font-code-sm font-bold uppercase tracking-wider block text-on-surface-variant">
-                Upload prescription / doctor notes / report (PDF or Image)
-              </span>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Category</label>
-                  <select
-                    value={uploadCategory}
-                    onChange={e => setUploadCategory(e.target.value)}
-                    className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
-                  >
-                    <option value="prescription">Prescription</option>
-                    <option value="doctor_note">Doctor's Note</option>
-                    <option value="lab_report">Lab Report</option>
-                    <option value="image">Image</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Select File</label>
-                  <input
-                    id="profile-file-input"
-                    type="file"
-                    onChange={handleFileChange}
-                    accept="application/pdf,image/*"
-                    required
-                    className="w-full text-xs text-clinical-black border border-clinical-black/30 p-1 file:mr-2 file:py-1 file:px-2 file:border-2 file:border-clinical-black file:text-[10px] file:font-bold file:bg-white file:uppercase"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">User Note</label>
-                <input
-                  type="text"
-                  value={uploadNote}
-                  onChange={e => setUploadNote(e.target.value)}
-                  placeholder="Optional brief description of the document"
-                  className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
-                />
-              </div>
-
-              {uploadError && (
-                <div className="text-[10px] text-rose-600 font-bold uppercase">{uploadError}</div>
-              )}
-
+          {/* Column 2: Clinical Notes Stack & Document RAG Tabs */}
+          <div className="space-y-4">
+            {/* Segmented Tab Switch */}
+            <div className="flex border-2 border-clinical-black bg-stone-100 p-0.5">
               <button
-                type="submit"
-                disabled={isUploading || !selectedFile}
-                className="w-full py-2 bg-clinical-black text-white font-bold border-2 border-clinical-black neo-brutal-btn text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+                type="button"
+                onClick={() => setActiveRightTab('notes')}
+                className={`flex-1 py-1.5 px-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeRightTab === 'notes'
+                    ? 'bg-brand-accent text-white neo-brutal-shadow-sm'
+                    : 'text-clinical-black hover:bg-stone-200'
+                }`}
               >
-                {isUploading ? <Loader2 size={12} className="animate-spin" /> : 'Ingest Document'}
+                Notes Stack ({notesStack.length})
               </button>
-            </form>
-
-            {/* List uploads */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase text-clinical-black tracking-wide">
-                Ingested Files ({uploads.length})
-              </h4>
-              
-              {isFetchingUploads ? (
-                <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin" /></div>
-              ) : uploads.length === 0 ? (
-                <p className="text-xs text-on-surface-variant italic">No documents uploaded yet.</p>
-              ) : (
-                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                  {uploads.map((up: any) => (
-                    <div key={up.id} className="p-3 bg-white border-2 border-clinical-black flex items-start justify-between gap-3 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                          <span className="px-1.5 py-0.5 bg-brand-accent/15 text-brand-accent border border-brand-accent/30 font-code-sm text-[9px] font-bold uppercase">
-                            {up.category}
-                          </span>
-                          <span className="text-[9px] font-code-sm text-on-surface-variant font-semibold">
-                            {up.kind} · {(up.size_bytes / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-                        <p className="text-xs font-bold truncate text-clinical-black" title={up.display_title || up.original_filename}>
-                          {up.display_title || up.original_filename}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => onChatAboutDoc(up.display_title || up.original_filename)}
-                          className="p-1 border border-clinical-black hover:bg-brand-accent hover:text-white transition-colors"
-                          title="Ask follow-up regarding this document"
-                        >
-                          <MessageSquare size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteUpload(up.id)}
-                          className="p-1 border border-clinical-black hover:bg-rose-500 hover:text-white transition-colors"
-                          title="Delete document"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => setActiveRightTab('documents')}
+                className={`flex-1 py-1.5 px-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeRightTab === 'documents'
+                    ? 'bg-brand-accent text-white neo-brutal-shadow-sm'
+                    : 'text-clinical-black hover:bg-stone-200'
+                }`}
+              >
+                Documents ({uploads.length})
+              </button>
             </div>
+
+            {activeRightTab === 'notes' ? (
+              <div className="space-y-4">
+                <div className="p-3 border-2 border-clinical-black bg-stone-50 space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-clinical-black">
+                    Add Short Clinical Note to Stack
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={stackNoteInput}
+                      onChange={e => setStackNoteInput(e.target.value)}
+                      placeholder="e.g. Morning BP 135/85, mild fatigue..."
+                      className="flex-1 px-2.5 py-1.5 bg-white border-2 border-clinical-black text-xs font-bold focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (stackNoteInput.trim()) {
+                          handlePushNote(stackNoteInput)
+                          setStackNoteInput('')
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-brand-accent text-white font-bold text-xs uppercase border-2 border-clinical-black hover:bg-brand-accent/90 shrink-0"
+                    >
+                      + Push
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase text-clinical-black tracking-wide flex items-center justify-between border-b border-clinical-black pb-1">
+                    <span>Clinical Notes History ({notesStack.length})</span>
+                    <span className="text-[10px] text-gray-500 font-normal">Most recent first</span>
+                  </h4>
+
+                  {notesStack.length === 0 ? (
+                    <div className="p-4 border-2 border-dashed border-clinical-black/30 text-center text-xs text-gray-500 italic">
+                      No short notes stored yet. Type a note and click "+ Push to Stack" or "Save Changes".
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                      {notesStack.map(item => (
+                        <div key={item.id} className="p-3 bg-white border-2 border-clinical-black shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-xs font-bold text-clinical-black whitespace-pre-wrap">{item.text}</p>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteNote(item.id)}
+                              className="p-1 text-gray-400 hover:text-rose-600 transition-colors shrink-0"
+                              title="Delete note from stack"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-gray-500 font-bold border-t border-clinical-black/10 pt-1">
+                            <span>{new Date(item.created_at).toLocaleString()}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onChatAboutDoc(`Clinical Note: "${item.text}"`)
+                              }}
+                              className="text-brand-accent font-bold uppercase hover:underline flex items-center gap-1"
+                            >
+                              <MessageSquare size={11} /> Consult AI
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Upload form */}
+                <form onSubmit={handleUploadSubmit} className="p-4 border-2 border-clinical-black bg-stone-50 space-y-3">
+                  <span className="text-[10px] font-code-sm font-bold uppercase tracking-wider block text-on-surface-variant">
+                    Upload prescription / doctor notes / report (PDF or Image)
+                  </span>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Category</label>
+                      <select
+                        value={uploadCategory}
+                        onChange={e => setUploadCategory(e.target.value)}
+                        className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
+                      >
+                        <option value="prescription">Prescription</option>
+                        <option value="doctor_note">Doctor's Note</option>
+                        <option value="lab_report">Lab Report</option>
+                        <option value="image">Image</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">Select File</label>
+                      <input
+                        id="profile-file-input"
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="application/pdf,image/*"
+                        required
+                        className="w-full text-xs text-clinical-black border border-clinical-black/30 p-1 file:mr-2 file:py-1 file:px-2 file:border-2 file:border-clinical-black file:text-[10px] file:font-bold file:bg-white file:uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-clinical-black mb-1">User Note</label>
+                    <input
+                      type="text"
+                      value={uploadNote}
+                      onChange={e => setUploadNote(e.target.value)}
+                      placeholder="Optional brief description of the document"
+                      className="w-full px-2 py-1.5 bg-white border-2 border-clinical-black text-[11px] font-bold focus:outline-none"
+                    />
+                  </div>
+
+                  {uploadError && (
+                    <div className="text-[10px] text-rose-600 font-bold uppercase">{uploadError}</div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isUploading || !selectedFile}
+                    className="w-full py-2 bg-clinical-black text-white font-bold border-2 border-clinical-black neo-brutal-btn text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isUploading ? <Loader2 size={12} className="animate-spin" /> : 'Ingest Document'}
+                  </button>
+                </form>
+
+                {/* List uploads */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase text-clinical-black tracking-wide">
+                    Ingested Files ({uploads.length})
+                  </h4>
+                  
+                  {isFetchingUploads ? (
+                    <div className="flex justify-center py-4"><Loader2 size={20} className="animate-spin" /></div>
+                  ) : uploads.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant italic">No documents uploaded yet.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                      {uploads.map((up: any) => (
+                        <div key={up.id} className="p-3 bg-white border-2 border-clinical-black flex items-start justify-between gap-3 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                              <span className="px-1.5 py-0.5 bg-brand-accent/15 text-brand-accent border border-brand-accent/30 font-code-sm text-[9px] font-bold uppercase">
+                                {up.category}
+                              </span>
+                              <span className="text-[9px] font-code-sm text-on-surface-variant font-semibold">
+                                {up.kind} · {(up.size_bytes / 1024).toFixed(1)} KB
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold truncate text-clinical-black" title={up.display_title || up.original_filename}>
+                              {up.display_title || up.original_filename}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => onChatAboutDoc(up.display_title || up.original_filename)}
+                              className="p-1 border border-clinical-black hover:bg-brand-accent hover:text-white transition-colors"
+                              title="Ask follow-up regarding this document"
+                            >
+                              <MessageSquare size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUpload(up.id)}
+                              className="p-1 border border-clinical-black hover:bg-rose-500 hover:text-white transition-colors"
+                              title="Delete document"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1607,22 +1607,40 @@ function ClinicalCatPet() {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
-// ─── Local Storage User Conversation Persistence ─────────────────────────────────
-function getStorageKey(u: UserProfile | null, suffix: string) {
+// ─── Local Storage User Data & Conversation Persistence ─────────────────────
+function getStorageKey(u: UserProfile | null, suffix: string): string | null {
   if (!u) return null
-  const identifier = u.id || u.email || 'user'
+  // Normalize key using username or email (which are stable across sessions and logins)
+  const identifier = (u.username || u.email || u.id || 'user').toLowerCase().trim()
   return `cw_storage_${identifier.replace(/[^a-zA-Z0-9_-]/g, '_')}_${suffix}`
 }
 
 function loadLocalConvs(u: UserProfile | null): ConversationSummary[] {
-  const key = getStorageKey(u, 'conv_list')
-  if (!key) return []
+  const primaryKey = getStorageKey(u, 'conv_list')
+  if (!primaryKey) return []
   try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
+    const raw = localStorage.getItem(primaryKey)
+    if (raw) return JSON.parse(raw)
+
+    // Fallback & migration: Search for any existing legacy keys for this user
+    const usernameClean = (u?.username || u?.email || '').toLowerCase().trim().replace(/[^a-zA-Z0-9_-]/g, '_')
+    if (usernameClean) {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith('cw_storage_') && key.endsWith('_conv_list')) {
+          if (key.toLowerCase().includes(usernameClean)) {
+            const legacyRaw = localStorage.getItem(key)
+            if (legacyRaw) {
+              const parsed = JSON.parse(legacyRaw)
+              localStorage.setItem(primaryKey, legacyRaw) // Migrate to normalized primary key
+              return parsed
+            }
+          }
+        }
+      }
+    }
+  } catch {}
+  return []
 }
 
 function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
@@ -1634,14 +1652,26 @@ function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
 }
 
 function loadLocalConvDetail(u: UserProfile | null, convId: string): Conversation | null {
-  const key = getStorageKey(u, `conv_${convId}`)
-  if (!key) return null
+  const primaryKey = getStorageKey(u, `conv_${convId}`)
+  if (!primaryKey) return null
   try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+    const raw = localStorage.getItem(primaryKey)
+    if (raw) return JSON.parse(raw)
+
+    // Fallback: search for any key matching _conv_${convId}
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.includes(`_conv_${convId}`)) {
+        const legacyRaw = localStorage.getItem(key)
+        if (legacyRaw) {
+          const parsed = JSON.parse(legacyRaw)
+          localStorage.setItem(primaryKey, legacyRaw)
+          return parsed
+        }
+      }
+    }
+  } catch {}
+  return null
 }
 
 function saveLocalConvDetail(u: UserProfile | null, convId: string, conv: Conversation) {

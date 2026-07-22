@@ -88,4 +88,4 @@ if __name__ == "__main__":
     ids = upload_all_datasets(datasets_dir)
     logger.info("Uploaded %d datasets. IDs: %s", len(ids), ids)
     results = run_langsmith_evaluation()
-    print(json.dumps(results._results, indent=2) if hasattr(results, "_results") else results)
+    print("LangSmith evaluation complete:", results)

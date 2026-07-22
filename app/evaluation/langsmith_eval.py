@@ -58,8 +58,12 @@ def _parse_score(score_str: str, default: float = 0.0) -> float:
 
 
 def _call_eval_llm(prompt: str) -> str:
-    llm = get_llm_for_eval()
-    return llm.chat([ChatMessage(role="user", content=prompt)], temperature=0.0)
+    try:
+        llm = get_llm_for_eval()
+        return llm.chat([ChatMessage(role="user", content=prompt)], temperature=0.0)
+    except Exception as exc:
+        logger.warning("LLM eval call failed, returning fallback score 0.5: %s", exc)
+        return "0.5"
 
 
 # ── LLM-as-Judge Evaluators ──────────────────────────────────────────

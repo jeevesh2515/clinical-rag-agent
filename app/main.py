@@ -60,19 +60,25 @@ app.add_middleware(
 
 
 class MaxBodySizeMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, max_size: int = 262144):
+    def __init__(self, app, default_max_size: int = 5242880, upload_max_size: int = 10485760):
         super().__init__(app)
-        self.max_size = max_size
+        self.default_max_size = default_max_size
+        self.upload_max_size = upload_max_size
 
     async def dispatch(self, request: Request, call_next):
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > self.max_size:
+        max_size = (
+            self.upload_max_size
+            if request.url.path.startswith("/api/uploads")
+            else self.default_max_size
+        )
+        if content_length and int(content_length) > max_size:
             return JSONResponse(
                 status_code=413,
                 content={
                     "error": {
                         "code": "payload_too_large",
-                        "message": f"Request body exceeds the maximum allowed size of {self.max_size} bytes.",
+                        "message": f"Request body exceeds the maximum allowed size of {max_size} bytes.",
                         "details": [],
                         "request_id": getattr(request.state, "request_id", str(uuid4())),
                     }
@@ -81,7 +87,17 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app.add_middleware(MaxBodySizeMiddleware, max_size=262144)
+app.add_middleware(MaxBodySizeMiddleware)
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 
 @app.middleware("http")
@@ -160,6 +176,28 @@ async def validation_exception_handler(
     )
     return JSONResponse(
         status_code=422,
+        content=error_response.model_dump(),
+        headers={"X-Request-ID": request_id},
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", str(uuid4()))
+    import logging as _log_mod
+    _log_mod.getLogger("app.unhandled").error("unhandled_error err=%s request_id=%s", exc, request_id, exc_info=True)
+    error_response = ApiErrorResponse(
+        error=ApiError(
+            code="internal_error",
+            message="An internal server error occurred.",
+            details=[],
+            request_id=request_id,
+        )
+    )
+    return JSONResponse(
+        status_code=500,
         content=error_response.model_dump(),
         headers={"X-Request-ID": request_id},
     )

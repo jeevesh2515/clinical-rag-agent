@@ -385,6 +385,6 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 **Built with ❤️ for safer medical AI architectures**
 
-[Live Demo](https://clinical-workflows.vercel.app) • [GitHub Repository](https://github.com/jeevesh2515/clinical-rag-agent)
+[Live Demo](https://clinical-workflows.vercel.app) • [GitHub Repository](https://github.com/jeevesh2515/clinical-rag-agent) • [Read Full Article on Medium](https://medium.com/@jeevesh2515/building-clinical-workflows-how-i-engineered-a-zero-hallucination-production-grade-medical-rag-846843f1e972)
 
 </div>

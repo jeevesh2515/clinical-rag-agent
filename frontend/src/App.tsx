@@ -2223,18 +2223,6 @@ export default function App() {
               <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Calmness' : 'Pressure Relief'}</span>
             </button>
 
-            {/* BMI Calculator Button */}
-            <button 
-              onClick={() => setIsBmiModalOpen(true)}
-              className={cn(
-                "relative flex items-center gap-1.5 px-2.5 py-1.5 border-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white transition-all font-bold text-xs uppercase tracking-wider overflow-hidden shrink-0 clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none",
-                evidencePanelOpen ? "hidden xl:!flex" : "flex"
-              )}
-              title="Open BMI Calculator"
-            >
-              <Scale size={16} className="text-brand-accent shrink-0" />
-              <span className="hidden xl:inline font-label-md">BMI Calc</span>
-            </button>
 
             {/* Model Picker */}
             {models.length > 0 && (

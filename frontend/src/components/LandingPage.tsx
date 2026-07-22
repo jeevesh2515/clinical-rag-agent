@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Stethoscope } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
-import BMICalculator from './BMICalculator'
 
 interface LandingPageProps {
   onLogin: () => void
@@ -433,20 +432,60 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
           </div>
         </section>
 
-        {/* Interactive Clinical BMI Calculator Section */}
-        <section id="bmi-calculator" className="py-16 bg-white dark:bg-slate-950 border-t-2 border-clinical-black dark:border-slate-800 px-gutter">
+        {/* Clinical BMI Teaser Section */}
+        <section id="bmi-teaser" className="py-16 bg-white dark:bg-slate-950 border-t-2 border-clinical-black dark:border-slate-800 px-gutter">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="font-headline-xl text-3xl sm:text-4xl font-black uppercase text-clinical-black dark:text-white tracking-tight">
-                Interactive Clinical BMI Calculator
-              </h2>
-              <p className="font-body-md text-sm sm:text-base text-on-surface-variant dark:text-slate-400 mt-2">
-                Calculate your Body Mass Index, WHO Category, and hypertension cardiovascular risk profile instantly.
-              </p>
-              <div className="w-24 h-2 bg-brand-accent mx-auto mt-4"></div>
-            </div>
+            <div className="bg-[#fafafa] dark:bg-slate-900 border-4 border-clinical-black dark:border-white p-6 sm:p-10 clinical-shadow relative overflow-hidden">
+              <div className="tipped-label dark:border-white dark:text-white" style={{ right: '24px' }}>CLINICAL_TOOL</div>
+              
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="space-y-4 max-w-xl text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 bg-brand-accent inline-block"></span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-brand-accent font-code-sm">Cardiovascular Health Feature</span>
+                  </div>
 
-            <BMICalculator user={currentUser} />
+                  <h3 className="font-headline-xl text-2xl sm:text-3xl font-black uppercase text-clinical-black dark:text-white tracking-tight leading-tight">
+                    Clinical BMI & Hypertension Risk Assessor
+                  </h3>
+
+                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-sm sm:text-base leading-relaxed">
+                    Track your Body Mass Index against official WHO categories and discover how weight management directly impacts your systolic blood pressure & ACC/AHA hypertension risk. Save your health vitals securely to your private profile.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <span className="px-2.5 py-1 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-xs font-bold uppercase font-code-sm">
+                      WHO BMI Categories
+                    </span>
+                    <span className="px-2.5 py-1 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-xs font-bold uppercase font-code-sm">
+                      SBP Impact (-1 mmHg/kg)
+                    </span>
+                    <span className="px-2.5 py-1 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-xs font-bold uppercase font-code-sm">
+                      Private Vitals Sync
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] text-center space-y-4">
+                  <div className="w-14 h-14 bg-brand-accent text-white flex items-center justify-center border-2 border-clinical-black dark:border-white font-bold shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
+                    <span className="material-symbols-outlined text-3xl">scale</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 block font-code-sm">Free Health Tool</span>
+                    <span className="text-base font-black uppercase text-clinical-black dark:text-white font-headline-md">Measure Your BMI</span>
+                  </div>
+
+                  <button
+                    onClick={currentUser ? onGoToDashboard : onRegister}
+                    className="w-full px-6 py-3 bg-brand-accent text-white font-headline-md text-xs font-bold uppercase tracking-wider border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>{currentUser ? 'Open Calculator in App' : 'Sign Up to Calculate BMI'}</span>
+                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

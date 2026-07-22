@@ -2127,7 +2127,24 @@ export default function App() {
 
   const handleChatAboutDoc = (filename: string) => {
     setIsProfileModalOpen(false)
-    const prompt = `Let's review the uploaded document: "${filename}". Can you summarize its key clinical details and check for any recommendations or care gaps?`
+    let prompt = ''
+    if (filename.startsWith('Clinical Note:')) {
+      const cleanNote = filename.replace(/^Clinical Note:\s*"?/, '').replace(/"?$/, '').trim()
+      const lower = cleanNote.toLowerCase()
+
+      if (lower.includes('fatigue') || lower.includes('tired') || lower.includes('symptom')) {
+        prompt = `What do clinical guidelines (NICE NG136 & ACC/AHA) recommend when a patient with hypertension reports "${cleanNote}"? What potential medication side effects, lab checks, or care gaps should be evaluated?`
+      } else if (lower.includes('newly') || lower.includes('initial') || lower.includes('diagnos')) {
+        prompt = `What are the recommended clinical evaluation steps, target blood pressure goals, and baseline lifestyle guidance for a patient with "${cleanNote}" hypertension?`
+      } else if (lower.includes('bp') || lower.includes('pressure') || /\d{2,3}\/\d{2,3}/.test(lower)) {
+        prompt = `What blood pressure stage and recommended treatment protocol apply to a patient with readings of "${cleanNote}" according to ACC/AHA guidelines?`
+      } else {
+        prompt = `Regarding my clinical note: "${cleanNote}" — What do evidence-based clinical guidelines recommend for assessment, care gaps, and follow-up management?`
+      }
+    } else {
+      prompt = `Regarding my uploaded document "${filename}": Can you summarize its key clinical findings, blood pressure management guidance, and check for any care gaps?`
+    }
+
     setInputValue(prompt)
     if (textareaRef.current) {
       textareaRef.current.focus()

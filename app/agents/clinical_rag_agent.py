@@ -758,16 +758,41 @@ class ClinicalRAGAgent:
         if not state.get("reranked") and not notes:
             return "I could not find enough evidence in the indexed sources."
 
-        preface = (
-            "Here is a plain-language summary of the indexed evidence."
-            if state.get("mode") == "patient"
-            else "Here is a care-team workflow summary from indexed evidence."
-        )
+        is_patient = state.get("mode") == "patient"
+        q_lower = (state.get("question") or "").lower()
+
+        # Dynamic topic header tailored to the user's specific query
+        topic_intro = ""
+        if is_patient:
+            if "fatigue" in q_lower or "tired" in q_lower:
+                topic_intro = (
+                    "### 🩺 Fatigue & Symptom Evaluation\n"
+                    "Fatigue or tiredness is an important symptom to discuss with your care provider. "
+                    "It can stem from blood pressure fluctuations, medication side-effects (such as beta-blockers or diuretics), "
+                    "or sleep disturbances. Here is evidence-based guidance from clinical guidelines:"
+                )
+            elif "newly" in q_lower or "initial" in q_lower or "diagnos" in q_lower:
+                topic_intro = (
+                    "### 🩺 Newly Detected Hypertension Overview\n"
+                    "Identifying newly elevated blood pressure is an important first step. "
+                    "Clinical guidelines (ACC/AHA 2017 & NICE NG136) recommend verifying readings with home monitoring, "
+                    "adopting heart-healthy lifestyle changes, and scheduling a follow-up evaluation:"
+                )
+            elif "bp" in q_lower or "reading" in q_lower or "target" in q_lower or "/" in q_lower:
+                topic_intro = (
+                    "### 🩺 Understanding Your Blood Pressure Category & Goals\n"
+                    "Blood pressure is recorded as Systolic (top number) over Diastolic (bottom number). "
+                    "Here are the evidence-based category thresholds and target goals:"
+                )
+            else:
+                topic_intro = (
+                    "### 🩺 Evidence-Based Educational Summary\n"
+                    "Here is a plain-language summary based on clinical guidelines (NICE NG136 and ACC/AHA 2017):"
+                )
+        else:
+            topic_intro = "### 🩺 Care-Team Clinical Workflow Summary\nHere is an evidence-based summary from indexed clinical guidelines:"
 
         # Build a clean, structured answer from reranked chunks.
-        # Each chunk becomes a labeled section with its title as a heading,
-        # a short prose lead, and the chunk's own content (which may include
-        # markdown tables) preserved so the frontend renderer can format it.
         sections: list[str] = []
         for item in state.get("reranked", [])[:3]:
             raw_text = (item.get("text") or "").strip()
@@ -776,18 +801,12 @@ class ClinicalRAGAgent:
 
             title = (item.get("title") or item.get("chunk_id") or "Source").strip()
 
-            # Pull out the first markdown heading (## Title) if present —
-            # it usually names the table/topic (e.g. "BP Categories (Revised)").
             heading_match = raw_text.split("\n", 1)[0] if raw_text.startswith("#") else ""
             if heading_match:
-                # Strip leading '#' and trim — render as h2 in the answer.
                 stripped_heading = heading_match.lstrip("#").strip()
                 if stripped_heading:
                     title = stripped_heading
 
-            # Compose the body. We keep table syntax |...| intact because the
-            # frontend renders it via remark-gfm. Strip the duplicated leading
-            # heading line so we don't repeat it.
             body = raw_text
             if heading_match and body.startswith(heading_match):
                 body = body[len(heading_match):].lstrip("\n").lstrip()
@@ -799,7 +818,7 @@ class ClinicalRAGAgent:
                 else:
                     body = body[:900].rsplit(" ", 1)[0] + " — section continues below."
 
-            sections.append(f"## {title}\n\n{body}")
+            sections.append(f"#### {title}\n\n{body}")
 
         if not sections and not notes:
             return "I could not find enough evidence in the indexed sources."
@@ -807,8 +826,6 @@ class ClinicalRAGAgent:
         body_md = "\n\n---\n\n".join(sections) if sections else ""
         notes_md = "\n\n".join(notes) if notes else ""
 
-        # Pull the chunk ids of the sources we cited — surface them inline so
-        # the answer keeps the [chunk_id] convention the suite asserts on.
         cited_ids = [
             (item.get("chunk_id") or "").strip()
             for item in state.get("reranked", [])[:3]
@@ -818,7 +835,7 @@ class ClinicalRAGAgent:
         parts: list[str] = [
             "**This is educational workflow support — not medical advice.**",
             "",
-            preface,
+            topic_intro,
             "",
         ]
         if body_md:

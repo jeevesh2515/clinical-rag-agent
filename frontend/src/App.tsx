@@ -1624,67 +1624,84 @@ function getStorageKey(u: UserProfile | null, suffix: string): string | null {
 }
 
 function loadLocalConvs(u: UserProfile | null): ConversationSummary[] {
+  let list: ConversationSummary[] = []
   const primaryKey = getStorageKey(u, 'conv_list')
-  if (!primaryKey) return []
-  try {
-    const raw = localStorage.getItem(primaryKey)
-    if (raw) return JSON.parse(raw)
+  if (primaryKey) {
+    try {
+      const raw = localStorage.getItem(primaryKey)
+      if (raw) list = JSON.parse(raw)
+    } catch {}
+  }
 
-    const usernameClean = (u?.username || u?.email || '').toLowerCase().trim().replace(/[^a-zA-Z0-9_-]/g, '_')
-    if (usernameClean) {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && key.startsWith('cw_storage_') && key.endsWith('_conv_list')) {
-          if (key.toLowerCase().includes(usernameClean)) {
-            const legacyRaw = localStorage.getItem(key)
-            if (legacyRaw) {
-              const parsed = JSON.parse(legacyRaw)
-              localStorage.setItem(primaryKey, legacyRaw)
-              return parsed
+  if (!list || list.length === 0) {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (key.endsWith('_conv_list') || key === 'cw_conv_list_backup')) {
+        try {
+          const raw = localStorage.getItem(key)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              list = parsed
+              break
             }
           }
-        }
+        } catch {}
       }
     }
-  } catch {}
-  return []
+  }
+  return list
 }
 
 function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
+  // CRITICAL PROTECTION: Never overwrite an existing conversation list with an empty array!
+  if (!convs || convs.length === 0) return
+
   const key = getStorageKey(u, 'conv_list')
-  if (!key) return
+  if (key) {
+    try {
+      localStorage.setItem(key, JSON.stringify(convs))
+    } catch {}
+  }
   try {
-    localStorage.setItem(key, JSON.stringify(convs))
+    localStorage.setItem('cw_conv_list_backup', JSON.stringify(convs))
   } catch {}
 }
 
 function loadLocalConvDetail(u: UserProfile | null, convId: string): Conversation | null {
   const primaryKey = getStorageKey(u, `conv_${convId}`)
-  if (!primaryKey) return null
-  try {
-    const raw = localStorage.getItem(primaryKey)
-    if (raw) return JSON.parse(raw)
+  if (primaryKey) {
+    try {
+      const raw = localStorage.getItem(primaryKey)
+      if (raw) return JSON.parse(raw)
+    } catch {}
+  }
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && key.includes(`_conv_${convId}`)) {
-        const legacyRaw = localStorage.getItem(key)
-        if (legacyRaw) {
-          const parsed = JSON.parse(legacyRaw)
-          localStorage.setItem(primaryKey, legacyRaw)
-          return parsed
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key.includes(convId)) {
+      try {
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed && parsed.messages && parsed.messages.length > 0) return parsed
         }
-      }
+      } catch {}
     }
-  } catch {}
+  }
   return null
 }
 
 function saveLocalConvDetail(u: UserProfile | null, convId: string, conv: Conversation) {
+  if (!conv || !conv.messages || conv.messages.length === 0) return
   const key = getStorageKey(u, `conv_${convId}`)
-  if (!key) return
+  if (key) {
+    try {
+      localStorage.setItem(key, JSON.stringify(conv))
+    } catch {}
+  }
   try {
-    localStorage.setItem(key, JSON.stringify(conv))
+    localStorage.setItem(`cw_conv_${convId}_backup`, JSON.stringify(conv))
   } catch {}
 }
 
@@ -1699,15 +1716,27 @@ function saveLocalUserProfile(u: UserProfile | null) {
       notes: u.notes,
       health_vitals: u.health_vitals
     }))
+    localStorage.setItem('cw_profile_backup', JSON.stringify({
+      full_name: u.full_name,
+      email: u.email,
+      date_of_birth: u.date_of_birth,
+      notes: u.notes,
+      health_vitals: u.health_vitals
+    }))
   } catch {}
 }
 
 function loadLocalUserProfile(u: UserProfile | null): Partial<UserProfile> | null {
   const key = getStorageKey(u, 'profile')
-  if (!key) return null
+  if (key) {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw) return JSON.parse(raw)
+    } catch {}
+  }
   try {
-    const raw = localStorage.getItem(key)
-    if (raw) return JSON.parse(raw)
+    const backupRaw = localStorage.getItem('cw_profile_backup')
+    if (backupRaw) return JSON.parse(backupRaw)
   } catch {}
   return null
 }

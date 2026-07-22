@@ -1619,14 +1619,13 @@ function BreathingShader() {
       }
     `
 
-    // Enhanced fragment shader with breathing ring, particles, and rich teal palette
+    // Ultra-calm ambient shader with serene teal palette and soft drifting specks
     const fs = `
       precision highp float;
       varying vec2 v_texCoord;
       uniform float u_time;
       uniform vec2 u_resolution;
 
-      // pseudo-random hash for particle positions
       float hash(vec2 p) {
         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
       }
@@ -1637,55 +1636,46 @@ function BreathingShader() {
           vec2 pos = uv;
           pos.x *= aspect;
 
-          // Slow respiratory rhythm (~12 breaths/min)
-          float breath = sin(u_time * 0.25) * 0.5 + 0.5;
-          float breathIn = sin(u_time * 0.25); // -1..1 raw
+          // Slow, ultra-calm ambient wave
+          float wave1 = sin(uv.x * 2.5 + u_time * 0.12) * 0.08;
+          float wave2 = cos(uv.y * 2.0 - u_time * 0.1) * 0.08;
 
-          // Gradient background — soft teal/cyan medical palette
-          vec3 deep = vec3(0.05, 0.30, 0.35);   // dark teal
-          vec3 mid  = vec3(0.10, 0.55, 0.55);   // rich teal
-          vec3 light = vec3(0.70, 0.92, 0.95);  // airy cyan
-          vec3 top  = mix(light, mid, 0.3);
+          // Soothing, even medical teal/cyan & deep oceanic slate palette
+          vec3 deep  = vec3(0.04, 0.22, 0.28);   // deep tranquil teal
+          vec3 mid   = vec3(0.08, 0.42, 0.46);   // calm teal
+          vec3 light = vec3(0.65, 0.88, 0.92);   // soft serene cyan
 
-          vec3 bg = mix(mid, top, uv.y + breath * 0.15);
-          bg = mix(bg, deep, 1.0 - uv.y * 0.4);
+          // Even, gentle gradient flow
+          vec3 bg = mix(deep, mid, uv.y + wave1);
+          bg = mix(bg, light, (uv.x + wave2) * 0.25);
 
-          // Breathing ring — concentric pulse that expands/contracts
+          // Soft ambient central aura (broad and soothing)
           vec2 center = vec2(0.5 * aspect, 0.5);
           float dist = distance(pos, center);
-          float ringRadius = 0.25 + breath * 0.15;
-          float ring = 1.0 - smoothstep(0.02, 0.08, abs(dist - ringRadius));
-          vec3 ringColor = vec3(0.25, 0.85, 0.85);
-          bg += ring * ringColor * (0.3 + breath * 0.2);
+          float aura = exp(-dist * 1.8) * 0.15;
+          bg += vec3(0.2, 0.7, 0.75) * aura;
 
-          // Inner glow — brightness pulse with breath
-          float innerGlow = exp(-dist * 3.0) * (0.1 + breath * 0.15);
-          bg += vec3(0.2, 0.7, 0.8) * innerGlow;
-
-          // Floating particles — 24 slow drifting dots
-          for (int i = 0; i < 24; i++) {
+          // Floating particles — slow, peaceful drifting light specks
+          for (int i = 0; i < 20; i++) {
             float fi = float(i);
             float px = hash(vec2(fi, 0.0));
             float py = hash(vec2(fi, 1.0));
-            float speed = 0.08 + hash(vec2(fi, 2.0)) * 0.12;
-            float size = 0.005 + hash(vec2(fi, 3.0)) * 0.015;
-            float phase = hash(vec2(fi, 4.0)) * 6.28;
+            float speed = 0.03 + hash(vec2(fi, 2.0)) * 0.05;
+            float size = 0.006 + hash(vec2(fi, 3.0)) * 0.012;
 
-            vec2 p = vec2(px * aspect, py);
-            p.y = fract(p.y - u_time * speed * 0.15 + phase * 0.1);
-            p.x = px * aspect + sin(u_time * 0.1 + fi) * 0.05;
+            vec2 p = vec2(px * aspect, fract(py - u_time * speed * 0.1));
+            p.x = px * aspect + sin(u_time * 0.08 + fi) * 0.04;
 
             float d = distance(pos, p);
             float particle = smoothstep(size, 0.0, d);
-            float twinkle = 0.5 + 0.5 * sin(u_time * 2.0 + fi * 1.7);
-            bg += vec3(0.3, 0.9, 0.9) * particle * twinkle * 0.25;
+            float twinkle = 0.6 + 0.4 * sin(u_time * 1.2 + fi * 2.0);
+            bg += vec3(0.4, 0.85, 0.85) * particle * twinkle * 0.2;
           }
 
-          // Subtle vignette
-          float vignette = 1.0 - dist * 0.6;
-          bg *= vignette;
+          // Subtle vignette for depth
+          bg *= (1.0 - dist * 0.35);
 
-          gl_FragColor = vec4(bg, 0.85);
+          gl_FragColor = vec4(bg, 0.82);
       }
     `
 
@@ -1747,6 +1737,51 @@ function BreathingShader() {
 }
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
+
+// ─── Local Storage User Conversation Persistence ─────────────────────────────────
+function getStorageKey(u: UserProfile | null, suffix: string) {
+  if (!u) return null
+  const identifier = u.id || u.email || 'user'
+  return `cw_storage_${identifier.replace(/[^a-zA-Z0-9_-]/g, '_')}_${suffix}`
+}
+
+function loadLocalConvs(u: UserProfile | null): ConversationSummary[] {
+  const key = getStorageKey(u, 'conv_list')
+  if (!key) return []
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
+  const key = getStorageKey(u, 'conv_list')
+  if (!key) return
+  try {
+    localStorage.setItem(key, JSON.stringify(convs))
+  } catch {}
+}
+
+function loadLocalConvDetail(u: UserProfile | null, convId: string): Conversation | null {
+  const key = getStorageKey(u, `conv_${convId}`)
+  if (!key) return null
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveLocalConvDetail(u: UserProfile | null, convId: string, conv: Conversation) {
+  const key = getStorageKey(u, `conv_${convId}`)
+  if (!key) return
+  try {
+    localStorage.setItem(key, JSON.stringify(conv))
+  } catch {}
+}
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -1842,7 +1877,27 @@ export default function App() {
   useEffect(() => {
     if (user) {
       setIsFetchingConvs(true)
-      api.listConversations().then(setConversations).catch(() => {}).finally(() => setIsFetchingConvs(false))
+      const localConvs = loadLocalConvs(user)
+      if (localConvs.length > 0) {
+        setConversations(localConvs)
+      }
+
+      api.listConversations()
+        .then(remoteConvs => {
+          const map = new Map<string, ConversationSummary>()
+          localConvs.forEach(c => map.set(c.id, c))
+          remoteConvs.forEach(c => map.set(c.id, c))
+          const merged = Array.from(map.values()).sort((a, b) =>
+            new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
+          )
+          setConversations(merged)
+          saveLocalConvs(user, merged)
+        })
+        .catch(() => {
+          if (localConvs.length > 0) setConversations(localConvs)
+        })
+        .finally(() => setIsFetchingConvs(false))
+
       // Load available models
       api.listModels().then(({ models: mods, default_model }) => {
         setModels(mods)
@@ -1931,8 +1986,19 @@ export default function App() {
 
   const handleSelectConv = async (id: string) => {
     setCurrentConvId(id)
+    let conv: Conversation | null = null
     try {
-      const conv = await api.getConversation(id)
+      conv = await api.getConversation(id)
+      if (conv && conv.messages && conv.messages.length > 0) {
+        saveLocalConvDetail(user, id, conv)
+      }
+    } catch {}
+
+    if (!conv || !conv.messages || conv.messages.length === 0) {
+      conv = loadLocalConvDetail(user, id)
+    }
+
+    if (conv) {
       const msgs = (conv.messages || []).map(m => {
         if (!m.mode) m.mode = m.role === 'assistant' ? 'patient' : undefined
         return m
@@ -1944,12 +2010,20 @@ export default function App() {
         setPanelSafety(last.safety_flags || null)
       }
       setEvidencePanelOpen(true)
-    } catch { setMessages([]) }
+    } else {
+      setMessages([])
+    }
   }
 
   const handleDeleteConv = async (id: string) => {
-    await api.deleteConversation(id)
-    setConversations(prev => prev.filter(c => c.id !== id))
+    try { await api.deleteConversation(id) } catch {}
+    setConversations(prev => {
+      const updated = prev.filter(c => c.id !== id)
+      saveLocalConvs(user, updated)
+      return updated
+    })
+    const key = getStorageKey(user, `conv_${id}`)
+    if (key) localStorage.removeItem(key)
     if (currentConvId === id) { setCurrentConvId(null); setMessages([]) }
   }
 
@@ -1965,25 +2039,47 @@ export default function App() {
       content: question,
       timestamp: new Date().toISOString(),
     }
-    setMessages(prev => [...prev, userMsg])
+    const updatedMsgs = [...messages, userMsg]
+    setMessages(updatedMsgs)
 
     try {
       let convId = currentConvId
+      let convTitle = question.slice(0, 60)
       if (!convId) {
-        const conv = await api.createConversation(question.slice(0, 60))
+        const conv = await api.createConversation(convTitle)
         convId = conv.id
+        convTitle = conv.title || convTitle
         setCurrentConvId(convId)
-        setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
       const assistantMsg = await api.sendMessage(convId, question, mode, selectedModelId)
       assistantMsg.mode = mode
       assistantMsg.question = question
-      setMessages(prev => [...prev, assistantMsg])
+      const finalMsgs = [...updatedMsgs, assistantMsg]
+      setMessages(finalMsgs)
+
+      saveLocalConvDetail(user, convId, {
+        id: convId,
+        title: convTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: finalMsgs,
+      })
+
+      setConversations(prev => {
+        const map = new Map<string, ConversationSummary>()
+        prev.forEach(c => map.set(c.id, c))
+        map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
+        const newList = Array.from(map.values()).sort((a, b) =>
+          new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
+        )
+        saveLocalConvs(user, newList)
+        return newList
+      })
+
       setPanelCitations(assistantMsg.citations || [])
       setPanelTools(assistantMsg.tool_trace || [])
       setPanelSafety(assistantMsg.safety_flags || null)
       if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
-      setConversations(prev => prev.map(c => c.id === convId ? { ...c, updated_at: new Date().toISOString() } : c))
     } catch (err) {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
@@ -2002,21 +2098,42 @@ export default function App() {
     setIsLoading(true)
     try {
       let convId = currentConvId
+      let convTitle = question.slice(0, 60)
       if (!convId) {
-        const conv = await api.createConversation(question.slice(0, 60))
+        const conv = await api.createConversation(convTitle)
         convId = conv.id
+        convTitle = conv.title || convTitle
         setCurrentConvId(convId)
-        setConversations(prev => [{ id: conv.id, title: conv.title, updated_at: conv.updated_at }, ...prev])
       }
       const assistantMsg = await api.sendMessage(convId, question, newMode, selectedModelId)
       assistantMsg.mode = newMode
       assistantMsg.question = question
-      setMessages(prev => [...prev, assistantMsg])
+      const finalMsgs = [...messages, assistantMsg]
+      setMessages(finalMsgs)
+
+      saveLocalConvDetail(user, convId, {
+        id: convId,
+        title: convTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: finalMsgs,
+      })
+
+      setConversations(prev => {
+        const map = new Map<string, ConversationSummary>()
+        prev.forEach(c => map.set(c.id, c))
+        map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
+        const newList = Array.from(map.values()).sort((a, b) =>
+          new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
+        )
+        saveLocalConvs(user, newList)
+        return newList
+      })
+
       setPanelCitations(assistantMsg.citations || [])
       setPanelTools(assistantMsg.tool_trace || [])
       setPanelSafety(assistantMsg.safety_flags || null)
       if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
-      setConversations(prev => prev.map(c => c.id === convId ? { ...c, updated_at: new Date().toISOString() } : c))
     } catch (err) {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
@@ -2218,11 +2335,11 @@ export default function App() {
             <button 
               onClick={toggleReliefMode}
               className={cn(
-                "relief-toggle-btn relative flex items-center gap-2 px-2 xl:px-3 py-2 border-2 transition-all font-semibold text-xs uppercase tracking-wider overflow-hidden shrink-0",
+                "relief-toggle-btn relative flex items-center gap-2 px-3 py-1.5 border-2 rounded-full transition-all font-bold text-xs uppercase tracking-wider overflow-hidden shrink-0 shadow-sm hover:scale-105 active:scale-95",
                 evidencePanelOpen ? "hidden xl:!flex" : "flex",
                 isReliefMode 
                   ? "bg-[#008080] text-white shadow-none border-[#008080]"
-                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none"
+                  : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow"
               )}
             >
               {isReliefMode && (
@@ -2234,8 +2351,8 @@ export default function App() {
                   </span>
                 </>
               )}
-              <span className="material-symbols-outlined text-[20px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
-              <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Breathing…' : 'Pressure Relief'}</span>
+              <span className="material-symbols-outlined text-[18px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
+              <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Calming Mode' : 'Calmness'}</span>
             </button>
 
             {/* Model Picker */}
@@ -2250,7 +2367,7 @@ export default function App() {
                     setSelectedModelId(e.target.value)
                     localStorage.setItem('cw_model_id', e.target.value)
                   }}
-                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-2 py-1.5 pr-6 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[120px] xl:max-w-[160px] cursor-pointer"
+                  className="text-[11px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-3 py-1.5 pr-7 rounded-full focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[120px] xl:max-w-[160px] cursor-pointer"
                   title="Select AI model"
                 >
                   {models.map(m => (
@@ -2259,7 +2376,7 @@ export default function App() {
                     </option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
+                <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
                   <ChevronDown size={10} className="text-[#1a1a1a] dark:text-white" />
                 </div>
               </div>
@@ -2268,13 +2385,15 @@ export default function App() {
             <div className={cn(evidencePanelOpen ? "hidden lg:!block" : "block")}>
               <ThemeToggle />
             </div>
-            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow shrink-0">
+
+            {/* Mode Switcher Container — rounded-full pill styling */}
+            <div className="flex items-center border-2 border-[#1a1a1a] dark:border-white p-0.5 bg-[#f0f0f0] dark:bg-slate-800 rounded-full clinical-shadow shrink-0">
               {(['patient', 'clinician'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    'px-2 xl:px-4 py-1.5 text-xs xl:text-sm font-label-md transition-all uppercase font-bold',
+                    'px-3 xl:px-4 py-1 text-xs xl:text-sm font-label-md transition-all uppercase font-bold rounded-full',
                     mode === m
                       ? isClinicianMode
                         ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
@@ -2286,21 +2405,25 @@ export default function App() {
                 </button>
               ))}
             </div>
+
+            {/* Evidence Panel Button — rounded-full styling */}
             <button
               onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
               className={cn(
-                'w-10 h-10 flex items-center justify-center border-2 transition-all shrink-0',
+                'w-9 h-9 flex items-center justify-center border-2 rounded-full transition-all shrink-0 hover:scale-105 active:scale-95',
                 evidencePanelOpen
                   ? 'bg-brand-accent text-white border-brand-accent shadow-none'
-                  : 'bg-white dark:bg-slate-900 text-brand-accent dark:text-brand-accent border-brand-accent dark:border-brand-accent shadow-[2px_2px_0px_0px_rgba(255,51,102,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none'
+                  : 'bg-white dark:bg-slate-900 text-brand-accent dark:text-brand-accent border-brand-accent dark:border-brand-accent shadow-[2px_2px_0px_0px_rgba(255,51,102,1)]'
               )}
               title={evidencePanelOpen ? 'Hide evidence' : 'Show evidence'}
             >
-              <BarChart3 size={18} />
+              <BarChart3 size={16} />
             </button>
+
+            {/* Profile Avatar Button — rounded-full styling */}
             <button 
               onClick={() => setIsProfileModalOpen(true)}
-              className="w-10 h-10 bg-brand-accent hover:bg-brand-accent/90 text-white flex items-center justify-center font-bold text-sm border-2 border-[#1a1a1a] dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all duration-150 uppercase shrink-0"
+              className="w-9 h-9 bg-brand-accent hover:bg-brand-accent/90 text-white flex items-center justify-center font-bold text-sm border-2 border-[#1a1a1a] dark:border-white rounded-full shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:scale-105 active:scale-95 transition-all duration-150 uppercase shrink-0"
               title={`${user?.username || 'User'}'s Profile`}
             >
               {user ? getInitials(user.username) : 'U'}

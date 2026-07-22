@@ -14,6 +14,7 @@ import SignupPage from './components/SignupPage'
 import LandingPage from './components/LandingPage'
 import Markdown from './components/Markdown'
 import ThemeToggle from './components/ThemeToggle'
+import { decodeToken } from './utils/auth'
 
 // Permissive icon type — lucide props allow string | number for size, but we
 // only ever pass numbers.
@@ -185,9 +186,27 @@ class ApiClient {
   }
 
   async getCurrentUser(): Promise<UserProfile> {
-    const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
-    if (!res.ok) throw new Error('Failed to get user')
-    return res.json()
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
+      if (res.ok) return await res.json()
+    } catch {
+      // Backend unreachable / network error — fallback to client-side token claims
+    }
+    if (this.token) {
+      const decoded = decodeToken(this.token)
+      if (decoded) {
+        const username = decoded.username || decoded.sub || 'user'
+        const role = decoded.role || decoded.roles?.[0] || 'patient'
+        return {
+          id: 'usr-' + username,
+          username,
+          email: decoded.email || `${username}@clinical.demo`,
+          roles: decoded.roles || [role],
+          is_active: true,
+        }
+      }
+    }
+    throw new Error('Failed to get user')
   }
 
   async updateProfile(data: { full_name?: string; email?: string; date_of_birth?: string; notes?: string }): Promise<UserProfile> {

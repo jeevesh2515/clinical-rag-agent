@@ -55,6 +55,13 @@ def _to_user_public(user: OrmUser) -> UserPublic:
     This intentionally omits hashed_password from the response.
     """
     valid_roles = {r.value for r in UserRole}
+    vitals = None
+    if getattr(user, "health_vitals_json", None):
+        try:
+            import json
+            vitals = json.loads(user.health_vitals_json)
+        except Exception:
+            vitals = None
     return UserPublic(
         id=user.id,
         username=user.username,
@@ -65,6 +72,7 @@ def _to_user_public(user: OrmUser) -> UserPublic:
         primary_role=user.primary_role,
         date_of_birth=user.date_of_birth,
         notes=user.notes,
+        health_vitals=vitals,
         created_at=user.created_at.isoformat() if user.created_at else None,
     )
 
@@ -220,6 +228,9 @@ async def update_profile(
         current_user.date_of_birth = payload.date_of_birth
     if payload.notes is not None:
         current_user.notes = payload.notes
+    if payload.health_vitals is not None:
+        import json
+        current_user.health_vitals_json = json.dumps(payload.health_vitals)
     if payload.email and payload.email != current_user.email:
         if db.query(OrmUser).filter(OrmUser.email == payload.email).one_or_none():
             raise HTTPException(

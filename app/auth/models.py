@@ -26,6 +26,7 @@ class UserPublic(BaseModel):
     primary_role: str = Field("patient", description="Primary role used for routing and gating")
     date_of_birth: Optional[str] = Field(None, description="Date of birth (YYYY-MM-DD, patient profiles)")
     notes: Optional[str] = Field(None, description="Free-form profile notes")
+    health_vitals: Optional[dict] = Field(None, description="Persisted health vitals (BMI, SBP, DBP, height, weight)")
     created_at: Optional[str] = Field(None, description="Account creation timestamp (ISO-8601)")
 
 
@@ -41,6 +42,7 @@ class User(BaseModel):
     primary_role: str = Field("patient", description="Primary role used for routing and gating")
     date_of_birth: Optional[str] = Field(None, description="Date of birth (YYYY-MM-DD, patient profiles)")
     notes: Optional[str] = Field(None, description="Free-form profile notes")
+    health_vitals: Optional[dict] = Field(None, description="Persisted health vitals")
     created_at: Optional[str] = Field(None, description="Account creation timestamp (ISO-8601)")
 
 
@@ -80,3 +82,4 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     date_of_birth: Optional[str] = Field(None, description="YYYY-MM-DD")
     notes: Optional[str] = None
+    health_vitals: Optional[dict] = Field(None, description="Health vitals object to store in database")

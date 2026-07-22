@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Stethoscope } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import BMICalculator from './BMICalculator'
 
 interface LandingPageProps {
   onLogin: () => void
@@ -429,6 +430,23 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Interactive Clinical BMI Calculator Section */}
+        <section id="bmi-calculator" className="py-16 bg-white dark:bg-slate-950 border-t-2 border-clinical-black dark:border-slate-800 px-gutter">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="font-headline-xl text-3xl sm:text-4xl font-black uppercase text-clinical-black dark:text-white tracking-tight">
+                Interactive Clinical BMI Calculator
+              </h2>
+              <p className="font-body-md text-sm sm:text-base text-on-surface-variant dark:text-slate-400 mt-2">
+                Calculate your Body Mass Index, WHO Category, and hypertension cardiovascular risk profile instantly.
+              </p>
+              <div className="w-24 h-2 bg-brand-accent mx-auto mt-4"></div>
+            </div>
+
+            <BMICalculator user={currentUser} />
           </div>
         </section>
 

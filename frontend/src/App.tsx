@@ -5,7 +5,7 @@ import {
   Send, Activity, BookOpen, Shield, Zap, Brain, Heart,
   X, Loader2, AlertCircle, CheckCircle2,
   ExternalLink, Info, Stethoscope, Search, Trash2,
-  BarChart3, PanelLeftClose,
+  BarChart3, PanelLeftClose, Scale,
   PanelLeft, Sparkles, ChevronDown, ChevronRight,
   ArrowUp, FlaskRound, type LucideIcon
 } from 'lucide-react'
@@ -14,6 +14,7 @@ import SignupPage from './components/SignupPage'
 import LandingPage from './components/LandingPage'
 import Markdown from './components/Markdown'
 import ThemeToggle from './components/ThemeToggle'
+import BMICalculator, { HealthVitals } from './components/BMICalculator'
 import { decodeToken } from './utils/auth'
 import { generateFallbackResponse } from './utils/fallbackChat'
 
@@ -32,6 +33,7 @@ interface UserProfile {
   full_name?: string
   date_of_birth?: string
   notes?: string
+  health_vitals?: HealthVitals
 }
 
 interface Citation {
@@ -373,10 +375,10 @@ function Pill({
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, onOpenProfile, onLogoClick, isLoading }: {
+function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewChat, onSelectConv, onDeleteConv, onLogout, onOpenProfile, onOpenBmiModal, onLogoClick, isLoading }: {
   isOpen: boolean; onToggle: () => void; user: UserProfile; conversations: ConversationSummary[]
   currentConvId: string | null; onNewChat: () => void; onSelectConv: (id: string) => void
-  onDeleteConv: (id: string) => void; onLogout: () => void; onOpenProfile: () => void; onLogoClick?: () => void; isLoading: boolean
+  onDeleteConv: (id: string) => void; onLogout: () => void; onOpenProfile: () => void; onOpenBmiModal?: () => void; onLogoClick?: () => void; isLoading: boolean
 }) {
   const [search, setSearch] = useState('')
   const [hoveredConv, setHoveredConv] = useState<string | null>(null)
@@ -424,13 +426,21 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
           </button>
         </div>
 
-      {/* New chat */}
-      <div className="px-4 py-4">
+      {/* New chat & BMI Calc */}
+      <div className="px-4 py-4 space-y-2">
         <button onClick={onNewChat}
           className="w-full bg-brand-accent text-white font-label-md text-label-md py-2.5 flex items-center justify-center gap-2 hover:bg-white hover:text-[#1a1a1a] transition-colors border-2 border-white uppercase tracking-wider brutalist-button">
           <Plus size={15} />
           <span>New Chat</span>
         </button>
+
+        {onOpenBmiModal && (
+          <button onClick={onOpenBmiModal}
+            className="w-full bg-white/10 text-white hover:bg-white hover:text-[#1a1a1a] font-label-md text-xs py-2 flex items-center justify-center gap-2 transition-all border-2 border-white/40 uppercase tracking-wider">
+            <Scale size={14} className="text-brand-accent" />
+            <span>BMI Calculator</span>
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -868,8 +878,6 @@ function EvidencePanel({
   activeTab: EvidenceTab; setActiveTab: (tab: EvidenceTab) => void
   highlightedCitationIndex: number | null
 }) {
-  const [lisinoprilDosage, setLisinoprilDosage] = useState(20)
-
   const tabs: { id: EvidenceTab; label: string; icon: IconType; count: number }[] = useMemo(() => [
     { id: 'sources', label: 'Sources', icon: BookOpen, count: citations.length },
     { id: 'tools', label: 'Tools', icon: Zap, count: toolTrace.length },
@@ -928,44 +936,6 @@ function EvidencePanel({
           <div className="flex-1 overflow-y-auto scroll-premium p-4 sm:p-6 space-y-4 sm:space-y-6 bg-[#fafafa] dark:bg-slate-950 transition-all duration-1000">
             {activeTab === 'sources' && (
               <>
-                {/* Titration Sandbox */}
-                <div className="bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white clinical-shadow p-3 sm:p-5 space-y-4 sm:space-y-6 mb-6 sm:mb-8 transition-all duration-1000">
-                  <div className="flex items-center justify-between border-b-2 border-[#1a1a1a] dark:border-white/20 pb-2">
-                    <h3 className="font-headline-md text-[11px] sm:text-sm uppercase text-[#1a1a1a] dark:text-white">Titration Sandbox</h3>
-                    <span className="material-symbols-outlined text-brand-accent text-[18px]">monitoring</span>
-                  </div>
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between font-code-sm text-[10px] uppercase font-bold text-[#1a1a1a] dark:text-white">
-                        <span>Lisinopril Dosage</span>
-                        <span className="text-brand-accent">{lisinoprilDosage}mg</span>
-                      </div>
-                      <input 
-                        type="range"
-                        min="0"
-                        max="40"
-                        step="10"
-                        value={lisinoprilDosage}
-                        onChange={e => setLisinoprilDosage(Number(e.target.value))}
-                        className="w-full h-2 bg-[#f0f0f0] dark:bg-slate-800 appearance-none border-2 border-[#1a1a1a] dark:border-white accent-brand-accent cursor-pointer"
-                      />
-                    </div>
-                    <div className="p-4 bg-[#1a1a1a] dark:bg-slate-950 text-white space-y-2">
-                      <p className="font-label-md text-[10px] uppercase tracking-widest opacity-70">Predicted Outcome</p>
-                      <div className="flex items-end gap-1 h-16 pt-2">
-                        <div className="flex-1 bg-brand-accent/30 border-t-2 border-brand-accent" style={{ height: '100%' }}></div>
-                        <div className="flex-1 bg-brand-accent/40 border-t-2 border-brand-accent" style={{ height: `${Math.max(30, 100 - (lisinoprilDosage / 40) * 20)}%` }}></div>
-                        <div className="flex-1 bg-brand-accent/60 border-t-2 border-brand-accent" style={{ height: `${Math.max(25, 100 - (lisinoprilDosage / 40) * 45)}%` }}></div>
-                        <div className="flex-1 bg-brand-accent border-t-2 border-brand-accent" style={{ height: `${Math.max(20, 100 - (lisinoprilDosage / 40) * 60)}%` }}></div>
-                      </div>
-                      <div className="flex justify-between font-code-sm text-[12px] font-bold">
-                        <span>{145 - Math.round((lisinoprilDosage / 40) * 19)}/{92 - Math.round((lisinoprilDosage / 40) * 12)}</span>
-                        <span className="text-brand-accent">BP Target Goal</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {citations.length === 0 ? (
                   <EmptyEvidence icon={BookOpen} title="No citations yet" subtitle="Ask a clinical question to see source material" />
                 ) : (
@@ -1133,12 +1103,13 @@ function WelcomeScreen({ mode, onQuestionClick }: { mode: 'patient' | 'clinician
 
 // ─── Profile Modal ──────────────────────────────────────────────────────────
 
-function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
+function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onOpenBmiModal }: {
   isOpen: boolean
   onClose: () => void
   user: UserProfile
   onUpdateUser: (updated: UserProfile) => void
   onChatAboutDoc: (filename: string) => void
+  onOpenBmiModal?: () => void
 }) {
   const [fullName, setFullName] = useState(user.full_name || '')
   const [dateOfBirth, setDateOfBirth] = useState(user.date_of_birth || '')
@@ -1322,6 +1293,54 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc }: {
                   <span>Profile updated successfully</span>
                 </div>
               )}
+
+              {/* Saved Health Vitals & BMI Card */}
+              <div className="p-4 border-2 border-clinical-black bg-[#fafafa] space-y-3">
+                <div className="flex items-center justify-between border-b border-clinical-black/20 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Scale size={16} className="text-brand-accent" />
+                    <span className="text-xs font-bold uppercase font-headline-md text-clinical-black">Personal Health Vitals (BMI)</span>
+                  </div>
+                  {onOpenBmiModal && (
+                    <button
+                      type="button"
+                      onClick={onOpenBmiModal}
+                      className="text-[10px] font-bold uppercase bg-brand-accent text-white px-2 py-1 border border-clinical-black hover:bg-brand-accent/90"
+                    >
+                      Calculator
+                    </button>
+                  )}
+                </div>
+
+                {user.health_vitals ? (
+                  <div className="grid grid-cols-2 gap-2 text-xs font-code-sm">
+                    <div>
+                      <span className="text-gray-500 uppercase text-[9px] font-bold block">Height / Weight</span>
+                      <span className="font-bold text-clinical-black">{user.health_vitals.height_cm} cm / {user.health_vitals.weight_kg} kg</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 uppercase text-[9px] font-bold block">BMI & Classification</span>
+                      <span className="font-bold text-brand-accent">{user.health_vitals.bmi} kg/m² ({user.health_vitals.category})</span>
+                    </div>
+                    <div className="col-span-2 text-[10px] text-gray-500 font-bold border-t border-clinical-black/10 pt-1">
+                      Last Updated: {new Date(user.health_vitals.updated_at).toLocaleString()}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-600 font-medium flex items-center justify-between">
+                    <span>No BMI vitals saved yet.</span>
+                    {onOpenBmiModal && (
+                      <button
+                        type="button"
+                        onClick={onOpenBmiModal}
+                        className="text-[10px] font-bold uppercase underline text-brand-accent"
+                      >
+                        Calculate & Save
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <button
                 type="submit"
@@ -1651,6 +1670,7 @@ export default function App() {
   const [panelSafety, setPanelSafety] = useState<SafetyFlags | null>(null)
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isBmiModalOpen, setIsBmiModalOpen] = useState(false)
   const [isReliefMode, setIsReliefMode] = useState(false)
   const [models, setModels] = useState<ModelSpec[]>([])
   const [selectedModelId, setSelectedModelId] = useState<string>(
@@ -1658,6 +1678,16 @@ export default function App() {
   )
   const [evidenceTab, setEvidenceTab] = useState<EvidenceTab>('sources')
   const [highlightedCitationIndex, setHighlightedCitationIndex] = useState<number | null>(null)
+
+  const handleSaveVitals = (vitals: HealthVitals) => {
+    if (user) {
+      const key = getStorageKey(user, 'vitals')
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(vitals))
+      }
+      setUser(prev => prev ? { ...prev, health_vitals: vitals } : null)
+    }
+  }
 
 
   const toggleReliefMode = () => {
@@ -1730,6 +1760,18 @@ export default function App() {
       const localConvs = loadLocalConvs(user)
       if (localConvs.length > 0) {
         setConversations(localConvs)
+      }
+
+      // Load saved health vitals for user
+      const vitalsKey = getStorageKey(user, 'vitals')
+      if (vitalsKey) {
+        try {
+          const rawVitals = localStorage.getItem(vitalsKey)
+          if (rawVitals) {
+            const vitals: HealthVitals = JSON.parse(rawVitals)
+            setUser(prev => prev && !prev.health_vitals ? { ...prev, health_vitals: vitals } : prev)
+          }
+        } catch {}
       }
 
       api.listConversations()
@@ -2098,6 +2140,7 @@ export default function App() {
         conversations={conversations} currentConvId={currentConvId} onNewChat={handleNewChat}
         onSelectConv={handleSelectConv} onDeleteConv={handleDeleteConv} onLogout={handleLogout}
         onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenBmiModal={() => setIsBmiModalOpen(true)}
         onLogoClick={() => setPage('landing')}
         isLoading={isFetchingConvs}
       />
@@ -2178,6 +2221,19 @@ export default function App() {
               )}
               <span className="material-symbols-outlined text-[20px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
               <span className="hidden xl:inline relative font-label-md">{isReliefMode ? 'Calmness' : 'Pressure Relief'}</span>
+            </button>
+
+            {/* BMI Calculator Button */}
+            <button 
+              onClick={() => setIsBmiModalOpen(true)}
+              className={cn(
+                "relative flex items-center gap-1.5 px-2.5 py-1.5 border-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white transition-all font-bold text-xs uppercase tracking-wider overflow-hidden shrink-0 clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none",
+                evidencePanelOpen ? "hidden xl:!flex" : "flex"
+              )}
+              title="Open BMI Calculator"
+            >
+              <Scale size={16} className="text-brand-accent shrink-0" />
+              <span className="hidden xl:inline font-label-md">BMI Calc</span>
             </button>
 
             {/* Model Picker */}
@@ -2409,7 +2465,29 @@ export default function App() {
         user={user!}
         onUpdateUser={(updated) => setUser(updated)}
         onChatAboutDoc={handleChatAboutDoc}
+        onOpenBmiModal={() => setIsBmiModalOpen(true)}
       />
+
+      {/* BMI Calculator Modal */}
+      {isBmiModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-clinical-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border-4 border-clinical-black dark:border-white w-full max-w-3xl max-h-[90vh] overflow-y-auto neo-brutal-shadow relative p-2 sm:p-4">
+            <button
+              onClick={() => setIsBmiModalOpen(false)}
+              className="absolute top-2 right-2 w-8 h-8 bg-brand-accent text-white border-2 border-clinical-black flex items-center justify-center font-bold z-10 hover:bg-brand-accent/80"
+              title="Close BMI Calculator"
+            >
+              <X size={16} />
+            </button>
+            <BMICalculator
+              user={user}
+              onSaveVitals={(vitals) => {
+                handleSaveVitals(vitals)
+              }}
+            />
+          </div>
+        </div>
+      )}
       <SpeedInsights />
     </div>
   )

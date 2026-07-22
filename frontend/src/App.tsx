@@ -191,22 +191,48 @@ class ApiClient {
   async getCurrentUser(): Promise<UserProfile> {
     try {
       const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
-      if (res.ok) return await res.json()
+      if (res.ok) {
+        const remoteUser: UserProfile = await res.json()
+        const cached = loadLocalUserProfile(remoteUser)
+        if (cached) {
+          return {
+            ...remoteUser,
+            full_name: cached.full_name || remoteUser.full_name,
+            email: cached.email || remoteUser.email,
+            date_of_birth: cached.date_of_birth || remoteUser.date_of_birth,
+            notes: cached.notes || remoteUser.notes,
+            health_vitals: cached.health_vitals || remoteUser.health_vitals,
+          }
+        }
+        return remoteUser
+      }
     } catch {
-      // Backend unreachable / network error — fallback to client-side token claims
+      // Backend unreachable / network error — fallback to client-side token claims + cached profile
     }
     if (this.token) {
       const decoded = decodeToken(this.token)
       if (decoded) {
         const username = decoded.username || decoded.sub || 'user'
         const role = decoded.role || decoded.roles?.[0] || 'patient'
-        return {
+        const baseUser: UserProfile = {
           id: 'usr-' + username,
           username,
           email: decoded.email || `${username}@clinical.demo`,
           roles: decoded.roles || [role],
           is_active: true,
         }
+        const cached = loadLocalUserProfile(baseUser)
+        if (cached) {
+          return {
+            ...baseUser,
+            full_name: cached.full_name || baseUser.full_name,
+            email: cached.email || baseUser.email,
+            date_of_birth: cached.date_of_birth || baseUser.date_of_birth,
+            notes: cached.notes || baseUser.notes,
+            health_vitals: cached.health_vitals || baseUser.health_vitals,
+          }
+        }
+        return baseUser
       }
     }
     throw new Error('Failed to get user')
@@ -1223,6 +1249,7 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
         notes
       })
       onUpdateUser(updated)
+      saveLocalUserProfile(updated)
       setProfileSuccess(true)
       setTimeout(() => setProfileSuccess(false), 3000)
     } catch (err) {
@@ -1235,6 +1262,7 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
         notes
       }
       onUpdateUser(fallbackUser)
+      saveLocalUserProfile(fallbackUser)
       setProfileSuccess(true)
       setTimeout(() => setProfileSuccess(false), 3000)
     } finally {
@@ -2030,15 +2058,16 @@ export default function App() {
     if (user) {
       setIsFetchingConvs(true)
 
-      // 1. Immediately restore user profile details (full_name, date_of_birth, notes, health_vitals)
+      // 1. Immediately restore user profile details (full_name, email, date_of_birth, notes, health_vitals)
       const cachedProfile = loadLocalUserProfile(user)
       if (cachedProfile) {
         setUser(prev => prev ? {
           ...prev,
-          full_name: prev.full_name || cachedProfile.full_name,
-          date_of_birth: prev.date_of_birth || cachedProfile.date_of_birth,
-          notes: prev.notes || cachedProfile.notes,
-          health_vitals: prev.health_vitals || cachedProfile.health_vitals
+          full_name: cachedProfile.full_name || prev.full_name,
+          email: cachedProfile.email || prev.email,
+          date_of_birth: cachedProfile.date_of_birth || prev.date_of_birth,
+          notes: cachedProfile.notes || prev.notes,
+          health_vitals: cachedProfile.health_vitals || prev.health_vitals
         } : prev)
       }
 
@@ -2384,7 +2413,7 @@ export default function App() {
             isOpen={isProfileModalOpen}
             onClose={() => setIsProfileModalOpen(false)}
             user={user!}
-            onUpdateUser={(updated) => setUser(updated)}
+            onUpdateUser={(updated) => { setUser(updated); saveLocalUserProfile(updated); }}
             onChatAboutDoc={handleChatAboutDoc}
           />
         )}
@@ -2742,7 +2771,7 @@ export default function App() {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         user={user!}
-        onUpdateUser={(updated) => setUser(updated)}
+        onUpdateUser={(updated) => { setUser(updated); saveLocalUserProfile(updated); }}
         onChatAboutDoc={handleChatAboutDoc}
         onOpenBmiModal={() => setIsBmiModalOpen(true)}
       />

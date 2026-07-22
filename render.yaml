@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: clinical-workflows-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: "/api/health"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: "sqlite:///./clinical_demo.db"
+      - key: VECTOR_STORE
+        value: "auto"
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: COHERE_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: "https://clinical-workflows.vercel.app,http://localhost:5173"

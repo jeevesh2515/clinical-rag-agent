@@ -94,7 +94,37 @@ CORS_ORIGINS=https://clinical-workflows.vercel.app
 
 ---
 
-## 4. Running via Docker
+## 4. Deploy to Render (Web Service)
+
+Render provides a 100% free tier for Python web services:
+
+### 1-Click / Blueprint Deployment
+1. Log in to [Render Dashboard](https://dashboard.render.com).
+2. Click **New +** → **Blueprint**.
+3. Connect your GitHub repository (`clinical-rag-agent`).
+4. Render automatically detects `render.yaml` blueprint.
+5. Click **Apply** to deploy!
+
+### Manual Web Service Setup
+If creating a Web Service manually on Render:
+- **Environment:** `Python 3`
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Health Check Path:** `/api/health`
+
+### Environment Variables on Render
+Add your keys in **Environment Variables**:
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+COHERE_API_KEY=...
+JWT_SECRET_KEY=generate-a-secure-random-32-byte-key
+CORS_ORIGINS=https://clinical-workflows.vercel.app,http://localhost:5173
+DATABASE_URL=sqlite:///./clinical_demo.db
+```
+
+---
+
+## 5. Running via Docker
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build -d

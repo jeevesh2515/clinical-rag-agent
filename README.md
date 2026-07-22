@@ -311,14 +311,18 @@ cd frontend && npm run build
 
 ## Deployment ($0/month)
 
-Clinical Workflows is configured for zero-cost deployment across serverless providers:
+Clinical Workflows is configured for zero-cost deployment across serverless and web service providers:
 
-- **Frontend:** Vercel (Static SPA)
-- **Backend:** Vercel Serverless Functions / Render Free Tier
-- **Database:** Neon Serverless PostgreSQL (`pgvector`)
-- **LLM Tier:** OpenRouter Free Tier / Deterministic Fallback Mode
+- **Frontend:** Vercel (Static SPA) — [https://clinical-workflows.vercel.app](https://clinical-workflows.vercel.app)
+- **Backend API (Vercel):** Vercel Python Serverless Runtime (`api/index.py`)
+- **Backend API (Render):** Render Free Web Service (`render.yaml` 1-click blueprint)
+- **Database:** Neon Serverless PostgreSQL (`pgvector`) or SQLite
+- **LLM Tier:** OpenRouter Free Tier / Deterministic Extractive Fallback Mode
 
-For step-by-step deployment instructions, see [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md).
+### Render 1-Click Setup:
+Add `OPENROUTER_API_KEY`, `COHERE_API_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL` to your Render environment variables or `.env`.
+
+For step-by-step deployment instructions for Vercel, Render, Docker, and Neon, see [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md).
 
 ---
 

@@ -109,7 +109,14 @@ For open-ended guideline search, the system combines:
 - **Adaptive Min-Max Score Fusion:** Normalizes dense and sparse scores per query (`alpha = 0.55`) so neither signal overwhelms the other.
 - **Cross-Encoder Reranking:** Cohere `rerank-v3.5` rescores the top-N candidates before generation.
 
-### 3. LangGraph Safety Routing
+### 3. Personal Document RAG Engine (RAG-on-Upload)
+
+In addition to searching public clinical guidelines, the system incorporates a **User-Level Personal RAG Engine**:
+- **Ingestion (`/api/uploads`):** Parses user-uploaded prescriptions, doctor notes, lab reports, and clinical images (`PDF`, `PNG`, `JPG`).
+- **Personalized Context Fusion:** Converts uploaded files into structured document chunks attached to the user's explicit profile context (`app/personalization.py`).
+- **Targeted Follow-Ups:** Users can click *"Consult AI with Note"* or *"Ask follow-up regarding document"* to execute targeted RAG queries against their specific clinical background.
+
+### 4. LangGraph Safety Routing
 
 The system enforces safety boundaries as structural edges in a stateful **LangGraph Directed Acyclic Graph (DAG)**:
 
@@ -119,7 +126,7 @@ The system enforces safety boundaries as structural edges in a stateful **LangGr
 
 If a query requests prescribing advice, self-diagnosis, or emergency triage, it routes to `format_refusal` **immediately**, terminating the execution path before calling retrieval stores or external LLMs.
 
-### 4. Deterministic Clinical Calculators
+### 5. Deterministic Clinical Calculators
 
 Medical calculations are executed by deterministic code algorithms rather than LLM text generation:
 
@@ -130,7 +137,7 @@ Medical calculations are executed by deterministic code algorithms rather than L
 | **Pulse Pressure** | `SP - DP` | `PP for 150/90` ➔ `60.0 mmHg` |
 | **BMI** | `weight(kg) / height(m)²` | `BMI for 80kg, 1.75m` ➔ `26.1` |
 
-### 5. Automated Evaluator Suite (LangSmith + Code Metrics)
+### 6. Automated Evaluator Suite (LangSmith + Code Metrics)
 
 Quality is verified continuously using a **55-question evaluation suite** across 6 datasets:
 - **Faithfulness (LLM-as-Judge):** Verifies all generated claims are backed by retrieved chunks.
@@ -154,19 +161,21 @@ flowchart TD
         C[Middleware<br/>Request ID + User Context]
     end
 
-    subgraph Agent["🧠 LangGraph Agent DAG"]
+    subgraph Agent["🧠 LangGraph Agent RAG DAG"]
         D[validate_request] --> E[classify_intent]
         E --> F{Route Decision}
         F -->|Unsafe Query| G[format_refusal]
         F -->|Calculator| H[Calculator Fast Path<br/>eGFR / MAP / BMI / PP]
         F -->|Canonical Query| I[OKF Knowledge Spine<br/>27 Concept Files]
-        F -->|Guideline Query| J[Hybrid Store<br/>Cohere Vector + BM25]
+        F -->|Guideline Query| J[Hybrid RAG Store<br/>Cohere Vector + BM25]
+        F -->|User Document| J2[Personal RAG Engine<br/>Prescriptions & Reports]
 
         H --> K[Cohere Reranker v3.5]
         I --> K
         J --> K
+        J2 --> K
 
-        K --> L[Grounded Generation]
+        K --> L[Grounded LLM Generation]
         L --> M[Claim Validator]
         M --> N[Citation Validator]
         N --> O[Output Formatter]

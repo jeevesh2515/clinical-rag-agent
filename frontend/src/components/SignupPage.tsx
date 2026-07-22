@@ -93,8 +93,16 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed'
-      // If server is unreachable / sleeping (Failed to fetch), activate instant demo token fallback
-      if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('HTTP 504') || msg.includes('HTTP 500')) {
+      // If server is unreachable / sleeping / mobile fetch failure (Load failed on Safari), activate instant demo token fallback
+      if (
+        msg.includes('Failed to fetch') ||
+        msg.includes('Load failed') ||
+        msg.includes('NetworkError') ||
+        msg.includes('Network request failed') ||
+        msg.includes('HTTP 504') ||
+        msg.includes('HTTP 500') ||
+        msg.includes('TypeError')
+      ) {
         tokenToUse = createDemoToken(username, email, role)
       } else {
         setError(msg)

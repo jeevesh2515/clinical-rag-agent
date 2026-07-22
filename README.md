@@ -318,7 +318,7 @@ Clinical Workflows is configured for zero-cost deployment across serverless prov
 - **Database:** Neon Serverless PostgreSQL (`pgvector`)
 - **LLM Tier:** OpenRouter Free Tier / Deterministic Fallback Mode
 
-For step-by-step deployment instructions, see [`.planning/FREE_TIER_DEPLOYMENT.md`](.planning/FREE_TIER_DEPLOYMENT.md).
+For step-by-step deployment instructions, see [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md).
 
 ---
 
@@ -339,7 +339,6 @@ For step-by-step deployment instructions, see [`.planning/FREE_TIER_DEPLOYMENT.m
 ├── frontend/            # React 18 + TypeScript + Tailwind v4 SPA
 ├── hypertension-okf/    # 27 Curated OKF concept files
 ├── tests/               # 219 automated pytest tests
-├── .planning/           # Architecture docs, deployment guides, learnings
 ├── Makefile             # Development task commands
 └── README.md            # Master repository documentation
 ```

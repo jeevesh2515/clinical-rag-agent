@@ -3,7 +3,15 @@ export interface FallbackChatMessage {
   role: 'assistant'
   content: string
   timestamp: string
-  citations?: Array<{ source_id: string; title: string; page?: number; chunk_id?: string }>
+  citations?: Array<{
+    source_id: string
+    title: string
+    page?: number
+    chunk_id?: string
+    organization?: string
+    source_url?: string
+    quote?: string
+  }>
   safety_flags?: {
     medical_disclaimer: boolean
     consult_licensed_clinician: boolean
@@ -62,8 +70,20 @@ If you or someone else is experiencing severe blood pressure symptoms, **seek em
       content,
       timestamp: now,
       citations: [
-        { source_id: 'guidelines/acc-aha-2017-summary.md', title: 'ACC/AHA 2017 Hypertension Guidelines - Hypertensive Crises' },
-        { source_id: 'guidelines/nice-ng136-summary.md', title: 'NICE NG136 Guideline - Specialist Referral & Emergency Triage' }
+        {
+          source_id: 'guidelines/acc-aha-2017-summary.md',
+          title: 'ACC/AHA 2017 Guidelines - Hypertensive Crises Protocol',
+          organization: 'ACC/AHA',
+          source_url: 'https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065',
+          quote: 'Hypertensive Crises (SBP >180 and/or DBP >120 mmHg): Categorized as Urgency (no acute organ damage) vs Emergency (acute target organ damage present). Emergency requires immediate ICU transfer and parenteral antihypertensives.'
+        },
+        {
+          source_id: 'guidelines/nice-ng136-summary.md',
+          title: 'NICE NG136 Guideline - Emergency Specialist Triage',
+          organization: 'NICE UK',
+          source_url: 'https://www.nice.org.uk/guidance/ng136',
+          quote: 'Refer immediately for same-day specialist assessment if clinic BP >= 180/120 mmHg with target organ damage, acute papilloedema, or severe headache/chest pain.'
+        }
       ],
       safety_flags: {
         medical_disclaimer: true,
@@ -144,8 +164,20 @@ According to major clinical guidelines (ACC/AHA 2017 and NICE NG136), structured
       content,
       timestamp: now,
       citations: [
-        { source_id: 'guidelines/acc-aha-2017-summary.md', title: 'ACC/AHA 2017 Guidelines - Table 15: Nonpharmacological Interventions' },
-        { source_id: 'guidelines/nice-ng136-summary.md', title: 'NICE NG136 - Section 1.2: Lifestyle Interventions for Hypertension' }
+        {
+          source_id: 'guidelines/acc-aha-2017-summary.md',
+          title: 'ACC/AHA 2017 Guidelines - Nonpharmacological Interventions',
+          organization: 'ACC/AHA',
+          source_url: 'https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065',
+          quote: 'DASH Diet Pattern (-11 mmHg SBP), Sodium Restriction <2,000 mg/day (-5 to -6 mmHg SBP), Aerobic Physical Activity 150 min/wk (-5 to -8 mmHg SBP), Weight loss (-1 mmHg per kg lost).'
+        },
+        {
+          source_id: 'guidelines/nice-ng136-summary.md',
+          title: 'NICE NG136 - Section 1.2: Lifestyle Interventions',
+          organization: 'NICE UK',
+          source_url: 'https://www.nice.org.uk/guidance/ng136',
+          quote: 'Offer lifestyle advice to all adults with hypertension. Dietary advice includes reducing sodium intake, adopting a balanced diet rich in fruits/vegetables, limiting alcohol, and maintaining regular aerobic physical activity.'
+        }
       ],
       safety_flags: {
         medical_disclaimer: true,
@@ -207,8 +239,20 @@ Medical guidelines (NICE NG136 and ACC/AHA 2017) recommend starting blood pressu
       content,
       timestamp: now,
       citations: [
-        { source_id: 'guidelines/nice-ng136-summary.md', title: 'NICE NG136 - Section 1.4: Pharmacological Treatment Algorithm' },
-        { source_id: 'guidelines/jnc8-summary.md', title: 'JNC8 Evidence-Based Guideline for Management of High Blood Pressure' }
+        {
+          source_id: 'guidelines/nice-ng136-summary.md',
+          title: 'NICE NG136 - Step-Care Antihypertensive Ladder',
+          organization: 'NICE UK',
+          source_url: 'https://www.nice.org.uk/guidance/ng136',
+          quote: 'Step 1: Offer an ACEi/ARB to adults <55 or with T2D. Offer a CCB to adults >=55 or Black African/African-Caribbean origin. Step 2: Combine ACEi/ARB + CCB or Thiazide-like diuretic.'
+        },
+        {
+          source_id: 'guidelines/jnc8-summary.md',
+          title: 'JNC8 Panel Report - First-Line Drug Classes',
+          organization: 'JNC8 Panel',
+          source_url: 'https://jamanetwork.com/journals/jama/article-abstract/1791497',
+          quote: 'In the general nonblack population, initial antihypertensive treatment should include a thiazide-type diuretic, CCB, ACEi, or ARB. In the general black population, initial treatment should include a thiazide-type diuretic or CCB.'
+        }
       ],
       safety_flags: {
         medical_disclaimer: true,
@@ -267,8 +311,20 @@ Here is an evidence-based summary based on clinical guidelines (NICE NG136 and A
     content: defaultContent,
     timestamp: now,
     citations: [
-      { source_id: 'guidelines/acc-aha-2017-summary.md', title: 'ACC/AHA 2017 Clinical Practice Guidelines' },
-      { source_id: 'guidelines/nice-ng136-summary.md', title: 'NICE NG136 Hypertension Overview' }
+      {
+        source_id: 'guidelines/acc-aha-2017-summary.md',
+        title: 'ACC/AHA 2017 Practice Guidelines',
+        organization: 'ACC/AHA',
+        source_url: 'https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065',
+        quote: 'Comprehensive evaluation and management of high blood pressure in adults. Establishes SBP/DBP threshold categories and target BP <130/80 mmHg for high-risk patients.'
+      },
+      {
+        source_id: 'guidelines/nice-ng136-summary.md',
+        title: 'NICE NG136 Hypertension Overview',
+        organization: 'NICE UK',
+        source_url: 'https://www.nice.org.uk/guidance/ng136',
+        quote: 'Guideline for diagnosis, risk assessment, ABPM confirmation, step-care treatment, and annual monitoring of adults with essential hypertension.'
+      }
     ],
     safety_flags: {
       medical_disclaimer: true,

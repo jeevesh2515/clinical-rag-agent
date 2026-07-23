@@ -48,6 +48,8 @@ class Settings(BaseSettings):
 
     def __init__(self, **values):
         super().__init__(**values)
+        if self.database_url and self.database_url.startswith("postgres://"):
+            self.database_url = self.database_url.replace("postgres://", "postgresql://", 1)
         # Standardise key values between LANGCHAIN_ and LANGSMITH_ env prefixes
         tracing_str = self.langsmith_tracing
         tracing_enabled = self.langchain_tracing_v2 or (

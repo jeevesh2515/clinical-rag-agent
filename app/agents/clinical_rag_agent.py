@@ -806,6 +806,35 @@ class ClinicalRAGAgent:
                         "--- \n"
                         "*Never ignore a blood pressure reading over 180/120 mmHg.*"
                     )
+                elif "friend" in q_lower or "double salt" in q_lower or ("salt" in q_lower and "balance" in q_lower):
+                    return (
+                        "### ⚠️ CRITICAL WARNING: Medical Misconception & Salt Intake\n\n"
+                        "**1. Doubling Salt Intake is Extremely Dangerous**:\n"
+                        "- Excess sodium causes your body to retain fluid, significantly **increasing blood pressure** and heart strain.\n"
+                        "- Clinical guidelines (ACC/AHA & NICE) strictly recommend limiting sodium to **under 1,500 mg/day** for hypertension.\n\n"
+                        "**2. Medication Dosage Safety**:\n"
+                        "- Never start, double, or adjust prescription medication (like Lisinopril) based on advice from friends or non-clinicians.\n"
+                        "- Lisinopril is typically taken **once daily**, and dosing must be tailored by a licensed physician after evaluating kidney function and potassium levels.\n\n"
+                        "--- \n"
+                        "*Always consult your healthcare provider before modifying any medication or dietary habit.*"
+                    )
+                elif "white coat" in q_lower or ("clinic" in q_lower and "home" in q_lower):
+                    return (
+                        "### 🩺 White-Coat Hypertension vs True Hypertension\n\n"
+                        "When your blood pressure is elevated in a doctor's office (e.g. 142/92 mmHg) but normal at home (e.g. 126/78 mmHg), this is called **White-Coat Hypertension**:\n\n"
+                        "- **Cause**: Anxiety or stress triggered by the medical environment.\n"
+                        "- **Action Needed**: Guidelines recommend **against** immediately starting blood pressure medication based solely on clinic readings when home averages are normal.\n"
+                        "- **Next Steps**: Your clinician will usually confirm with a 24-hour Ambulatory Blood Pressure Monitor (ABPM) or a 7-day home BP log and recommend lifestyle modifications first."
+                    )
+                elif "180/120" in q_lower or (("180" in q_lower or "170" in q_lower) and ("chest" in q_lower or "numbness" in q_lower)):
+                    return (
+                        "### 🚨 EMERGENCY WARNING: Severe High Blood Pressure with Warning Symptoms\n\n"
+                        "**DO NOT USE HOME REMEDIES OR WAIT TO SEEK CARE.**\n\n"
+                        "Chest pressure, arm numbness, and severe blood pressure elevations are potential signs of a **Hypertensive Emergency** or acute cardiovascular event:\n\n"
+                        "1. **Call 911 or Go to the Emergency Room Immediately.**\n"
+                        "2. **Do Not Attempt Home Remedies**: No diet, drink, or home remedy can treat acute heart or blood vessel distress.\n"
+                        "3. **Stay Calm and Rest**: Sit quietly while waiting for emergency responders to arrive."
+                    )
                 elif "stress" in q_lower or "anxiety" in q_lower or "relax" in q_lower:
                     return (
                         "### 🧘 Stress & Blood Pressure Management\n\n"
@@ -876,7 +905,31 @@ class ClinicalRAGAgent:
                         "Hypertension management combines regular home blood pressure monitoring, heart-healthy lifestyle modifications (DASH diet, sodium <1500mg/day, regular aerobic activity), and adherence to prescribed clinical treatments according to ACC/AHA and NICE guidelines."
                     )
             else: # Clinician Mode
-                if "first-line" in q_lower or "drug class" in q_lower or "medication" in q_lower:
+                if "combine" in q_lower and ("lisinopril" in q_lower or "losartan" in q_lower or "ace" in q_lower or "arb" in q_lower):
+                    return (
+                        "### 🚫 CONTRAINDICATION: Dual RAAS Blockade (ACEi + ARB Combination)\n\n"
+                        "**Clinical Recommendation**: **DO NOT COMBINE ACE Inhibitors and ARBs.**\n\n"
+                        "- **Trial Evidence (ONTARGET / ALTITUDE)**: Dual RAAS blockade (e.g., Lisinopril + Losartan) does NOT provide additive blood pressure lowering or mortality benefit over monotherapy.\n"
+                        "- **Severe Adverse Events**: Significantly increases the incidence of **Hyperkalemia**, **Acute Kidney Injury (AKI)**, and severe symptomatic hypotension.\n"
+                        "- **Standard Combination Protocol**: Combine an ACEi/ARB with a **Calcium Channel Blocker (CCB)** or a **Thiazide-like Diuretic** instead."
+                    )
+                elif ("black" in q_lower or "african" in q_lower) and ("ckd" in q_lower or "kidney" in q_lower or "protein" in q_lower or "albumin" in q_lower) and ("priorit" in q_lower or "versus" in q_lower or "vs" in q_lower or "which" in q_lower):
+                    return (
+                        "### ⚖️ Clinical Guideline Prioritization: CKD vs Racial Subgroup Monotherapy\n\n"
+                        "**Decision Framework (ACC/AHA 2017 & KDIGO)**:\n\n"
+                        "1. **CKD / Albuminuria Takes Precedence**: In patients of African descent who have **Chronic Kidney Disease (CKD Stage 3–5 or uACR ≥30 mg/g)**, renal protection with an **ACE Inhibitor or ARB** is recommended as initial therapy over a CCB or Thiazide.\n"
+                        "2. **Renal Function Monitoring**: Check serum creatinine / eGFR and serum potassium within **1 to 2 weeks** after ACEi/ARB initiation.\n"
+                        "3. **Dual Combination**: If blood pressure remains elevated (>20/10 mmHg over target), add a **CCB** (Amlodipine) or **Thiazide-like Diuretic** (Chlorthalidone) as the second agent."
+                    )
+                elif "white coat" in q_lower or ("clinic" in q_lower and "home" in q_lower):
+                    return (
+                        "### 🩺 Out-of-Office Diagnostic Protocol: White-Coat Hypertension Evaluation\n\n"
+                        "**Diagnostic Criteria (ACC/AHA 2017 & NICE NG136)**:\n"
+                        "- **Clinic BP**: ≥140/90 mmHg (Stage 1/2 HTN)\n"
+                        "- **Out-of-Office (HBPM/ABPM)**: Daytime average <135/85 mmHg (Normal)\n\n"
+                        "**Clinical Management**: Do NOT initiate immediate pharmacotherapy based solely on clinic BP. Re-evaluate with 24-hr ABPM or 7-day HBPM. Recommend non-pharmacological lifestyle interventions and annual out-of-office monitoring."
+                    )
+                elif "first-line" in q_lower or "drug class" in q_lower or "medication" in q_lower:
                     return (
                         "### 💊 First-Line Pharmacotherapy Protocol (ACC/AHA 2017 & NICE NG136)\n\n"
                         "**Primary Agent Classes**:\n"

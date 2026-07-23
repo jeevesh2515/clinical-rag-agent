@@ -334,10 +334,10 @@ export default function BMICalculator({ user, onSaveVitals, className = '' }: BM
 
         {/* Visual BMI Range Gauge */}
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[9px] font-bold uppercase text-gray-400 font-code-sm">
-            <span>Underweight (&lt;18.5)</span>
-            <span>Normal (18.5-24.9)</span>
-            <span>Overweight (25-29.9)</span>
+          <div className="flex justify-between text-[8px] sm:text-[9px] font-bold uppercase text-gray-400 font-code-sm tracking-tighter sm:tracking-normal">
+            <span><span className="sm:hidden">Under</span><span className="hidden sm:inline">Underweight</span> (&lt;18.5)</span>
+            <span><span className="sm:hidden">Norm</span><span className="hidden sm:inline">Normal</span> (18.5-25)</span>
+            <span><span className="sm:hidden">Over</span><span className="hidden sm:inline">Overweight</span> (25-30)</span>
             <span>Obese (&ge;30)</span>
           </div>
           <div className="w-full h-3 bg-slate-800 border border-white/40 overflow-hidden relative flex">

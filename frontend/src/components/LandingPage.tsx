@@ -290,7 +290,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
               <div className="inline-block px-3 py-1 bg-brand-accent text-white font-code-sm text-code-sm uppercase tracking-widest neo-brutal-shadow-sm font-bold">
                 Precision Hypertension RAG
               </div>
-              <h1 className="font-headline-xl text-[64px] leading-tight font-black text-clinical-black dark:text-white uppercase">
+              <h1 className="font-headline-xl text-3xl sm:text-5xl lg:text-[64px] leading-tight font-black text-clinical-black dark:text-white uppercase">
                 Clinical Precision.<br />
                 <span className="text-brand-accent">Engineered</span> For Care.
               </h1>
@@ -499,7 +499,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                 <span className="material-symbols-outlined text-4xl text-brand-accent" style={{ fontVariationSettings: "'FILL' 1" }}>terminal</span>
               </div>
             </div>
-            <h2 className="font-headline-xl text-[48px] font-black uppercase text-clinical-black dark:text-white mb-6">Experience the Protocol</h2>
+            <h2 className="font-headline-xl text-2xl sm:text-4xl lg:text-[48px] font-black uppercase text-clinical-black dark:text-white mb-6">Experience the Protocol</h2>
             <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 mb-12">
               Enter the sandbox to test the Hybrid Retrieval engine against anonymized clinical datasets in real-time. Full HIPAA compliance simulated.
             </p>
@@ -546,7 +546,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         {/* Next Step Section */}
         <section className="py-24 bg-stone-50 dark:bg-slate-900 border-b-4 border-clinical-black dark:border-slate-800 px-gutter relative overflow-hidden transition-colors duration-300">
           <div className="max-w-4xl mx-auto text-center space-y-6 reveal-bottom">
-            <h3 className="font-headline-xl text-[40px] font-black uppercase text-clinical-black dark:text-white">Ready for the Next Step?</h3>
+            <h3 className="font-headline-xl text-2xl sm:text-3xl lg:text-[40px] font-black uppercase text-clinical-black dark:text-white">Ready for the Next Step?</h3>
             <p className="text-on-surface-variant dark:text-slate-400 font-body-md max-w-lg mx-auto leading-relaxed border-l-4 border-brand-accent pl-6 text-left md:text-center md:border-l-0 md:pl-0">
               Audit results verified. Select an action below to authenticate and enter the clinical dashboard or scroll back to review the guidelines.
             </p>

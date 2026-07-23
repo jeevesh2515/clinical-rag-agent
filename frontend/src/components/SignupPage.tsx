@@ -225,7 +225,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as any)}
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white text-base sm:text-xs font-bold font-code-sm uppercase rounded-none focus:outline-none focus:border-brand-accent focus:ring-0"
                   >
                     <option value="patient">Patient (Normal User)</option>
                     <option value="clinician">Clinician (Medical Staff)</option>
@@ -244,7 +244,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
                     onChange={e => setUsername(e.target.value)}
                     required
                     placeholder="Choose a username"
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
                   />
                 </div>
 
@@ -258,7 +258,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
                     onChange={e => setEmail(e.target.value)}
                     required
                     placeholder="Enter your email"
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
                   />
                 </div>
 
@@ -273,7 +273,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
                       onChange={e => setPassword(e.target.value)}
                       required
                       placeholder="Create a password"
-                      className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                      className="w-full px-4 py-2.5 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
                     />
                     <button
                       type="button"

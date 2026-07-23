@@ -208,7 +208,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
                     required
                     autoFocus
                     placeholder="Enter your username"
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent dark:focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                    className="w-full px-4 py-3 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:border-brand-accent dark:focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
                   />
                 </div>
 
@@ -223,7 +223,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
                       onChange={e => setPassword(e.target.value)}
                       required
                       placeholder="Enter your password"
-                      className="w-full px-4 py-3 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-sm focus:outline-none focus:border-brand-accent dark:focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
+                      className="w-full px-4 py-3 pr-12 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-clinical-black dark:text-white placeholder-clinical-black/40 dark:placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:border-brand-accent dark:focus:border-brand-accent font-code-sm font-bold rounded-none transition-all"
                     />
                     <button
                       type="button"

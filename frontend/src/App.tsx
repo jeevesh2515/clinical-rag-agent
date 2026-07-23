@@ -2706,7 +2706,7 @@ export default function App() {
                 onKeyDown={handleKeyDown}
                 placeholder={isClinicianMode ? 'ASK A CLINICIAN-GRADE CLINICAL QUESTION…' : 'ASK A CLINICAL QUESTION ABOUT HYPERTENSION…'}
                 rows={1}
-                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-sm font-medium resize-none focus:outline-none focus:ring-0 leading-normal px-1.5 sm:px-2 py-1.5 min-h-[36px] max-h-32 scrollbar-thin"
+                className="flex-1 bg-transparent text-[#1a1a1a] dark:text-white placeholder-[#1a1a1a]/50 dark:placeholder-white/50 text-base sm:text-sm font-medium resize-none focus:outline-none focus:ring-0 leading-normal px-1.5 sm:px-2 py-1.5 min-h-[36px] max-h-32 scrollbar-thin"
               />
               <div className="flex items-center gap-1.5 sm:gap-2 pb-1">
                 <button

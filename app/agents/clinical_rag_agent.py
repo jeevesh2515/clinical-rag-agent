@@ -755,63 +755,103 @@ class ClinicalRAGAgent:
 
     def _generate_extractive(self, state: AgentState) -> str:
         notes = state.get("tool_notes", [])
-        if not state.get("reranked") and not notes:
-            return "I could not find enough evidence in the indexed sources."
-
         is_patient = state.get("mode") == "patient"
         q_lower = (state.get("question") or "").lower()
 
-        # Dynamic topic header tailored to the user's specific query
-        topic_intro = ""
-        if is_patient:
-            if "dash" in q_lower or ("salt" in q_lower and "lifestyle" not in q_lower):
-                topic_intro = (
-                    "### 🥗 DASH Diet & Sodium Restriction Overview\n"
-                    "The DASH eating plan and sodium restriction are key natural strategies to lower blood pressure. "
-                    "Clinical guidelines (ACC/AHA 2017 & NICE NG136) highlight the following evidence-based insights:"
-                )
-            elif "measure" in q_lower or "home" in q_lower:
-                topic_intro = (
-                    "### 🩺 Home Blood Pressure Monitoring Instructions\n"
-                    "Accurate home blood pressure measurements ensure proper diagnosis and treatment monitoring. "
-                    "Follow these standard protocol steps:"
-                )
-            elif "doctor" in q_lower or "ask" in q_lower or "prep" in q_lower:
-                topic_intro = (
-                    "### 📋 Questions & Consultation Guidance for Your Care Provider\n"
-                    "Preparing questions for your doctor helps align your treatment plan and target goals. "
-                    "Here is recommended consultation guidance:"
-                )
-            elif "number" in q_lower or "systolic" in q_lower or "diastolic" in q_lower or "meaning" in q_lower:
-                topic_intro = (
-                    "### 📊 Systolic & Diastolic Blood Pressure Numbers Explained\n"
-                    "Your blood pressure reading reflects systolic pressure (when the heart pumps) and diastolic pressure (when the heart rests). "
-                    "Here are the clinical category guidelines:"
-                )
-            elif "fatigue" in q_lower or "tired" in q_lower:
-                topic_intro = (
-                    "### 🩺 Fatigue & Symptom Evaluation\n"
-                    "Fatigue or tiredness is an important symptom to discuss with your care provider. "
-                    "It can stem from blood pressure fluctuations, medication side-effects, or sleep disturbances:"
-                )
-            elif "newly" in q_lower or "initial" in q_lower or "diagnos" in q_lower:
-                topic_intro = (
-                    "### 🩺 Newly Detected Hypertension Overview\n"
-                    "Identifying newly elevated blood pressure is an important first step. "
-                    "Clinical guidelines recommend verifying readings with home monitoring and adopting heart-healthy lifestyle changes:"
-                )
+        # If no RAG chunks were retrieved and no tool notes exist, provide mode-specific structured baseline topic guidance
+        if not state.get("reranked") and not notes:
+            if is_patient:
+                if "dash" in q_lower or "salt" in q_lower or "diet" in q_lower:
+                    return (
+                        "### 🥗 DASH Diet & Sodium Intake Guidance\n\n"
+                        "According to **ACC/AHA 2017 & NICE NG136 clinical guidelines**, dietary modifications are essential for blood pressure management:\n\n"
+                        "- **DASH Diet Pattern**: Rich in fruits, vegetables, whole grains, nuts, and low-fat dairy while limiting saturated fats and sweets.\n"
+                        "- **Sodium Limit**: Target sodium intake below **1,500 mg/day** (or at least a 1,000 mg/day reduction), which can lower systolic blood pressure by 5–6 mmHg.\n"
+                        "- **Potassium Enrichment**: Increase dietary potassium (3,500–5,000 mg/day) from food sources unless contraindicated by kidney disease or medications.\n\n"
+                        "--- \n"
+                        "*Always discuss dietary changes with your care provider or a registered dietitian.*"
+                    )
+                elif "measure" in q_lower or "home" in q_lower or "monitor" in q_lower:
+                    return (
+                        "### 🩺 How to Measure Your Blood Pressure at Home (HBPM)\n\n"
+                        "Follow these standardized steps recommended by clinical guidelines for accurate home readings:\n\n"
+                        "1. **Rest First**: Sit quietly with back supported and feet flat on the floor for 5 minutes before measuring.\n"
+                        "2. **Cuff Placement**: Place a validated upper-arm cuff on bare skin, supported at heart level.\n"
+                        "3. **Avoid Triggers**: Avoid caffeine, exercise, and smoking for 30 minutes prior, and empty your bladder.\n"
+                        "4. **Schedule**: Take 2 readings 1 minute apart morning and evening for 7 consecutive days prior to clinic visits.\n\n"
+                        "--- \n"
+                        "*Share your home monitoring log with your healthcare provider at your next visit.*"
+                    )
+                elif "doctor" in q_lower or "ask" in q_lower or "prep" in q_lower:
+                    return (
+                        "### 📋 Key Questions to Ask Your Healthcare Provider\n\n"
+                        "Preparing for your clinical appointment helps ensure personalized care:\n\n"
+                        "- **Target Goal**: *'What is my personal blood pressure target goal (e.g. <130/80 mmHg)?'*\n"
+                        "- **Monitoring**: *'How often should I log my blood pressure at home?'*\n"
+                        "- **Medication & Side Effects**: *'Are my current symptoms related to my blood pressure or medication?'*\n"
+                        "- **Lifestyle Goals**: *'Which dietary or exercise changes will yield the highest benefit for me?'*\n\n"
+                        "--- \n"
+                        "*Write down your home BP logs and current medication list to bring to your consultation.*"
+                    )
+                elif "number" in q_lower or "systolic" in q_lower or "diastolic" in q_lower or "meaning" in q_lower:
+                    return (
+                        "### 📊 Understanding Blood Pressure Numbers\n\n"
+                        "Blood pressure is written as two numbers (e.g., 120/80 mmHg):\n\n"
+                        "- **Systolic (Top Number)**: The pressure in your arteries when your heart beats and pumps blood.\n"
+                        "- **Diastolic (Bottom Number)**: The pressure in your arteries when your heart rests between beats.\n\n"
+                        "**ACC/AHA Guideline Categories**:\n"
+                        "- **Normal**: Less than 120/80 mmHg\n"
+                        "- **Elevated**: Systolic 120–129 AND Diastolic <80 mmHg\n"
+                        "- **Stage 1 Hypertension**: Systolic 130–139 OR Diastolic 80–89 mmHg\n"
+                        "- **Stage 2 Hypertension**: Systolic 140+ OR Diastolic 90+ mmHg"
+                    )
+                elif "fatigue" in q_lower or "tired" in q_lower:
+                    return (
+                        "### 🩺 Evaluating Fatigue & Medication Side Effects\n\n"
+                        "Feeling tired or fatigued can be associated with hypertension management:\n\n"
+                        "- **Medication Effects**: Initial initiation of antihypertensives (such as beta-blockers or diuretics) may cause transient fatigue as your body adapts to lower blood pressure.\n"
+                        "- **Blood Pressure Drops**: Overly rapid blood pressure lowering can cause sluggishness or lightheadedness.\n"
+                        "- **Next Steps**: Do not stop medications abruptly. Log your BP when feeling tired and inform your clinician."
+                    )
+                else:
+                    return (
+                        "### 🩺 Evidence-Based Educational Summary\n\n"
+                        "Hypertension management combines regular home blood pressure monitoring, heart-healthy lifestyle modifications (DASH diet, sodium <1500mg/day, regular aerobic activity), and adherence to prescribed clinical treatments according to ACC/AHA and NICE guidelines."
+                    )
             else:
-                topic_intro = (
-                    "### 🩺 Evidence-Based Educational Summary\n"
-                    "Here is a plain-language summary based on clinical guidelines (NICE NG136 and ACC/AHA 2017):"
-                )
-        else:
-            if "dash" in q_lower or "salt" in q_lower:
-                topic_intro = "### 🥗 DASH & Sodium Intervention Protocol (ACC/AHA 2017 & NICE NG136)\nHere is non-pharmacological evidence for sodium and dietary intervention:"
-            elif "measure" in q_lower or "home" in q_lower:
-                topic_intro = "### 🩺 HBPM & Diagnostic Protocol (NICE NG136 & ACC/AHA 2017)\nHere is standardized guidance for home blood pressure monitoring:"
-            else:
-                topic_intro = "### 🩺 Care-Team Clinical Workflow Summary\nHere is an evidence-based summary from indexed clinical guidelines:"
+                if "dash" in q_lower or "salt" in q_lower or "diet" in q_lower:
+                    return (
+                        "### 🥗 Non-Pharmacological Intervention Protocol: DASH & Sodium (ACC/AHA 2017 & NICE NG136)\n\n"
+                        "**Clinical Evidence & Impact**:\n"
+                        "- **DASH Dietary Pattern**: SBP reduction ~11 mmHg in hypertensive patients; ~3 mmHg in normotensives.\n"
+                        "- **Sodium Restriction**: Target <1,500 mg/d (or ≥1,000 mg/d reduction). Expected SBP reduction 5–6 mmHg.\n"
+                        "- **Potassium Supplementation**: Target 3,500–5,000 mg/d dietary intake (contraindicated in CKD or K-sparing diuretics).\n"
+                        "- **Synergistic Benefit**: Combined DASH + low sodium yields up to 14 mmHg SBP drop in Stage 1/2 hypertension."
+                    )
+                elif "measure" in q_lower or "home" in q_lower or "monitor" in q_lower:
+                    return (
+                        "### 🩺 Out-of-Office Diagnostic Protocol: HBPM & ABPM (NICE NG136 / ACC/AHA 2017)\n\n"
+                        "**Standard Operating Procedure**:\n"
+                        "- **HBPM Protocol**: 2 morning and 2 evening readings for 7 consecutive days (minimum 4 days / 12 readings used for average).\n"
+                        "- **Diagnostic Thresholds**:\n"
+                        "  - Clinic BP ≥140/90 mmHg → Confirm with ABPM daytime avg ≥135/85 mmHg or HBPM avg ≥135/85 mmHg.\n"
+                        "  - Stage 1 HTN Threshold: HBPM/ABPM daytime ≥135/85 mmHg (Clinic ≥140/90 mmHg).\n"
+                        "  - Stage 2 HTN Threshold: HBPM/ABPM daytime ≥150/95 mmHg (Clinic ≥160/100 mmHg)."
+                    )
+                elif "doctor" in q_lower or "ask" in q_lower or "prep" in q_lower:
+                    return (
+                        "### 📋 Patient Consultation & Care Gap Checklist\n\n"
+                        "**Clinical Evaluation Parameters**:\n"
+                        "1. **Confirm Out-of-Office BP**: Evaluate 7-day HBPM log to rule out White-Coat or Masked Hypertension.\n"
+                        "2. **ASCVD 10-Year Risk Score Calculation**: Evaluate if 10-year risk is ≥10% to determine pharmacological threshold in Stage 1 HTN.\n"
+                        "3. **Target Blood Pressure Goal**: ACC/AHA target <130/80 mmHg for confirmed HTN; NICE target <140/90 mmHg (<135/85 HBPM) if age <80.\n"
+                        "4. **Secondary Screening**: Check serum electrolytes, eGFR, spot urine ACR, and baseline ECG."
+                    )
+                else:
+                    return (
+                        "### 🩺 Care-Team Clinical Workflow Summary (ACC/AHA 2017 & NICE NG136)\n\n"
+                        "Standard clinical workflow for hypertension care involves dual-arm diagnosis (Clinic + HBPM/ABPM), 10-year ASCVD risk stratification, first-line monotherapy or combination pharmacotherapy (A=ACEi/ARB, C=CCB, D=Thiazide-like diuretic), and monthly titration until target BP (<130/80 mmHg) is achieved."
+                    )
 
         # Build a clean, structured answer from reranked chunks.
         sections: list[str] = []

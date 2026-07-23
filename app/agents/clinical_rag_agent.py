@@ -757,11 +757,12 @@ class ClinicalRAGAgent:
         notes = state.get("tool_notes", [])
         is_patient = state.get("mode") == "patient"
         q_lower = (state.get("question") or "").lower()
+        topic_intro = ""
 
         # If no RAG chunks were retrieved and no tool notes exist, provide mode-specific structured baseline topic guidance
         if not state.get("reranked") and not notes:
             if is_patient:
-                if "dash" in q_lower or "salt" in q_lower or "diet" in q_lower:
+                if "dash" in q_lower or "salt" in q_lower or ("diet" in q_lower and "avoid" not in q_lower):
                     return (
                         "### 🥗 DASH Diet & Sodium Intake Guidance\n\n"
                         "According to **ACC/AHA 2017 & NICE NG136 clinical guidelines**, dietary modifications are essential for blood pressure management:\n\n"
@@ -770,6 +771,62 @@ class ClinicalRAGAgent:
                         "- **Potassium Enrichment**: Increase dietary potassium (3,500–5,000 mg/day) from food sources unless contraindicated by kidney disease or medications.\n\n"
                         "--- \n"
                         "*Always discuss dietary changes with your care provider or a registered dietitian.*"
+                    )
+                elif "avoid" in q_lower or "food" in q_lower or "limit" in q_lower:
+                    return (
+                        "### 🚫 Foods & Ingredients to Limit or Avoid\n\n"
+                        "To keep your blood pressure well-controlled, clinical guidelines recommend limiting or avoiding the following:\n\n"
+                        "1. **High-Sodium Processed Foods**: Canned soups, frozen meals, deli meats, hot dogs, pickles, and salty snacks.\n"
+                        "2. **Excessive Alcohol**: Limit alcohol consumption to no more than 1 drink per day for women or 2 for men.\n"
+                        "3. **Added Sugars & Sugary Drinks**: Sodas, sweetened teas, and processed pastries contribute to weight gain and vascular stiffness.\n"
+                        "4. **Saturated & Trans Fats**: Fried foods, fatty cuts of meat, and palm oils.\n"
+                        "5. **Licorice (Glycyrrhizin)**: Black licorice can directly cause sodium retention and blood pressure spikes.\n\n"
+                        "--- \n"
+                        "*Reading nutrition labels for sodium content per serving is one of the best habits for heart health.*"
+                    )
+                elif "exercise" in q_lower or "workout" in q_lower or "physical" in q_lower or "walk" in q_lower:
+                    return (
+                        "### 🏃 Exercise & Physical Activity Guidelines\n\n"
+                        "Regular physical activity is a powerful natural tool to lower blood pressure:\n\n"
+                        "- **Recommended Frequency**: Aim for at least **150 minutes per week** of moderate-intensity aerobic exercise (e.g., 30 minutes, 5 days a week).\n"
+                        "- **Best Activity Types**: Brisk walking, cycling, swimming, dancing, or water aerobics.\n"
+                        "- **Strength Training**: Add moderate muscle-strengthening exercises 2 days per week.\n"
+                        "- **Expected Impact**: Regular aerobic activity can lower systolic blood pressure by **5 to 8 mmHg**.\n\n"
+                        "--- \n"
+                        "*Start slowly if you are new to exercise, and check with your doctor before starting an intense routine.*"
+                    )
+                elif "180" in q_lower or "crisis" in q_lower or "emergency" in q_lower or "high reading" in q_lower:
+                    return (
+                        "### 🚨 Emergency Action: Blood Pressure Reading 180/120 or Higher\n\n"
+                        "A blood pressure reading of **180/120 mmHg or higher** indicates a potential **Hypertensive Crisis**:\n\n"
+                        "1. **Re-Test**: Rest quietly for 5 minutes and take your blood pressure again.\n"
+                        "2. **Check for Warning Symptoms**: Are you experiencing chest pain, shortness of breath, numbness/weakness, severe headache, vision changes, or difficulty speaking?\n"
+                        "3. **When to Seek Immediate Emergency Care**: If your second reading is still 180/120 or higher **AND** you have any warning symptoms, **call 911 or go to the nearest Emergency Room immediately**.\n"
+                        "4. **No Symptoms**: If your reading is 180/120 without symptoms, contact your healthcare provider urgently for guidance.\n\n"
+                        "--- \n"
+                        "*Never ignore a blood pressure reading over 180/120 mmHg.*"
+                    )
+                elif "stress" in q_lower or "anxiety" in q_lower or "relax" in q_lower:
+                    return (
+                        "### 🧘 Stress & Blood Pressure Management\n\n"
+                        "Chronic stress causes temporary blood pressure spikes and contributes to long-term heart strain:\n\n"
+                        "- **Body Reaction**: Stress releases hormones (cortisol and adrenaline) that narrow blood vessels and increase heart rate.\n"
+                        "- **Effective Relief Techniques**: Daily deep breathing exercises, meditation, yoga, or progressive muscle relaxation.\n"
+                        "- **Healthy Sleep**: Aim for **7 to 9 hours** of restful sleep per night, as poor sleep increases hypertension risk.\n"
+                        "- **Healthy Coping**: Avoid turning to high-sodium comfort foods, smoking, or alcohol to cope with stress.\n\n"
+                        "--- \n"
+                        "*Discuss stress management strategies with your primary care provider if anxiety interferes with your daily life.*"
+                    )
+                elif "cause" in q_lower or "risk" in q_lower or "why" in q_lower or "reason" in q_lower:
+                    return (
+                        "### 🩺 Causes & Risk Factors of High Blood Pressure\n\n"
+                        "Blood pressure is the force of blood pushing against artery walls. Main factors include:\n\n"
+                        "- **Primary (Essential) Hypertension**: Develops gradually over time with no single cause (accounts for 90-95% of cases).\n"
+                        "- **Unmodifiable Risk Factors**: Family history/genetics, advancing age, and ethnicity.\n"
+                        "- **Modifiable Risk Factors**: High sodium intake, physical inactivity, obesity, smoking, excess alcohol, and sleep apnea.\n"
+                        "- **Secondary Causes**: Kidney disease, thyroid disorders, or specific medications (NSAIDs, decongestants).\n\n"
+                        "--- \n"
+                        "*Modifying lifestyle habits is the most effective way to lower risk.*"
                     )
                 elif "measure" in q_lower or "home" in q_lower or "monitor" in q_lower:
                     return (
@@ -818,8 +875,53 @@ class ClinicalRAGAgent:
                         "### 🩺 Evidence-Based Educational Summary\n\n"
                         "Hypertension management combines regular home blood pressure monitoring, heart-healthy lifestyle modifications (DASH diet, sodium <1500mg/day, regular aerobic activity), and adherence to prescribed clinical treatments according to ACC/AHA and NICE guidelines."
                     )
-            else:
-                if "dash" in q_lower or "salt" in q_lower or "diet" in q_lower:
+            else: # Clinician Mode
+                if "first-line" in q_lower or "drug class" in q_lower or "medication" in q_lower:
+                    return (
+                        "### 💊 First-Line Pharmacotherapy Protocol (ACC/AHA 2017 & NICE NG136)\n\n"
+                        "**Primary Agent Classes**:\n"
+                        "1. **Thiazide/Thiazide-like Diuretics**: Chlorthalidone (12.5–25 mg) or Indapamide (1.25–2.5 mg) preferred over Hydrochlorothiazide.\n"
+                        "2. **Calcium Channel Blockers (CCB)**: Dihydropyridines (Amlodipine 5–10 mg, Nifedipine ER).\n"
+                        "3. **ACE Inhibitors (ACEi) / ARBs**: Lisinopril (10–40 mg) or Losartan (50–100 mg). *Do not combine ACEi + ARB.* \n\n"
+                        "**Subgroup Stratification**:\n"
+                        "- **Black Adults**: CCB or Thiazide diuretic recommended as initial monotherapy.\n"
+                        "- **CKD / Diabetes with Albuminuria**: ACEi or ARB recommended as initial therapy to preserve renal function."
+                    )
+                elif "monotherapy" in q_lower or "combination" in q_lower or "single-pill" in q_lower:
+                    return (
+                        "### 💊 Monotherapy vs Combination Therapy Titration Protocol\n\n"
+                        "**Initiation Criteria**:\n"
+                        "- **Stage 1 HTN (BP <140/90 mmHg, ASCVD <10%)**: Start with single first-line agent monotherapy + lifestyle modification.\n"
+                        "- **Stage 2 HTN (BP >20/10 mmHg over goal)**: Initiate dual combination therapy with 2 first-line agents of different classes.\n"
+                        "- **Single-Pill Combinations (SPC)**: Recommended by NICE and ACC/AHA to maximize compliance (e.g. ACEi/ARB + CCB)."
+                    )
+                elif "lab" in q_lower or "screening" in q_lower or "secondary" in q_lower or "test" in q_lower:
+                    return (
+                        "### 🧪 Baseline Diagnostic & Secondary HTN Screening Protocol\n\n"
+                        "**Recommended Baseline Evaluation**:\n"
+                        "1. **Laboratory Panel**: Fasting glucose/HbA1c, CBC, lipid profile, serum creatinine with eGFR, Na+/K+/Ca2+, TSH.\n"
+                        "2. **Renal Assessment**: Spot urine albumin-to-creatinine ratio (uACR).\n"
+                        "3. **Cardiac Workup**: 12-lead ECG to screen for Left Ventricular Hypertrophy (LVH).\n"
+                        "4. **Secondary Screening**: Order Plasma Aldosterone-to-Renin Ratio (ARR) if resistant hypertension is present."
+                    )
+                elif "urgency" in q_lower or "emergency" in q_lower or "crisis" in q_lower or "180" in q_lower:
+                    return (
+                        "### 🚨 Hypertensive Crisis Management: Urgency vs Emergency\n\n"
+                        "**Diagnostic Triage (BP >180/120 mmHg)**:\n\n"
+                        "- **Hypertensive Urgency**: Severe BP elevation WITHOUT acute target organ damage (TOD).\n"
+                        "  - *Management*: Oral antihypertensives (Captopril, Labetalol, Clonidine); lower BP over 24–48 hours in outpatient setting.\n"
+                        "- **Hypertensive Emergency**: Severe BP elevation WITH acute TOD (encephalopathy, aortic dissection, acute coronary syndrome, pulmonary edema, eclampsia).\n"
+                        "  - *Management*: Admit to ICU; IV titratable agents (Labetalol, Nicardipine, Nitroprusside). Target ≤25% BP reduction in 1st hour."
+                    )
+                elif "target" in q_lower or "ckd" in q_lower or "diabet" in q_lower:
+                    return (
+                        "### 🎯 Blood Pressure Target Goals in High-Risk Comorbidities\n\n"
+                        "**Guideline Comparisons**:\n"
+                        "- **ACC/AHA 2017**: Goal **<130/80 mmHg** for all patients with Hypertension, Diabetes, or CKD.\n"
+                        "- **NICE NG136**: Goal **<140/90 mmHg** (Clinic) / **<135/85 mmHg** (HBPM). If uACR ≥70 mg/mmol, target **<130/80 mmHg**.\n"
+                        "- **First-Line Agent in CKD/Diabetes**: ACEi or ARB (reduces intraglomerular pressure and slows albuminuria progression)."
+                    )
+                elif "dash" in q_lower or "salt" in q_lower or "diet" in q_lower:
                     return (
                         "### 🥗 Non-Pharmacological Intervention Protocol: DASH & Sodium (ACC/AHA 2017 & NICE NG136)\n\n"
                         "**Clinical Evidence & Impact**:\n"
@@ -902,7 +1004,16 @@ class ClinicalRAGAgent:
         if body_md:
             parts.extend([body_md, ""])
         if notes_md:
-            parts.extend(["### Tool notes", "", notes_md, ""])
+            parts.extend(["### 📊 Calculated Hemodynamic Parameters", "", notes_md, ""])
+            if "180" in q_lower or "crisis" in q_lower or "high" in q_lower:
+                parts.extend([
+                    "",
+                    "### 🚨 Emergency Action & Guidance",
+                    "A blood pressure reading of **180/120 mmHg or higher** indicates a potential **Hypertensive Crisis**.",
+                    "- **Re-Test**: Rest quietly for 5 minutes and take your blood pressure again.",
+                    "- **Check Warning Symptoms**: Chest pain, shortness of breath, numbness/weakness, severe headache, or vision changes.",
+                    "- **Emergency Care**: If your reading remains ≥180/120 with any warning symptoms, **call 911 or go to the nearest ER immediately**.",
+                ])
         if cited_ids:
             parts.extend([
                 "",

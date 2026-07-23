@@ -56,7 +56,7 @@ REFUSAL_PATTERNS: list[tuple[RefusalReason, re.Pattern[str]]] = [
         "emergency_triage_request",
         re.compile(
             r"\b(should|do) (i|we|this patient|the patient) (go|send|be sent) (to )?(the )?"
-            r"(er|ed|emergency|hospital)|\bemergency\b|\bchest (pain|hurts|tightness)\b|"
+            r"(er|ed|emergency|hospital)|\bam i having an emergency\b|\bchest (pain|hurts|tightness)\b|"
             r"\bcan't breathe\b|\bstroke\b|\bheart attack\b",
             re.I,
         ),

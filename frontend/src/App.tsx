@@ -198,7 +198,7 @@ class ApiClient {
           return {
             ...remoteUser,
             full_name: remoteUser.full_name || cached.full_name,
-            email: remoteUser.email || cached.email,
+            email: remoteUser.email || cached.email || '',
             date_of_birth: remoteUser.date_of_birth || cached.date_of_birth,
             notes: remoteUser.notes || cached.notes,
             health_vitals: remoteUser.health_vitals || cached.health_vitals,
@@ -435,7 +435,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
         {/* Brand */}
         <div className="flex items-center justify-between px-4 py-4 sm:py-6 border-b-2 border-white/20">
           <button 
-            onClick={() => { onLogoClick(); if (window.innerWidth < 1024) onToggle(); }}
+            onClick={() => { if (onLogoClick) onLogoClick(); if (window.innerWidth < 1024) onToggle(); }}
             className="group flex items-center gap-3 min-w-0 flex-1 text-left focus:outline-none"
             title="Back to Homepage"
           >

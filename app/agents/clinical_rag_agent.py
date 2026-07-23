@@ -764,25 +764,41 @@ class ClinicalRAGAgent:
         # Dynamic topic header tailored to the user's specific query
         topic_intro = ""
         if is_patient:
-            if "fatigue" in q_lower or "tired" in q_lower:
+            if "dash" in q_lower or ("salt" in q_lower and "lifestyle" not in q_lower):
+                topic_intro = (
+                    "### 🥗 DASH Diet & Sodium Restriction Overview\n"
+                    "The DASH eating plan and sodium restriction are key natural strategies to lower blood pressure. "
+                    "Clinical guidelines (ACC/AHA 2017 & NICE NG136) highlight the following evidence-based insights:"
+                )
+            elif "measure" in q_lower or "home" in q_lower:
+                topic_intro = (
+                    "### 🩺 Home Blood Pressure Monitoring Instructions\n"
+                    "Accurate home blood pressure measurements ensure proper diagnosis and treatment monitoring. "
+                    "Follow these standard protocol steps:"
+                )
+            elif "doctor" in q_lower or "ask" in q_lower or "prep" in q_lower:
+                topic_intro = (
+                    "### 📋 Questions & Consultation Guidance for Your Care Provider\n"
+                    "Preparing questions for your doctor helps align your treatment plan and target goals. "
+                    "Here is recommended consultation guidance:"
+                )
+            elif "number" in q_lower or "systolic" in q_lower or "diastolic" in q_lower or "meaning" in q_lower:
+                topic_intro = (
+                    "### 📊 Systolic & Diastolic Blood Pressure Numbers Explained\n"
+                    "Your blood pressure reading reflects systolic pressure (when the heart pumps) and diastolic pressure (when the heart rests). "
+                    "Here are the clinical category guidelines:"
+                )
+            elif "fatigue" in q_lower or "tired" in q_lower:
                 topic_intro = (
                     "### 🩺 Fatigue & Symptom Evaluation\n"
                     "Fatigue or tiredness is an important symptom to discuss with your care provider. "
-                    "It can stem from blood pressure fluctuations, medication side-effects (such as beta-blockers or diuretics), "
-                    "or sleep disturbances. Here is evidence-based guidance from clinical guidelines:"
+                    "It can stem from blood pressure fluctuations, medication side-effects, or sleep disturbances:"
                 )
             elif "newly" in q_lower or "initial" in q_lower or "diagnos" in q_lower:
                 topic_intro = (
                     "### 🩺 Newly Detected Hypertension Overview\n"
                     "Identifying newly elevated blood pressure is an important first step. "
-                    "Clinical guidelines (ACC/AHA 2017 & NICE NG136) recommend verifying readings with home monitoring, "
-                    "adopting heart-healthy lifestyle changes, and scheduling a follow-up evaluation:"
-                )
-            elif "bp" in q_lower or "reading" in q_lower or "target" in q_lower or "/" in q_lower:
-                topic_intro = (
-                    "### 🩺 Understanding Your Blood Pressure Category & Goals\n"
-                    "Blood pressure is recorded as Systolic (top number) over Diastolic (bottom number). "
-                    "Here are the evidence-based category thresholds and target goals:"
+                    "Clinical guidelines recommend verifying readings with home monitoring and adopting heart-healthy lifestyle changes:"
                 )
             else:
                 topic_intro = (
@@ -790,7 +806,12 @@ class ClinicalRAGAgent:
                     "Here is a plain-language summary based on clinical guidelines (NICE NG136 and ACC/AHA 2017):"
                 )
         else:
-            topic_intro = "### 🩺 Care-Team Clinical Workflow Summary\nHere is an evidence-based summary from indexed clinical guidelines:"
+            if "dash" in q_lower or "salt" in q_lower:
+                topic_intro = "### 🥗 DASH & Sodium Intervention Protocol (ACC/AHA 2017 & NICE NG136)\nHere is non-pharmacological evidence for sodium and dietary intervention:"
+            elif "measure" in q_lower or "home" in q_lower:
+                topic_intro = "### 🩺 HBPM & Diagnostic Protocol (NICE NG136 & ACC/AHA 2017)\nHere is standardized guidance for home blood pressure monitoring:"
+            else:
+                topic_intro = "### 🩺 Care-Team Clinical Workflow Summary\nHere is an evidence-based summary from indexed clinical guidelines:"
 
         # Build a clean, structured answer from reranked chunks.
         sections: list[str] = []

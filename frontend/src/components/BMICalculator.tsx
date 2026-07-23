@@ -162,27 +162,27 @@ export default function BMICalculator({ user, onSaveVitals, className = '' }: BM
   return (
     <div className={`bg-white dark:bg-slate-900 border-4 border-[#1a1a1a] dark:border-white p-4 sm:p-6 clinical-shadow ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between border-b-2 border-[#1a1a1a] dark:border-white pb-3 mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-brand-accent text-white flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white font-bold">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b-2 border-[#1a1a1a] dark:border-white pb-3 mb-4 pr-8 sm:pr-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 bg-brand-accent text-white flex items-center justify-center border-2 border-[#1a1a1a] dark:border-white font-bold shrink-0">
             <Scale size={18} />
           </div>
-          <div>
-            <h3 className="font-headline-md text-sm sm:text-base uppercase font-bold text-[#1a1a1a] dark:text-white">
+          <div className="min-w-0">
+            <h3 className="font-headline-md text-xs sm:text-base uppercase font-bold text-[#1a1a1a] dark:text-white leading-tight">
               Clinical BMI & Cardiovascular Risk Calculator
             </h3>
-            <p className="text-[10px] text-[#1a1a1a]/60 dark:text-white/60 uppercase font-bold tracking-wider font-code-sm">
-              WHO BMI Categories & Antihypertensive Impact Assessment
+            <p className="text-[10px] text-[#1a1a1a]/60 dark:text-white/60 uppercase font-bold tracking-wider font-code-sm truncate">
+              WHO BMI Categories & Antihypertensive Impact
             </p>
           </div>
         </div>
 
         {/* Unit Selector Buttons */}
-        <div className="flex border-2 border-[#1a1a1a] dark:border-white bg-[#f0f0f0] dark:bg-slate-800 p-0.5 shrink-0">
+        <div className="flex border-2 border-[#1a1a1a] dark:border-white bg-[#f0f0f0] dark:bg-slate-800 p-0.5 shrink-0 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setUnitSystem('metric')}
-            className={`px-2.5 py-1 text-[11px] font-bold uppercase transition-all ${
+            className={`px-2 py-1 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase transition-all ${
               unitSystem === 'metric'
                 ? 'bg-brand-accent text-white border border-[#1a1a1a]'
                 : 'text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white'
@@ -193,7 +193,7 @@ export default function BMICalculator({ user, onSaveVitals, className = '' }: BM
           <button
             type="button"
             onClick={() => setUnitSystem('imperial')}
-            className={`px-2.5 py-1 text-[11px] font-bold uppercase transition-all ${
+            className={`px-2 py-1 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase transition-all ${
               unitSystem === 'imperial'
                 ? 'bg-brand-accent text-white border border-[#1a1a1a]'
                 : 'text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white'

@@ -190,8 +190,8 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             <div className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
               <Stethoscope size={14} className="text-white transition-transform group-hover:rotate-[15deg] sm:size-[16px]" />
             </div>
-            <span className="font-headline-md text-xs sm:text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight truncate max-w-[130px] sm:max-w-none">
-              Clinical <span className="hidden sm:inline">Workflows</span>
+            <span className="font-headline-md text-xs sm:text-sm md:text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight whitespace-nowrap">
+              Clinical Workflows
             </span>
           </button>
           <div className="hidden md:!flex items-center gap-8">

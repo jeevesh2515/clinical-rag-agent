@@ -197,11 +197,11 @@ class ApiClient {
         if (cached) {
           return {
             ...remoteUser,
-            full_name: cached.full_name || remoteUser.full_name,
-            email: cached.email || remoteUser.email,
-            date_of_birth: cached.date_of_birth || remoteUser.date_of_birth,
-            notes: cached.notes || remoteUser.notes,
-            health_vitals: cached.health_vitals || remoteUser.health_vitals,
+            full_name: remoteUser.full_name || cached.full_name,
+            email: remoteUser.email || cached.email,
+            date_of_birth: remoteUser.date_of_birth || cached.date_of_birth,
+            notes: remoteUser.notes || cached.notes,
+            health_vitals: remoteUser.health_vitals || cached.health_vitals,
           }
         }
         return remoteUser
@@ -429,13 +429,13 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       )}
       <aside className={cn(
         'flex flex-col bg-[#1a1a1a] text-white border-r-2 border-[#1a1a1a] transition-all duration-300 ease-in-out shrink-0 z-40',
-        'fixed lg:relative inset-y-0 left-0 h-screen lg:h-full',
+        'fixed lg:relative inset-y-0 left-0 h-[100dvh] lg:h-full max-h-[100dvh]',
         isOpen ? 'w-sidebar-width translate-x-0' : 'w-sidebar-width -translate-x-full lg:w-0 lg:translate-x-0 lg:overflow-hidden'
       )}>
         {/* Brand */}
-        <div className="flex items-center justify-between px-4 py-6 border-b-2 border-white/20">
+        <div className="flex items-center justify-between px-4 py-4 sm:py-6 border-b-2 border-white/20">
           <button 
-            onClick={onLogoClick}
+            onClick={() => { onLogoClick(); if (window.innerWidth < 1024) onToggle(); }}
             className="group flex items-center gap-3 min-w-0 flex-1 text-left focus:outline-none"
             title="Back to Homepage"
           >
@@ -447,21 +447,21 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
               <p className="font-mono text-[10px] text-white/70 mt-1 uppercase">Hypertension AI</p>
             </div>
           </button>
-          <button onClick={onToggle} className="p-1 text-white/50 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30" title="Collapse sidebar">
-            <PanelLeftClose size={16} />
+          <button onClick={onToggle} className="p-1.5 text-white/70 hover:text-brand-accent transition-colors border-2 border-transparent hover:border-white/30" title="Close sidebar">
+            <PanelLeftClose size={18} />
           </button>
         </div>
 
       {/* New chat & BMI Calc */}
-      <div className="px-4 py-4 space-y-2">
-        <button onClick={onNewChat}
+      <div className="px-4 py-3 space-y-2">
+        <button onClick={() => { onNewChat(); if (window.innerWidth < 1024) onToggle(); }}
           className="w-full bg-brand-accent text-white font-label-md text-label-md py-2.5 flex items-center justify-center gap-2 hover:bg-white hover:text-[#1a1a1a] transition-colors border-2 border-white uppercase tracking-wider brutalist-button">
           <Plus size={15} />
           <span>New Chat</span>
         </button>
 
         {onOpenBmiModal && (
-          <button onClick={onOpenBmiModal}
+          <button onClick={() => { onOpenBmiModal(); if (window.innerWidth < 1024) onToggle(); }}
             className="w-full bg-white/10 text-white hover:bg-white hover:text-[#1a1a1a] font-label-md text-xs py-2 flex items-center justify-center gap-2 transition-all border-2 border-white/40 uppercase tracking-wider">
             <Scale size={14} className="text-brand-accent" />
             <span>BMI Calculator</span>
@@ -470,7 +470,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       </div>
 
       {/* Search */}
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-3">
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
           <input
@@ -482,7 +482,7 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium px-4 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scroll-premium px-4 py-2 space-y-1 min-h-0">
         {isLoading ? (
           <div className="flex justify-center py-8"><Spinner className="text-white/50" /></div>
         ) : filtered.length === 0 ? (
@@ -497,30 +497,30 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
             {today.map(c => (
               <ConvItem key={c.id} conv={c} isActive={c.id === currentConvId}
                 hovered={hoveredConv === c.id} onHover={setHoveredConv}
-                onSelect={onSelectConv} onDelete={onDeleteConv} />
+                onSelect={(id) => { onSelectConv(id); if (window.innerWidth < 1024) onToggle(); }} onDelete={onDeleteConv} />
             ))}
             {week.length > 0 && <SectionLabel className="mt-3">This Week</SectionLabel>}
             {week.map(c => (
               <ConvItem key={c.id} conv={c} isActive={c.id === currentConvId}
                 hovered={hoveredConv === c.id} onHover={setHoveredConv}
-                onSelect={onSelectConv} onDelete={onDeleteConv} />
+                onSelect={(id) => { onSelectConv(id); if (window.innerWidth < 1024) onToggle(); }} onDelete={onDeleteConv} />
             ))}
             {older.length > 0 && <SectionLabel className="mt-3">Earlier</SectionLabel>}
             {older.map(c => (
               <ConvItem key={c.id} conv={c} isActive={c.id === currentConvId}
                 hovered={hoveredConv === c.id} onHover={setHoveredConv}
-                onSelect={onSelectConv} onDelete={onDeleteConv} />
+                onSelect={(id) => { onSelectConv(id); if (window.innerWidth < 1024) onToggle(); }} onDelete={onDeleteConv} />
             ))}
           </>
         )}
       </div>
 
       {/* Footer User card */}
-      <div className="p-4 border-t-2 border-white/20 flex items-center justify-between bg-black">
+      <div className="p-3.5 border-t-2 border-white/20 flex items-center justify-between bg-black shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))] z-10">
         <div className="flex items-center gap-3 min-w-0">
           <button 
-            onClick={onOpenProfile}
-            className="w-8 h-8 bg-white flex items-center justify-center text-[#1a1a1a] font-bold text-sm border-2 border-white shrink-0 clinical-shadow"
+            onClick={() => { onOpenProfile(); if (window.innerWidth < 1024) onToggle(); }}
+            className="w-8 h-8 bg-white flex items-center justify-center text-[#1a1a1a] font-bold text-sm border-2 border-white shrink-0 clinical-shadow hover:bg-brand-accent hover:text-white transition-colors"
             title="Edit Profile"
           >
             {getInitials(user.username)}
@@ -533,7 +533,11 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
             </div>
           </div>
         </div>
-        <button onClick={onLogout} className="text-white/50 hover:text-brand-accent transition-colors shrink-0" title="Log out">
+        <button 
+          onClick={onLogout} 
+          className="p-1.5 text-white/70 hover:text-white hover:bg-brand-accent transition-all border-2 border-white/40 hover:border-white shrink-0" 
+          title="Log out"
+        >
           <LogOut size={16} />
         </button>
       </div>
@@ -1928,13 +1932,6 @@ function saveLocalUserProfile(u: UserProfile | null) {
       notes: u.notes,
       health_vitals: u.health_vitals
     }))
-    localStorage.setItem('cw_profile_backup', JSON.stringify({
-      full_name: u.full_name,
-      email: u.email,
-      date_of_birth: u.date_of_birth,
-      notes: u.notes,
-      health_vitals: u.health_vitals
-    }))
   } catch {}
 }
 
@@ -1946,10 +1943,6 @@ function loadLocalUserProfile(u: UserProfile | null): Partial<UserProfile> | nul
       if (raw) return JSON.parse(raw)
     } catch {}
   }
-  try {
-    const backupRaw = localStorage.getItem('cw_profile_backup')
-    if (backupRaw) return JSON.parse(backupRaw)
-  } catch {}
   return null
 }
 

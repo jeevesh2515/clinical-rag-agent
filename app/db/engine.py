@@ -141,15 +141,17 @@ def bootstrap() -> None:
     init_db()
 
     # Idempotently add columns that may not exist on older databases.
+    # Each column addition uses its own connection + transaction block so a PostgreSQL
+    # column-exists exception won't abort the transaction for subsequent operations.
     engine = _get_engine()
-    with engine.connect() as conn:
-        for column, col_type in [("rephrased_question", "TEXT"), ("model_used", "VARCHAR(128)")]:
-            try:
-                conn.execute(text(f"ALTER TABLE messages ADD COLUMN {column} {col_type}"))
-                conn.commit()
-            except Exception:
-                # Column already exists — ignore.
-                pass
+    for column, col_type in [("rephrased_question", "TEXT"), ("model_used", "VARCHAR(128)")]:
+        try:
+            with engine.connect() as conn:
+                with conn.begin():
+                    conn.execute(text(f"ALTER TABLE messages ADD COLUMN {column} {col_type}"))
+        except Exception:
+            # Column already exists or freshly created table — ignore safely.
+            pass
 
     upload_dir = os.environ.get("UPLOAD_DIR", "data/uploads")
     try:

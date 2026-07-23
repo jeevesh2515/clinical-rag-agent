@@ -37,50 +37,63 @@ class PgVectorStore:
         self._rebuild_sparse_index()
 
     def _init_schema(self) -> None:
+        # Execute each DDL statement in its own connection + transaction block
+        # so PostgreSQL exceptions (like index unsupported) don't abort the entire connection.
         with self._engine.connect() as conn:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS chunk_vectors (
-                    id SERIAL PRIMARY KEY,
-                    chunk_id VARCHAR(255) UNIQUE NOT NULL,
-                    source_id VARCHAR(255) NOT NULL,
-                    title VARCHAR(500) NOT NULL,
-                    page INTEGER DEFAULT 0,
-                    section VARCHAR(500),
-                    text TEXT NOT NULL,
-                    source_url VARCHAR(1000) NOT NULL,
-                    chunk_index INTEGER DEFAULT 0,
-                    organization VARCHAR(255) DEFAULT '',
-                    publication_year INTEGER,
-                    source_type VARCHAR(100) DEFAULT 'clinical_guideline',
-                    source_version VARCHAR(100),
-                    review_date VARCHAR(50),
-                    effective_date VARCHAR(50),
-                    license_notes TEXT,
-                    ingested_at VARCHAR(50),
-                    embedding vector(1536)
-                )
-            """))
-            conn.execute(text("""
-                CREATE INDEX IF NOT EXISTS idx_chunk_vectors_chunk_id
-                ON chunk_vectors (chunk_id)
-            """))
-            try:
+            with conn.begin():
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+
+        with self._engine.connect() as conn:
+            with conn.begin():
                 conn.execute(text("""
-                    CREATE INDEX IF NOT EXISTS idx_chunk_vectors_embedding
-                    ON chunk_vectors USING hnsw (embedding vector_cosine_ops)
-                    WITH (m = 16, ef_construction = 64)
+                    CREATE TABLE IF NOT EXISTS chunk_vectors (
+                        id SERIAL PRIMARY KEY,
+                        chunk_id VARCHAR(255) UNIQUE NOT NULL,
+                        source_id VARCHAR(255) NOT NULL,
+                        title VARCHAR(500) NOT NULL,
+                        page INTEGER DEFAULT 0,
+                        section VARCHAR(500),
+                        text TEXT NOT NULL,
+                        source_url VARCHAR(1000) NOT NULL,
+                        chunk_index INTEGER DEFAULT 0,
+                        organization VARCHAR(255) DEFAULT '',
+                        publication_year INTEGER,
+                        source_type VARCHAR(100) DEFAULT 'clinical_guideline',
+                        source_version VARCHAR(100),
+                        review_date VARCHAR(50),
+                        effective_date VARCHAR(50),
+                        license_notes TEXT,
+                        ingested_at VARCHAR(50),
+                        embedding vector(1536)
+                    )
                 """))
-            except Exception:
-                try:
+
+        with self._engine.connect() as conn:
+            with conn.begin():
+                conn.execute(text("""
+                    CREATE INDEX IF NOT EXISTS idx_chunk_vectors_chunk_id
+                    ON chunk_vectors (chunk_id)
+                """))
+
+        try:
+            with self._engine.connect() as conn:
+                with conn.begin():
                     conn.execute(text("""
                         CREATE INDEX IF NOT EXISTS idx_chunk_vectors_embedding
-                        ON chunk_vectors USING ivfflat (embedding vector_cosine_ops)
-                        WITH (lists = 100)
+                        ON chunk_vectors USING hnsw (embedding vector_cosine_ops)
+                        WITH (m = 16, ef_construction = 64)
                     """))
-                except Exception:
-                    pass
-            conn.commit()
+        except Exception:
+            try:
+                with self._engine.connect() as conn:
+                    with conn.begin():
+                        conn.execute(text("""
+                            CREATE INDEX IF NOT EXISTS idx_chunk_vectors_embedding
+                            ON chunk_vectors USING ivfflat (embedding vector_cosine_ops)
+                            WITH (lists = 100)
+                        """))
+            except Exception:
+                pass
 
     def _rebuild_sparse_index(self) -> None:
         with Session(self._engine) as db:

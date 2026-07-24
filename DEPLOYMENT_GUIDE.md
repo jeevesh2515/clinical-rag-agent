@@ -145,27 +145,60 @@ The application implements a dual-layer storage system:
 
 ---
 
-## 5. Running via Docker
+---
+
+## 7. Kubernetes (K8s) Deployment
+
+The project provides production-grade Kubernetes manifests in the `k8s/` directory.
+
+### Quick Start (Deploying to K8s)
 
 ```bash
-docker compose -f docker-compose.prod.yml up --build -d
+# 1. Create secret from template
+cp k8s/secret.yaml.template k8s/secret.yaml
+# Edit k8s/secret.yaml with real base64/string secrets
+
+# 2. Apply ConfigMap and Secrets
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secret.yaml
+
+# 3. Deploy Application & Internal Service
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+# 4. Enable Horizontal Pod Autoscaler & Ingress (Optional)
+kubectl apply -f k8s/hpa.yaml
+kubectl apply -f k8s/ingress.yaml
 ```
 
-- Host: `http://localhost:8000`
-- API: `http://localhost:8000/api`
-- Health: `docker ps` shows `healthy` once DB + OKF verified
+### Kubernetes Architecture Highlights
+
+| Manifest | Purpose | Highlights |
+|---|---|---|
+| `k8s/deployment.yaml` | Application Deployment | Replicas: 2+, RollingUpdate strategy, Non-root user (UID 10001), Liveness (`/api/health`) & Readiness (`/api/ready`) probes |
+| `k8s/service.yaml` | ClusterIP Service | Exposes port 8000 internally on port 80 |
+| `k8s/ingress.yaml` | NGINX Ingress Controller | TLS termination via cert-manager (Let's Encrypt), 10MB payload size limit |
+| `k8s/hpa.yaml` | Horizontal Pod Autoscaler | Scales automatically from 2 to 10 replicas based on CPU (70%) and Memory (80%) targets |
+| `k8s/configmap.yaml` | Non-sensitive Config | `APP_ENV`, `LOG_LEVEL`, `VECTOR_STORE`, `CORS_ORIGINS` |
+| `k8s/secret.yaml` | Sensitive Secrets | `JWT_SECRET_KEY`, `OPENROUTER_API_KEY`, `COHERE_API_KEY`, `DATABASE_URL` |
 
 ---
 
-## 5. Continuous Integration
+## 8. Continuous Delivery (CD) Pipelines
 
-GitHub Actions workflows in `.github/workflows/`:
-- **ci.yml** — Runs on push to any branch: lint, test, frontend build
-- **docker-deploy.yml** — Docker build on main branch only
+The repository features automated GitHub Actions workflows in `.github/workflows/`:
+
+1. **Vercel Serverless CD (`automatic`)**:
+   - Pushing to `main` automatically triggers Vercel to compile the React frontend and deploy the Python serverless backend to `https://clinical-workflows.vercel.app`.
+
+2. **Docker Container CD (`.github/workflows/docker-deploy.yml`)**:
+   - Runs linting (`ruff`), unit tests (`pytest`), and OKF validation (`make okf-check`).
+   - Builds the production multi-stage `Dockerfile`.
+   - Pushes tagged image (`ghcr.io/jeevesh2515/clinical-rag-agent:latest`) directly to **GitHub Container Registry (GHCR)**.
 
 ---
 
-## 6. Uptime Monitoring (Recommended)
+## 9. Uptime Monitoring (Recommended)
 
 Set up a free UptimeRobot monitor to ping every 5 minutes:
 

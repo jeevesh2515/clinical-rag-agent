@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clinical-app-config
+  namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  VECTOR_STORE: "auto"
+  EMBEDDING_MODEL: "embed-v4.0"
+  EMBEDDING_DIM: "1536"
+  RERANK_MODEL: "rerank-v3.5"
+  GENERATION_MODEL: "command-a-03-2025"
+  CORS_ORIGINS: "https://clinical-workflows.vercel.app,http://localhost:5173"

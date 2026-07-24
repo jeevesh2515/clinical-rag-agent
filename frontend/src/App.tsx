@@ -2614,46 +2614,135 @@ export default function App() {
         </header>
 
         {/* Mobile header */}
-        <header className="lg:!hidden flex items-center justify-between px-4 py-3 border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setSidebarOpen(true)} className="text-[#1a1a1a] dark:text-white">
-              <PanelLeft size={20} />
-            </button>
-            <button
-              onClick={() => setPage('landing')}
-              className="group flex items-center gap-2 text-left focus:outline-none"
-              title="Back to Homepage"
-            >
-              <div className="w-7 h-7 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
-                <Stethoscope size={13} className="text-white transition-transform group-hover:rotate-[15deg]" />
-              </div>
-              <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white group-hover:text-brand-accent transition-colors uppercase">Clinical Workflows</span>
-            </button>
+        <header className="lg:!hidden flex flex-col border-b-2 border-[#1a1a1a] dark:border-white bg-white dark:bg-slate-950 shrink-0 z-20 transition-all">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#1a1a1a]/10 dark:border-white/10">
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-1 text-[#1a1a1a] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-[#1a1a1a] dark:hover:border-white shrink-0"
+                title="Open sidebar"
+              >
+                <PanelLeft size={19} />
+              </button>
+              <button
+                onClick={() => setPage('landing')}
+                className="group flex items-center gap-2 text-left focus:outline-none min-w-0"
+                title="Back to Homepage"
+              >
+                <div className="w-7 h-7 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
+                  <Stethoscope size={13} className="text-white transition-transform group-hover:rotate-[15deg]" />
+                </div>
+                <span className="font-headline-md text-headline-md font-bold text-[#1a1a1a] dark:text-white group-hover:text-brand-accent transition-colors uppercase truncate text-xs sm:text-sm tracking-tight">
+                  Clinical Workflows
+                </span>
+              </button>
+            </div>
+
+            {/* Mobile Header Right Controls: Theme Toggle + Citation Graph Button + Profile Avatar */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Theme Toggle (Dark/Light mode) */}
+              <ThemeToggle />
+
+              {/* Citation & Evidence Graph Button (BarChart3) */}
+              <button
+                onClick={() => setEvidencePanelOpen(!evidencePanelOpen)}
+                className={cn(
+                  'w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center border-2 transition-all shrink-0',
+                  evidencePanelOpen
+                    ? 'bg-brand-accent text-white border-brand-accent shadow-none'
+                    : 'bg-white dark:bg-slate-900 text-brand-accent dark:text-brand-accent border-brand-accent dark:border-brand-accent shadow-[1.5px_1.5px_0px_0px_rgba(255,51,102,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none'
+                )}
+                title={evidencePanelOpen ? 'Hide evidence & citations' : 'Show evidence & citations'}
+              >
+                <BarChart3 size={15} />
+              </button>
+
+              {/* User Profile Avatar */}
+              <button 
+                onClick={() => setIsProfileModalOpen(true)}
+                className="w-7 h-7 sm:w-8 sm:h-8 bg-brand-accent hover:bg-brand-accent/90 text-white flex items-center justify-center font-bold text-[10px] sm:text-xs border-2 border-[#1a1a1a] dark:border-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none transition-all duration-150 uppercase shrink-0"
+                title={`${user?.username || 'User'}'s Profile`}
+              >
+                {user ? getInitials(user.username) : 'U'}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Compact mode toggle for mobile */}
-            <button
-              onClick={() => setMode(mode === 'patient' ? 'clinician' : 'patient')}
-              className={cn(
-                'w-7 h-7 flex items-center justify-center border-2 transition-all text-[10px] font-bold uppercase shrink-0',
-                isClinicianMode
-                  ? 'bg-slate-900 text-white border-white'
-                  : 'bg-brand-accent text-white border-[#1a1a1a]'
+
+          {/* Sub Bar (Control Strip): Patient/Clinician Mode Toggle + Pressure Relief + Model Selector */}
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-[#f8f9fa] dark:bg-slate-900/90 overflow-x-auto scrollbar-none">
+            {/* Mode Switcher Toggle */}
+            <div className="flex border-2 border-[#1a1a1a] dark:border-white p-0 bg-[#f0f0f0] dark:bg-slate-800 clinical-shadow shrink-0">
+              <button
+                onClick={() => setMode('patient')}
+                className={cn(
+                  'px-2.5 py-0.5 text-[10px] font-label-md transition-all uppercase font-bold tracking-wider',
+                  mode === 'patient'
+                    ? 'bg-brand-accent text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-[#1a1a1a] dark:hover:text-white opacity-60 hover:opacity-100'
+                )}
+              >
+                Patient
+              </button>
+              <button
+                onClick={() => setMode('clinician')}
+                className={cn(
+                  'px-2.5 py-0.5 text-[10px] font-label-md transition-all uppercase font-bold tracking-wider',
+                  mode === 'clinician'
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-[#1a1a1a] dark:hover:text-white opacity-60 hover:opacity-100'
+                )}
+              >
+                Clinician
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Pressure Relief Toggle */}
+              <button 
+                onClick={toggleReliefMode}
+                className={cn(
+                  "relief-toggle-btn relative flex items-center gap-1 px-2 py-0.5 border-2 transition-all font-semibold text-[10px] uppercase tracking-wider overflow-hidden shrink-0",
+                  isReliefMode 
+                    ? "bg-[#008080] text-white shadow-none border-[#008080]"
+                    : "bg-white dark:bg-slate-900 text-[#1a1a1a] dark:text-white border-[#1a1a1a] dark:border-white clinical-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none"
+                )}
+                title={isReliefMode ? "Calmness Mode Active" : "Pressure Relief"}
+              >
+                {isReliefMode && (
+                  <span className="relative flex w-1 h-1 mr-0.5 shrink-0">
+                    <span className="absolute inset-0 rounded-full bg-teal-200 animate-ping opacity-40" />
+                    <span className="relative rounded-full bg-teal-100 w-1 h-1" />
+                  </span>
+                )}
+                <span className="material-symbols-outlined text-[14px] relative shrink-0">{isReliefMode ? 'spa' : 'air'}</span>
+                <span className="font-label-md">{isReliefMode ? 'Calm' : 'Relief'}</span>
+              </button>
+
+              {/* Model Picker */}
+              {models.length > 0 && (
+                <div className="relative shrink-0">
+                  <select
+                    value={selectedModelId}
+                    onChange={e => {
+                      setSelectedModelId(e.target.value)
+                      localStorage.setItem('cw_model_id', e.target.value)
+                    }}
+                    className="text-[10px] bg-white dark:bg-slate-900 border-2 border-[#1a1a1a] dark:border-white text-[#1a1a1a] dark:text-white px-1.5 py-0.5 pr-4 focus:outline-none focus:ring-1 focus:ring-brand-accent transition-all clinical-shadow font-code-sm uppercase font-bold appearance-none max-w-[100px] cursor-pointer truncate"
+                    title="Select AI model"
+                  >
+                    {models.map(m => (
+                      <option key={m.id} value={m.id} disabled={!m.is_configured}>
+                        {m.label}{!m.is_configured ? ' ✗' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2">
+                    <ChevronDown size={9} className="text-[#1a1a1a] dark:text-white" />
+                  </div>
+                </div>
               )}
-              title={`Switch to ${isClinicianMode ? 'Patient' : 'Clinician'} mode`}
-            >
-              {isClinicianMode ? 'Dr' : 'Pt'}
-            </button>
-            <button onClick={() => setEvidencePanelOpen(!evidencePanelOpen)} className="text-[#1a1a1a] dark:text-white">
-              <Info size={18} />
-            </button>
-            <button 
-              onClick={() => setIsProfileModalOpen(true)}
-              className="w-7 h-7 bg-brand-accent text-white flex items-center justify-center font-bold text-[10px] border-2 border-[#1a1a1a] dark:border-white shadow-[1.5px_1.5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[1.5px_1.5px_0px_0px_#ffffff] uppercase shrink-0"
-              title={`${user?.username || 'User'}'s Profile`}
-            >
-              {user ? getInitials(user.username) : 'U'}
-            </button>
+            </div>
           </div>
         </header>
 

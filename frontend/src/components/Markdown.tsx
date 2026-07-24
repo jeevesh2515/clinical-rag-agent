@@ -39,7 +39,7 @@ function formatCitationsInText(text: string, citations?: Citation[]): string {
       chunkId === String(citations.indexOf(c) + 1)
     )
     if (idx !== -1) {
-      return `[[${idx + 1}](#citation-${idx})`
+      return `[${idx + 1}](#citation-${idx})`
     }
     return match
   })

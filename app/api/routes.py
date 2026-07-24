@@ -20,6 +20,7 @@ from app.ingestion.sources import DEFAULT_SOURCES
 from app.models import ApiErrorResponse, IngestRequest, IngestResponse, QueryRequest, QueryResponse, SourcesResponse
 from app.okf.interface import KnowledgeInterface
 from app.llm import DEFAULT_MODEL_ID, list_models_for_api
+from app.core.rate_limiter import limiter
 
 router = APIRouter()
 router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -110,9 +111,10 @@ def ready(
 
 
 @router.post("/ingest", response_model=IngestResponse, tags=["ingestion"])
-def ingest(request: IngestRequest, store: object = Depends(get_store)) -> IngestResponse:
-    sources = list(request.sources)
-    if request.use_default_sources:
+@limiter.limit("10/minute")
+def ingest(request: Request, ingest_request: IngestRequest, store: object = Depends(get_store)) -> IngestResponse:
+    sources = list(ingest_request.sources)
+    if ingest_request.use_default_sources:
         sources.extend(DEFAULT_SOURCES)
     result = ingest_sources(sources)
     store.upsert_chunks(result.chunks)
@@ -147,6 +149,7 @@ def ingest(request: IngestRequest, store: object = Depends(get_store)) -> Ingest
     },
     summary="Ask a guideline-grounded clinical workflow question.",
 )
+@limiter.limit("30/minute")
 def query(
     payload: QueryRequest,
     request: Request,
@@ -178,6 +181,7 @@ def query(
     summary="Streaming variant of /query that emits SSE events for progressive UX.",
     response_class=StreamingResponse,
 )
+@limiter.limit("20/minute")
 def query_stream(
     payload: QueryRequest,
     request: Request,

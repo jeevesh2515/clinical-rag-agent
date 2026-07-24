@@ -8,7 +8,6 @@ Requires LANGSMITH_API_KEY and at least one LLM API key for judge scoring.
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 

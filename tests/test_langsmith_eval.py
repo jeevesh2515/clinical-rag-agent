@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from langsmith.schemas import Example, Run
 
@@ -60,8 +60,6 @@ def test_latency_evaluator():
     assert res.key == "latency_ms"
     assert res.score == 300
 
-
-from unittest.mock import patch
 
 def test_llm_evaluators_with_dummy_llm():
     run = MagicMock(spec=Run)

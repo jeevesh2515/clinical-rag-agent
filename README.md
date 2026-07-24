@@ -252,6 +252,8 @@ npm run dev
 ## Features
 
 - 💻 **Claude-Style Workstation Interface:** Sliding conversation drawer, dark/light theme, suggested queries grid, and real-time evidence drawer.
+- 📱 **Mobile Double-Decker Header UX:** Full responsive mobile toolbar containing Light/Dark Theme Toggle (`ThemeToggle`), prominent `PATIENT | CLINICIAN` mode switcher, `<BarChart3 />` Citation & Evidence Graph button, Pressure Relief toggle, and AI Model selector dropdown.
+- 🐳 **Docker & Kubernetes (K8s) Ready:** Multi-stage production `Dockerfile`, `docker-compose.prod.yml`, and enterprise Kubernetes manifests (`k8s/`: Deployment with 2+ HA replicas, non-root user security context, ClusterIP service, NGINX Ingress with TLS, HPA autoscaler, ConfigMaps, Secrets).
 - 📋 **Clinical Notes Stack & History:** Dedicated chronological notes stack in user profile with timestamps, single-click "Consult AI with Note" integration, and individual note management.
 - 🧘 **Pressure Relief / Calmness Mode:** One-click toggle transforming workstation UI into a calm, glassmorphic teal layout with 100% smooth curved pill edges on all buttons, toggle segments, and controls.
 - ⚖️ **Clinical BMI Assessor & Profile Vitals:** High-converting landing page teaser + in-app BMI calculator saving height, weight, BMI classification, and SBP impact to persistent user profile.
@@ -303,7 +305,7 @@ Knowledge Layer: Open Knowledge Format (OKF) | 27 Concept Files | YAML + Wikilin
 Retrieval:       Cohere Embeddings v3.0 | BM25 Sparse | Cohere Rerank v3.5
 Quality Harness: Pytest (219 tests) | LangSmith LLM-as-Judge | Ruff | Pyright
 Persistence:     Multi-Session Hybrid Storage | Zero-Overwrite Guardrails | Backup Keys
-Deployment:      Vercel (Frontend & Serverless) | Render | Neon PostgreSQL ($0/month)
+Deployment & Ops:Vercel (Frontend & Serverless) | Render | Neon PostgreSQL | Docker | Kubernetes (K8s) | GHCR
 ```
 
 ---
@@ -316,7 +318,7 @@ The codebase is protected by automated quality gates running in CI:
 # Run backend test suite (219 tests)
 make test
 
-# Run OKF concept validator (27 files, 0 errors)
+# Run OKF concept validator (28 files, 0 errors)
 make okf-check
 
 # Run evaluation suite across 6 datasets (55 questions)
@@ -337,11 +339,13 @@ Clinical Workflows is configured for zero-cost deployment across serverless and 
 - **Backend API (Render):** Render Free Web Service (`render.yaml` 1-click blueprint)
 - **Database:** Neon Serverless PostgreSQL (`pgvector`) or SQLite
 - **LLM Tier:** OpenRouter Free Tier / Deterministic Extractive Fallback Mode
+- **Container Registry:** GitHub Container Registry (`ghcr.io/jeevesh2515/clinical-rag-agent:latest`)
+- **Orchestration:** Production Kubernetes (`k8s/`: Deployments, Services, ConfigMaps, Secrets, Ingress, HPA)
 
 ### Render 1-Click Setup:
 Add `OPENROUTER_API_KEY`, `COHERE_API_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL` to your Render environment variables or `.env`.
 
-For step-by-step deployment instructions for Vercel, Render, Docker, and Neon, see [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md).
+For step-by-step deployment instructions for Vercel, Render, Docker, and Kubernetes (K8s), see [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md).
 
 ---
 
@@ -349,6 +353,7 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Neon, s
 
 ```
 .
+├── .github/             # CI/CD workflows (pytest, ruff, OKF validation, Docker GHCR release, Neon DB preview)
 ├── app/
 │   ├── agents/          # LangGraph agent, graph edges, citation validators
 │   ├── api/             # FastAPI routers, routes, middleware
@@ -360,8 +365,11 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Neon, s
 │   ├── safety/          # Intent classifier & refusal engine
 │   └── tools/           # eGFR, MAP, Pulse Pressure, BMI calculators
 ├── frontend/            # React 18 + TypeScript + Tailwind v4 SPA
-├── hypertension-okf/    # 27 Curated OKF concept files
+├── hypertension-okf/    # 28 Curated OKF concept files
+├── k8s/                 # Kubernetes manifests (Deployment, Service, ConfigMap, Secrets, Ingress, HPA)
 ├── tests/               # 219 automated pytest tests
+├── Dockerfile           # Multi-stage production container build
+├── docker-compose.prod.yml # Production Docker compose configuration
 ├── Makefile             # Development task commands
 └── README.md            # Master repository documentation
 ```

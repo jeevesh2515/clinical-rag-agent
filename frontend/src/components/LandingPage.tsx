@@ -108,65 +108,44 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
   }, [])
 
 
-  // Scroll-Linked Animations (Smooth Direct-Scroll coupled transitions)
+  // Scroll Reveal via IntersectionObserver (Instant, Early & Permanent Solid State)
   useEffect(() => {
-    const handleScrollAnimation = () => {
-      const revealElements = document.querySelectorAll(
-        '.reveal-on-scroll, .reveal-left, .reveal-right, .reveal-bottom'
-      )
-      const viewportHeight = window.innerHeight
+    const revealElements = document.querySelectorAll(
+      '.reveal-on-scroll, .reveal-left, .reveal-right, .reveal-bottom'
+    )
 
-      revealElements.forEach((el) => {
-        const htmlEl = el as HTMLElement
-        
-        // Once an element is fully revealed, lock it at solid opacity 1
-        if (htmlEl.dataset.revealed === 'true') {
-          htmlEl.style.opacity = '1'
-          htmlEl.style.transform = 'translate3d(0px, 0px, 0px)'
-          return
-        }
-
-        const rect = htmlEl.getBoundingClientRect()
-        const elementTop = rect.top
-        
-        // startReveal: element top enters 95% of viewport height
-        const startReveal = viewportHeight * 0.95
-        // endReveal: element top reaches 80% of viewport height (fully visible early!)
-        const endReveal = viewportHeight * 0.80
-
-        let progress = 0
-        if (elementTop < startReveal) {
-          progress = (startReveal - elementTop) / (startReveal - endReveal)
-          progress = Math.max(0, Math.min(1, progress))
-        }
-
-        if (progress >= 1) {
-          htmlEl.dataset.revealed = 'true'
-          htmlEl.style.opacity = '1'
-          htmlEl.style.transform = 'translate3d(0px, 0px, 0px)'
-        } else {
-          htmlEl.style.transition = 'none'
-          htmlEl.style.opacity = `${progress}`
-          
-          if (htmlEl.classList.contains('reveal-left')) {
-            const shift = (1 - progress) * (window.innerWidth < 640 ? -15 : -30)
-            htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
-          } else if (htmlEl.classList.contains('reveal-right')) {
-            const shift = (1 - progress) * (window.innerWidth < 640 ? 15 : 30)
-            htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
-          } else {
-            // reveal-bottom or reveal-on-scroll
-            const shift = (1 - progress) * (window.innerWidth < 640 ? 15 : 25)
-            htmlEl.style.transform = `translate3d(0px, ${shift}px, 0px)`
-          }
-        }
-      })
+    if (!('IntersectionObserver' in window)) {
+      revealElements.forEach((el) => el.classList.add('active'))
+      return
     }
 
-    window.addEventListener('scroll', handleScrollAnimation, { passive: true })
-    handleScrollAnimation() // Initial execution
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      {
+        root: null,
+        rootMargin: '0px 0px 80px 0px', // Triggers 80px before entering viewport so it's fully visible immediately
+        threshold: 0.01
+      }
+    )
 
-    return () => window.removeEventListener('scroll', handleScrollAnimation)
+    revealElements.forEach((el) => {
+      const rect = el.getBoundingClientRect()
+      // If already in or above viewport on page load, activate immediately
+      if (rect.top <= window.innerHeight) {
+        el.classList.add('active')
+      } else {
+        observer.observe(el)
+      }
+    })
+
+    return () => observer.disconnect()
   }, [])
 
   // Parallax Mouse Effect

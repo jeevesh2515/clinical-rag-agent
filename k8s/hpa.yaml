@@ -3,23 +3,47 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: clinical-workflow-hpa
   namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+  annotations:
+    # Day 26 — KEDA ScaledObject (k8s/keda-scaledobject.yaml) is the
+    # primary scaler on http_requests_in_flight. This HPA is now a
+    # SAFETY NET that only triggers on extreme CPU/memory saturation.
+    autoscaling.alpha.kubernetes.io/behavior: "{\"scaleDown\":{\"stabilizationWindowSeconds\":300}}"
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: clinical-workflow-rag
+  # Allow KEDA to scale down to minReplicaCount=2; this HPA cannot
+  # force more replicas than maxReplicaCount=10.
   minReplicas: 2
   maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
   metrics:
+    # CPU at 90% — high watermark only; KEDA handles normal load.
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 90
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: 85

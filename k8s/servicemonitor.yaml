@@ -1,0 +1,24 @@
+# Day 25 — Prometheus Operator ServiceMonitor.
+# Auto-discovers clinical-rag pods and scrapes /api/metrics every 30s.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: clinical-rag
+  namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+    release: kube-prometheus-stack   # match the ServiceMonitorSelector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: clinical-workflow-rag
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: http
+      path: /api/metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: true

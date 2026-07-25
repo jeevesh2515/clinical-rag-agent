@@ -1,0 +1,65 @@
+# Day 25 — Prometheus alerting rules.
+# Three alerts cover the standard production SLO targets for a clinical RAG API:
+#   1. High latency         (p95 > 5s for 5 minutes)
+#   2. High error rate      (5xx > 1% for 5 minutes)
+#   3. Pod not ready        (deployment replicas mismatch for 10 minutes)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: clinical-rag-alerts
+  namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: clinical-rag.slo
+      interval: 30s
+      rules:
+        - alert: ClinicalRAGHighLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (
+                rate(http_request_duration_seconds_bucket{
+                  namespace="default",
+                  endpoint=~"/api/query|/api/query/stream"
+                }[5m])
+              )
+            ) > 5
+          for: 5m
+          labels:
+            severity: warning
+            service: clinical-rag
+          annotations:
+            summary: "Clinical RAG p95 latency > 5s for 5 minutes"
+            description: "p95 latency is {{ $value | humanizeDuration }} on /api/query. Check OpenRouter latency and pgvector query time."
+
+        - alert: ClinicalRAGHighErrorRate
+          expr: |
+            (
+              sum(rate(http_request_duration_seconds_count{namespace="default",status=~"5.."}[5m]))
+              /
+              sum(rate(http_request_duration_seconds_count{namespace="default"}[5m]))
+            ) > 0.01
+          for: 5m
+          labels:
+            severity: critical
+            service: clinical-rag
+          annotations:
+            summary: "Clinical RAG 5xx error rate > 1% for 5 minutes"
+            description: "5xx rate is {{ $value | humanizePercentage }}. Check clinical-rag-app logs and KEDA scaling events."
+
+        - alert: ClinicalRAGPodNotReady
+          expr: |
+            (kube_deployment_status_replicas_ready{deployment="clinical-workflow-rag",namespace="default"})
+            !=
+            (kube_deployment_spec_replicas{deployment="clinical-workflow-rag",namespace="default"})
+          for: 10m
+          labels:
+            severity: warning
+            service: clinical-rag
+          annotations:
+            summary: "Clinical RAG deployment has unready pods for 10 minutes"
+            description: "Ready replicas {{ $value }} differs from spec replicas. Check `kubectl describe deployment clinical-workflow-rag`."

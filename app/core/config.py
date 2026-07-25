@@ -20,6 +20,17 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite:///./clinical_demo.db", repr=False)
     vector_store: str = Field(default="auto", description="'auto' | 'memory' | 'pgvector'. 'auto' detects from database_url.")
 
+    # Day 27 — Redis LLM response cache. None disables cache (no-op layer).
+    redis_url: str | None = Field(default=None, description="Day 27: redis://host:port/db for LLM response cache. Empty = cache disabled.")
+    redis_max_connections: int = Field(default=50, ge=1, le=500)
+
+    # Day 28 — S3 / object storage for user uploads.
+    storage_backend: str = Field(default="local", description="Day 28: 'local' or 's3'.")
+    s3_bucket: str | None = Field(default=None, description="Day 28: S3 bucket for uploads (required when storage_backend=s3).")
+    s3_region: str = Field(default="us-east-1", description="Day 28: S3 region.")
+    s3_endpoint_url: str | None = Field(default=None, description="Day 28: optional endpoint URL (MinIO, R2, etc.).")
+    uploads_local_root: str = Field(default="/tmp/clinical-rag-uploads", description="Day 28: local-fs upload root.")
+
     embedding_model: str = "embed-v4.0"
     embedding_dim: int = 1536
     rerank_model: str = "rerank-v3.5"

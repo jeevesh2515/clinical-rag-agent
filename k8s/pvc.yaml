@@ -1,0 +1,24 @@
+# Optional PersistentVolumeClaim for K8s deployments using SQLite-backed
+# storage. NOT needed when DATABASE_URL is set to PostgreSQL/Neon (the
+# production recommendation). Apply only if running SQLite on a single-
+# replica deployment and you want ingestion data to persist across pod
+# restarts.
+#
+# Note: SQLite is single-writer; on multi-replica deployments you MUST
+# switch DATABASE_URL to PostgreSQL+pgvector (see k8s/secret.yaml.template)
+# and disable this PVC.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clinical-rag-data
+  namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard

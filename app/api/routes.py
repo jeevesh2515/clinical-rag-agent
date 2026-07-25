@@ -99,10 +99,25 @@ def ready(
     if okf_count == 0:
         issues.append("okf")
 
+    # Ingestion check — ensure the HybridStore has at least one chunk before
+    # the load balancer routes traffic. This prevents the
+    # postStart-marker-race where a fresh pod can be marked ready while the
+    # postStart /api/ingest call is still in flight. With pgvector backend
+    # this is always > 0 because chunks live in the database; with the
+    # in-memory HybridStore it is populated by the postStart hook.
+    chunk_count = 0
+    try:
+        chunk_count = int(getattr(store, "chunk_count", 0))
+    except Exception:
+        pass
+    if chunk_count < 1:
+        issues.append("ingestion_pending")
+
     payload = {
         "status": "ready" if not issues else "not_ready",
         "db": db_status,
         "okf": okf_status,
+        "chunks": chunk_count,
         "request_id": request_id_from(request),
     }
     if issues:
@@ -118,6 +133,32 @@ def ingest(request: Request, ingest_request: IngestRequest, store: object = Depe
         sources.extend(DEFAULT_SOURCES)
     result = ingest_sources(sources)
     store.upsert_chunks(result.chunks)
+
+    # Day 27 — Invalidate any LLM cache entries whose chunk set overlaps with
+    # the new ingest. Best-effort: a Redis failure must NOT break the
+    # ingestion path (cache falls back to no-op, 24h TTL covers residual risk).
+    try:
+        from app.cache.redis_cache import RedisLLMCache as _Cache  # type: ignore[import-not-found]
+
+        cache = getattr(request.app.state, "llm_cache", None)
+        if isinstance(cache, _Cache) and cache.enabled:
+            new_chunk_ids = [c.chunk_id for c in result.chunks if getattr(c, "chunk_id", None)]
+            import asyncio
+            loop = asyncio.new_event_loop()
+            try:
+                deleted = loop.run_until_complete(
+                    cache.invalidate_by_chunk_ids(new_chunk_ids)
+                )
+                logging.getLogger(__name__).info(
+                    "cache_invalidated_after_ingest chunks=%d deleted=%d",
+                    len(new_chunk_ids), deleted,
+                )
+            finally:
+                loop.close()
+    except Exception as exc:  # noqa: BLE001 — never break ingestion
+        logging.getLogger(__name__).warning(
+            "cache_invalidation_skipped err=%s", exc,
+        )
 
     manifest_id = build_manifest_id()
     manifest = IngestionManifest(

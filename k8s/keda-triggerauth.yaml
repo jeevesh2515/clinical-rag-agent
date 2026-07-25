@@ -1,0 +1,18 @@
+# Day 26 — KEDA TriggerAuthentication.
+# Optional: only needed if Prometheus requires basic auth. Most kube-prometheus
+# installs run without auth, so this file is commented-out by default. To
+# enable, apply it and reference the `authenticationRef` in the ScaledObject.
+#
+# apiVersion: keda.sh/v1alpha1
+# kind: TriggerAuthentication
+# metadata:
+#   name: keda-prometheus-auth
+#   namespace: default
+# spec:
+#   secretTargetRef:
+#     - parameter: username
+#       name: keda-prometheus-creds
+#       key: username
+#     - parameter: password
+#       name: keda-prometheus-creds
+#       key: password

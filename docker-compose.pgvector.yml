@@ -1,0 +1,48 @@
+# Day 31 — Override compose file adding a pgvector-enabled PostgreSQL service
+# for local smoke testing of the k6 load scripts (see scripts/smoke_load_test.sh).
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.pgvector.yml up -d --build
+#
+# After the stack is running, hit http://localhost:8000/api/ready to confirm
+# postStart ingest populated the pgvector chunk_vectors table.
+#
+# Production deployment uses Neon or Supabase for the same column layout, not
+# this local postgres — see DEPLOYMENT_GUIDE.md "Multi-Replica Horizontal
+# Scaling" section.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: clinical-rag-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clinical_rag
+      POSTGRES_USER: clinical
+      POSTGRES_PASSWORD: dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # pgvector image puts `vector` extension in the default install path;
+      # we verify by listing installed extensions.
+      test: ["CMD-SHELL", "psql -U clinical -d clinical_rag -c \"SELECT extname FROM pg_extension WHERE extname='vector'\" | grep -q vector"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Drive the factory into pgvector mode by setting schema + DATABASE_URL.
+      DATABASE_URL: "postgresql://clinical:dev@postgres:5432/clinical_rag"
+      VECTOR_STORE: "auto"
+    volumes:
+      # pgvector chunk_vectors table is durable across container restarts.
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local

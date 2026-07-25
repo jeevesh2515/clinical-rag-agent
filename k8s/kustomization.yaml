@@ -1,0 +1,59 @@
+# Kustomization overlay for clinical-workflows K8s manifests.
+#
+# Why Kustomize: production teams need to point deployment.yaml at the right
+# GHCR image per environment (preview/staging/main) WITHOUT editing the
+# static deployment.yaml. The image transform below rewrites the literal
+# `clinical-rag-app` container image to `ghcr.io/<owner>/clinical-rag-agent`
+# at the desired tag (default `latest`).
+#
+# Quick override (per environment):
+#   kustomize edit set image \
+#     clinical-rag-app=ghcr.io/<owner>/clinical-rag-agent:v1.2.3
+#   kubectl apply -k k8s/
+#
+# Or use plain `kubectl apply -f k8s/` if you have already edited
+# k8s/deployment.yaml to point at the right image.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+resources:
+  - configmap.yaml
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+  - networkpolicy.yaml
+  - pdb.yaml
+  - pvc.yaml
+  - ingress.yaml
+# ingress.yaml is included by default. If you do NOT have an NGINX ingress
+# controller installed yet, comment out the line above and apply the rest
+# first.
+
+# Image override: Kustomize's `images[].name` matches the *registry/repo*
+# portion of the existing `image:` field in deployment.yaml (NOT the
+# container name). For production, override the tag from `:latest` to an
+# immutable SHA or semver so rollouts are reproducible and rollbackable:
+#   kustomize edit set image \
+#     ghcr.io/jeevesh2515/clinical-rag-agent=ghcr.io/<your-org>/clinical-rag-agent:v1.0.0
+# The CI workflow .github/workflows/docker-deploy.yml also publishes
+# immutable :${{ github.sha }} tags; prefer those over :latest.
+images:
+  - name: ghcr.io/jeevesh2515/clinical-rag-agent
+    newName: ghcr.io/jeevesh2515/clinical-rag-agent
+    newTag: latest
+
+# Image override: Kustomize's `images[].name` matches the *registry/repo*
+# portion of the existing `image:` field in deployment.yaml (NOT the
+# container name). Override with `kustomize edit set image \
+# ghcr.io/jeevesh2515/clinical-rag-agent=ghcr.io/<your-org>/clinical-rag-agent:v1.2.3`
+# or edit this block.
+images:
+  - name: ghcr.io/jeevesh2515/clinical-rag-agent
+    newName: ghcr.io/jeevesh2515/clinical-rag-agent
+    newTag: latest
+
+commonLabels:
+  app.kubernetes.io/part-of: clinical-workflows

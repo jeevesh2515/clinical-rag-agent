@@ -320,7 +320,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             <div className="relative parallax-element" data-speed="-0.03">
               {/* CORE_ENGINE_V3 Visual Block */}
               <div className="relative w-full aspect-square min-h-[360px] sm:min-h-[420px] border-2 border-clinical-black dark:border-white bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-4 sm:p-6 scanline-effect overflow-hidden flex flex-col justify-between">
-                <div className="tipped-label dark:border-white dark:text-white text-[9px] sm:text-[10px]" style={{ right: '16px' }}>CORE_ENGINE_V3_LIVE</div>
+                <div className="tipped-label dark:border-white dark:text-white text-[9px] sm:text-[10px]" style={{ right: '52px' }}>CORE_ENGINE_V3_LIVE</div>
                 
                 {/* Top Header */}
                 <div className="flex justify-between items-start shrink-0">

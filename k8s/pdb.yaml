@@ -1,0 +1,22 @@
+# PodDisruptionBudget guarantees at least one pod stays Available during
+# voluntary disruptions (node drains, autoscaler scale-down, cluster upgrades).
+# Without this, a single node drain during a rolling release can take both
+# replicas of the clinical-rag deployment offline, producing a 100% outage.
+#
+# Production settings preserve 1 pod out of 2. If you raise replicas via
+# HPA, raise minAvailable accordingly (e.g. minAvailable: 2 for 3 replicas).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: clinical-workflow-pdb
+  namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+spec:
+  # Keep at least one pod healthy. Use maxUnavailable: 1 if you prefer to
+  # express "no more than one pod down at a time" instead.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: clinical-workflow-rag

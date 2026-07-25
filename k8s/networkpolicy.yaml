@@ -1,0 +1,34 @@
+# NetworkPolicy restricting ingress traffic to the Clinical Workflows pod.
+#
+# Production hardening: deny-all default, then allow only:
+#   1. The NGINX Ingress Controller pods (TLS-terminated external traffic)
+#   2. Other clinical-workflows pods in the same Deployment (sidecar, debug)
+#
+# Egress is unrestricted so the pod can reach OpenRouter, Cohere, Neon
+# Postgres, etc. Tighten with NetworkPolicy egress rules per destination if
+# compliance demands it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: clinical-workflow-allow-ingress-only
+  namespace: default
+  labels:
+    app.kubernetes.io/name: clinical-workflow-rag
+    app.kubernetes.io/part-of: clinical-workflows
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: clinical-workflow-rag
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: clinical-workflow-rag
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000

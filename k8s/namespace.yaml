@@ -1,0 +1,59 @@
+# Day 29 — Namespace with PodSecurityAdmission labels (restricted profile).
+# Enforces: no privileged containers, no host namespaces, restricted capabilities,
+# runAsNonRoot: true, seccompProfile: RuntimeDefault.
+#
+# Apply with: kubectl apply -f k8s/namespace.yaml
+# Then verify: kubectl get ns clinical-workflows -o jsonpath='{.metadata.labels}'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: clinical-workflows
+  labels:
+    app.kubernetes.io/part-of: clinical-workflows
+    # PodSecurityAdmission — restricted profile (highest available)
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    # Kyverno skip label for system namespaces (this one applies to our pods)
+    kyverno.io/namespace: clinical-workflows
+---
+# Day 29 — Network isolation (NetworkPolicy already exists; this is the
+# namespace-level default-deny that allows ingress-nginx ingress).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all-ingress
+  namespace: clinical-workflows
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-nginx
+  namespace: clinical-workflows
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: clinical-workflow-rag
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: clinical-workflow-rag
+      ports:
+        - protocol: TCP
+          port: 8000
+---

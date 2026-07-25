@@ -23,10 +23,33 @@ spec:
         app.kubernetes.io/name: clinical-workflow-rag
         app.kubernetes.io/component: backend-api
     spec:
+      serviceAccountName: clinical-rag-app
+      # Long graceful termination so the load balancer drains traffic before
+      # SIGKILL. OpenRouter-backed LLM calls can take 60s+; the default 30s
+      # would cut them off mid-flight and produce 502s during a rolling
+      # update. preStop sleeps 30s so the ingress-nginx upstream is removed
+      # from the load-balancer rotation before the pod stops accepting
+      # connections.
+      terminationGracePeriodSeconds: 90
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: clinical-workflow-rag
       securityContext:
         runAsNonRoot: true
+        # Pin UID/GID to 10001 to match Dockerfile (groupadd -g 10001 / useradd -u 10001).
         runAsUser: 10001
+        runAsGroup: 10001
         fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: clinical-rag-data
+          persistentVolumeClaim:
+            claimName: clinical-rag-data
       containers:
         - name: clinical-rag-app
           image: ghcr.io/jeevesh2515/clinical-rag-agent:latest
@@ -35,11 +58,22 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          env:
+            # Override DATA_DIR + DATABASE_URL so SQLite-style deployments
+            # write into the mounted PVC instead of the container FS.
+            # When the secret sets DATABASE_URL to PostgreSQL/Neon, this
+            # directory is unused for the DB but still useful for ingestion
+            # manifests and user corpus files.
+            - name: DATA_DIR
+              value: /app/data
           envFrom:
             - configMapRef:
                 name: clinical-app-config
             - secretRef:
                 name: clinical-app-secrets
+          volumeMounts:
+            - name: clinical-rag-data
+              mountPath: /app/data
           resources:
             requests:
               cpu: 250m
@@ -51,18 +85,38 @@ spec:
             httpGet:
               path: /api/health
               port: 8000
-            initialDelaySeconds: 15
-            periodSeconds: 20
+            initialDelaySeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /api/ready
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 2
+          lifecycle:
+            preStop:
+              # Allow K8s + ingress-nginx to drain traffic before SIGTERM.
+              # Without this, open LLM requests get cut mid-flight.
+              exec:
+                command: ["/bin/sh", "-c", "sleep 30"]
+            postStart:
+              # Idempotent warm-start: re-ingest public guidelines on first boot
+              # so the deployed pod has the same default 27-chunk corpus as the
+              # dev environment. /api/ingest is rate-limited (10/min) but the
+              # request is small and the pod can absorb it once. The
+              # --max-time 30 wall-clock cap stops a hung remote call from
+              # trapping the pod in ContainerCreating forever. For multi-replica
+              # deployments, prefer running a one-time `kubectl create job`
+              # ingest job from CI instead of relying on postStart in every pod.
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - 'curl -fsS --max-time 30 -X POST http://localhost:8000/api/ingest -H "Content-Type: application/json" -d "{\"use_default_sources\": true, \"sources\": []}" >/tmp/ingest.log 2>&1 || { rc=$?; echo "ingest warm-up failed rc=$rc — see /tmp/ingest.log"; exit $rc; }'
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

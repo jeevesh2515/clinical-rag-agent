@@ -1,0 +1,122 @@
+name: Load Test (Staging)
+
+# Auto-runs baseline + burst against staging after every main-branch deploy.
+# Operators also trigger via `workflow_dispatch` for ad-hoc verification.
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: "Which k6 scenario to run"
+        required: true
+        type: choice
+        default: all
+        options:
+          - preflight
+          - baseline
+          - burst
+          - all
+  push:
+    branches: [main, master]
+  workflow_run:
+    workflows: ["CI/CD Quality Gate & Docker Release"]
+    types: [completed]
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: write   # to comment PASS/FAIL onto the triggering PR
+
+concurrency:
+  group: load-test-${{ github.ref }}
+  cancel-in-progress: false   # don't cancel a run mid-burst
+
+jobs:
+  load-test:
+    name: k6 — ${{ github.event.inputs.scenario || 'all' }}
+    # Only run after the image has been pushed to GHCR (workflow_run trigger)
+    # OR on manual dispatch.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          curl -sSL https://github.com/grafana/k6/releases/download/v0.49.0/k6-v0.49.0-linux-amd64.tar.gz \
+            -o /tmp/k6.tar.gz
+          tar -xzf /tmp/k6.tar.gz -C /tmp
+          sudo mv /tmp/k6-v0.49.0-linux-amd64/k6 /usr/local/bin/k6
+          k6 version
+
+      - name: Determine scenario
+        id: scenario
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.scenario }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=all" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Preflight
+        if: steps.scenario.outputs.value == 'preflight' || steps.scenario.outputs.value == 'all'
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+          KUBE_CONTEXT: ${{ secrets.KUBE_CONTEXT }}
+          KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+        run: bash ./scripts/preflight_load_test.sh
+
+      - name: Baseline (50 RPS × 10 min)
+        if: steps.scenario.outputs.value == 'baseline' || steps.scenario.outputs.value == 'all'
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+          TOKEN: ${{ secrets.STAGING_TOKEN }}
+        run: |
+          mkdir -p docs/load-test-results
+          k6 run --out json=docs/load-test-results/baseline-ci.json \
+            tests/load/baseline.js \
+            -e BASE_URL="$STAGING_URL" -e TOKEN="$TOKEN"
+
+      - name: Cooldown (5 min)
+        if: steps.scenario.outputs.value == 'all'
+        run: sleep 300
+
+      - name: Burst (200 RPS × 2 min)
+        if: steps.scenario.outputs.value == 'burst' || steps.scenario.outputs.value == 'all'
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+          TOKEN: ${{ secrets.STAGING_TOKEN }}
+        run: k6 run --out json=docs/load-test-results/burst-ci.json \
+          tests/load/burst.js \
+          -e BASE_URL="$STAGING_URL" -e TOKEN="$TOKEN"
+
+      - name: Capture metrics
+        if: always()
+        env:
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+          KUBE_CONTEXT: ${{ secrets.KUBE_CONTEXT }}
+        run: |
+          mkdir -p docs/load-test-results
+          bash ./scripts/capture_metrics.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results-${{ github.run_id }}
+          path: docs/load-test-results/
+          retention-days: 30
+
+      - name: Summarize
+        if: always()
+        run: |
+          echo "## Load Test Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "Scenario: ${{ steps.scenario.outputs.value }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          ls -la docs/load-test-results/ >> "$GITHUB_STEP_SUMMARY" 2>&1 || true

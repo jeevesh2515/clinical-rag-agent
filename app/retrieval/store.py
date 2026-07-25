@@ -113,3 +113,6 @@ class HybridStore:
             candidate["hybrid_score"] = alpha * dense_norm + (1 - alpha) * sparse_norm
 
         return sorted(raw_candidates, key=lambda item: item["hybrid_score"], reverse=True)[:top_k]
+
+    def __repr__(self) -> str:
+        return f"HybridStore(documents={self.document_count}, chunks={self.chunk_count})"

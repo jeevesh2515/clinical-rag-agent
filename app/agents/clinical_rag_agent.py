@@ -8,6 +8,10 @@ from langgraph.graph import END, StateGraph
 
 from app.agents.citation_validator import build_citations, unsupported_claims_detected
 from app.core.config import Settings
+from app.observability.metrics import (
+    record_llm_call,
+    record_safety_refusal,
+)
 from app.llm import (
     ChatMessage as LLMChatMessage,
     LLM,
@@ -309,6 +313,9 @@ class ClinicalRAGAgent:
         latency = dict(state.get("latency_ms") or {})
         with Timer() as t:
             classification = classify_query(state["question"])
+        # Day 25 — record safety refusals as a Prometheus counter.
+        if classification.refusal_reason:
+            record_safety_refusal(classification.refusal_reason)
         latency["classify"] = t.elapsed_ms
         route = self._route_after_classification({
             "refusal_reason": classification.refusal_reason,
@@ -629,9 +636,25 @@ class ClinicalRAGAgent:
             return self._generate_extractive(state), None
 
         messages = self._build_prompt_messages(state, reranked)
+        import time
+        t0 = time.perf_counter()
         try:
-            return llm.chat(messages, temperature=0.1, max_tokens=1200), None
+            answer = llm.chat(messages, temperature=0.1, max_tokens=1200)
+            duration = time.perf_counter() - t0
+            # Day 25 — record LLM success metrics.
+            prompt_tokens = getattr(answer, "prompt_tokens", 0) or 0
+            completion_tokens = getattr(answer, "completion_tokens", 0) or 0
+            record_llm_call(
+                spec.id,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                duration_seconds=duration,
+                success=True,
+            )
+            return answer, None
         except ProviderNotConfiguredError as exc:
+            duration = time.perf_counter() - t0
+            record_llm_call(spec.id, duration_seconds=duration, success=False, failure_reason="not_configured")
             logger.warning(
                 "provider_not_configured provider=%s model=%s err=%s — falling back to extractive",
                 spec.provider, spec.id, exc,
@@ -641,6 +664,8 @@ class ClinicalRAGAgent:
                 f"_Note: '{spec.label}' is not configured on this deployment — showing an extractive summary instead._",
             )
         except ProviderError as exc:
+            duration = time.perf_counter() - t0
+            record_llm_call(spec.id, duration_seconds=duration, success=False, failure_reason="provider_error")
             logger.warning("provider_error provider=%s err=%s — falling back to extractive", spec.provider, exc)
             return (
                 self._generate_extractive(state),

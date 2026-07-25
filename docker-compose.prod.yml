@@ -1,4 +1,16 @@
-version: '3.8'
+# Production single-host analogue of the Kubernetes manifests in k8s/.
+#
+# IMPORTANT — volume layout:
+# We bind-mount the host directory `./data` into the container so that:
+#   * Bundled clinical guidelines baked into the image at build time
+#     (COPY data ./data) remain visible at runtime (the named-volume trap
+#     would silently shadow them).
+#   * SQLite database, ingestion manifests, and uploads persist across
+#     container restarts.
+#
+# For a multi-host production deployment, replace this compose file with the
+# Kubernetes manifests in k8s/ which use a real PersistentVolumeClaim and
+# ConfigMap/Secret separation.
 
 services:
   clinical-app:
@@ -10,7 +22,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - clinical_data:/app/data
+      # Bind-mount so COPY'd data is not shadowed. For multi-host production
+      # this file is NOT the right tool — use the k8s/ manifests which
+      # provide a real PersistentVolumeClaim + StatefulSet-friendly volume
+      # contract.
+      - ./data:/app/data
     env_file:
       - .env
     environment:
@@ -31,7 +47,3 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
-
-volumes:
-  clinical_data:
-    driver: local

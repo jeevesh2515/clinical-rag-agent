@@ -16,6 +16,8 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.rate_limiter import limiter
 from app.models import ApiError, ApiErrorDetail, ApiErrorResponse
+from app.observability.middleware import HttpInFlightMiddleware
+from app.observability.router import router as observability_router
 
 configure_logging()
 
@@ -88,6 +90,27 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(MaxBodySizeMiddleware)
+# Day 25 — Prometheus in-flight gauge + per-request duration histogram.
+app.add_middleware(HttpInFlightMiddleware)
+
+# Day 27 — initialise LLM response cache (no-op when REDIS_URL is unset).
+# Cache failures are swallowed: the service must start even if Redis is
+# unreachable; the cache layer will log a warning on first use.
+try:
+    from app.cache.redis_cache import build_cache as _build_cache
+
+    _llm_cache = _build_cache(settings.redis_url)
+    app.state.llm_cache = _llm_cache
+    import logging as _log_mod
+    _log_mod.getLogger(__name__).info(
+        "llm_cache_initialised enabled=%s redis_url=%s",
+        _llm_cache.enabled,
+        "set" if settings.redis_url else "unset",
+    )
+except Exception as _exc:  # noqa: BLE001
+    import logging as _log_mod
+    _log_mod.getLogger(__name__).warning("llm_cache_init_failed err=%s", _exc)
+    app.state.llm_cache = None
 
 
 @app.middleware("http")
@@ -203,6 +226,7 @@ async def unhandled_exception_handler(
     )
 
 
+app.include_router(observability_router, prefix="/api")
 app.include_router(router, prefix="/api")
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"

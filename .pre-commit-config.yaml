@@ -1,0 +1,26 @@
+# Day 30 — pre-commit hooks for the Clinical RAG Agent repo.
+# Install: pip install pre-commit && pre-commit install
+# Run on demand: pre-commit run --all-files
+repos:
+  - repo: local
+    hooks:
+      - id: verify-secrets
+        name: Block secret placeholders in tracked files
+        entry: python3 scripts/verify_secrets.py --quiet
+        language: system
+        types_or: [yaml, json, toml, ini]
+        stages: [pre-commit]
+        pass_filenames: false
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0
+    hooks:
+      - id: prettier
+        types_or: [ts, tsx, js, jsx, json, css, md]
+        additional_dependencies: []
+        args: [--check]

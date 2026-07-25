@@ -1,0 +1,149 @@
+# Day 29 — Kyverno policies for clinical-workflows namespace.
+# Apply with: kubectl apply -f k8s/kyverno-policies.yaml
+# Requires Kyverno installed (helm install kyverno kyverno/kyverno -n kyverno --create-namespace).
+#
+# Policies enforced:
+#   1. require-registry-allowlist    — only ghcr.io/jeevesh2515/* images
+#   2. disallow-latest-tag           — block image: latest
+#   3. require-resource-limits       — all containers must set CPU/memory limits
+#   4. require-run-as-non-root       — runAsNonRoot: true required
+#   5. require-app-labels            — mandatory Kubernetes recommended labels
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-registry-allowlist
+  annotations:
+    policies.kyverno.io/title: Require Registry Allowlist
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/description: |
+      Only allow images from the approved registry (ghcr.io/jeevesh2515).
+      This prevents supply-chain attacks via third-party registries.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-registry
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Images must come from ghcr.io/jeevesh2515. Other registries are blocked."
+        pattern:
+          spec:
+            containers:
+              - image: "ghcr.io/jeevesh2515/*:*"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Image Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: |
+      Image tags must be pinned (no :latest, no :main, no @sha256 only with digest).
+      Forces every deploy to declare an explicit version.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-image-tag
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Image tag must be an explicit version (not 'latest', 'main', or empty). Accepts v*, semver (X.Y.Z), date tags (YYYYMMDD*), or @sha256: digest."
+        pattern:
+          spec:
+            containers:
+              - image: "ghcr.io/jeevesh2515/*:v*|ghcr.io/jeevesh2515/*:@sha256:*|ghcr.io/jeevesh2515/*:20*|ghcr.io/jeevesh2515/*:*.*.*|ghcr.io/jeevesh2515/*:*-*"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/title: Require CPU & Memory Limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: |
+      Every container must declare CPU and memory resource limits. Without
+      limits a noisy neighbour pod can starve the whole node.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-limits
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "All containers must declare resources.limits.cpu and resources.limits.memory."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    cpu: "?*"
+                    memory: "?*"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-non-root
+  annotations:
+    policies.kyverno.io/title: Require runAsNonRoot
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/description: |
+      Pods must run as non-root UID. Combined with the namespace-level
+      pod-security.kubernetes.io/enforce=restricted, this is defence in depth.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: check-runasnonroot
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "spec.securityContext.runAsNonRoot must be true."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - securityContext:
+                  runAsNonRoot: true
+                  allowPrivilegeEscalation: false
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-app-labels
+  annotations:
+    policies.kyverno.io/title: Require Recommended App Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/description: |
+      Pods must carry the Kubernetes-recommended labels (app.kubernetes.io/name,
+      app.kubernetes.io/part-of). These power the ServiceMonitor selector and
+      cost dashboards.
+spec:
+  validationFailureAction: Audit  # Warn-only; enforce after Day 31
+  background: true
+  rules:
+    - name: check-labels
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Pods must include app.kubernetes.io/name and app.kubernetes.io/part-of labels."
+        pattern:
+          metadata:
+            labels:
+              app.kubernetes.io/name: "?*"
+              app.kubernetes.io/part-of: "?*"

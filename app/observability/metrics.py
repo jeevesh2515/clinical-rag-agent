@@ -26,9 +26,35 @@ Retrieval:
 from __future__ import annotations
 
 import time
+import warnings
 from contextlib import contextmanager
 
-from prometheus_client import Counter, Gauge, Histogram
+try:
+    from prometheus_client import Counter, Gauge, Histogram  # type: ignore
+except ImportError:  # pragma: no cover - e.g. Vercel serverless runtime
+    warnings.warn("prometheus_client not installed; metrics will be no-ops", stacklevel=2)
+
+    class _NoOpMetric:
+        """No-op metric fallback when prometheus_client is unavailable."""
+
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def labels(self, *args, **kwargs) -> "_NoOpMetric":
+            return self
+
+        def inc(self, *args, **kwargs) -> None:
+            pass
+
+        def dec(self, *args, **kwargs) -> None:
+            pass
+
+        def observe(self, *args, **kwargs) -> None:
+            pass
+
+    Counter = _NoOpMetric  # type: ignore
+    Gauge = _NoOpMetric  # type: ignore
+    Histogram = _NoOpMetric  # type: ignore
 
 # Buckets tuned for LLM workloads: long-tail up to 120s for OpenRouter free tier.
 _LLM_BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0)

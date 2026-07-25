@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
@@ -21,26 +22,61 @@ from app.observability.router import router as observability_router
 
 configure_logging()
 
-# Initialise SQLite + ORM tables at import time. Safe to call repeatedly.
-from app.db import SessionLocal, bootstrap as _bootstrap_db  # noqa: E402
-_bootstrap_db()
 
-# Warm the personal-corpus retrieval index from persisted uploads so the
-# personalised RAG works after a restart.
-try:
-    from app.personalization import personal_index  # noqa: E402
-    with SessionLocal() as _db:
-        _loaded = personal_index.warm_from_db(_db)
-        import logging as _logging  # noqa: E402
-        _logging.getLogger(__name__).info("personal_index_warm chunks=%s", _loaded)
-except Exception as _exc:  # never let warm-up break startup
-    import logging as _logging  # noqa: E402
-    _logging.getLogger(__name__).warning("personal_index_warm_failed err=%s", _exc)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: run one-time startup tasks without blocking import.
+
+    Moving DB bootstrap, personal-index warmup, and cache init here avoids
+    cold-start timeouts on serverless hosts (e.g. Vercel) where long-running
+    synchronous work at module import time causes ``FUNCTION_INVOCATION_FAILED``.
+    """
+    import logging as _logging
+
+    from app.db import SessionLocal, bootstrap as _bootstrap_db
+    from app.personalization import personal_index
+
+    # 1. Initialise SQLite + ORM tables. Safe to call repeatedly.
+    try:
+        _bootstrap_db()
+    except Exception as exc:
+        _logging.getLogger(__name__).warning("db_bootstrap_failed err=%s", exc)
+
+    # 2. Warm the personal-corpus retrieval index from persisted uploads so
+    #    personalised RAG works after a restart.
+    try:
+        with SessionLocal() as _db:
+            _loaded = personal_index.warm_from_db(_db)
+            _logging.getLogger(__name__).info("personal_index_warm chunks=%s", _loaded)
+    except Exception as exc:
+        _logging.getLogger(__name__).warning("personal_index_warm_failed err=%s", exc)
+
+    # 3. Day 27 — initialise LLM response cache (no-op when REDIS_URL is unset).
+    #    Cache failures are swallowed: the service must start even if Redis is
+    #    unreachable; the cache layer will log a warning on first use.
+    try:
+        from app.cache.redis_cache import build_cache as _build_cache
+
+        settings = get_settings()
+        _llm_cache = _build_cache(settings.redis_url)
+        app.state.llm_cache = _llm_cache
+        _logging.getLogger(__name__).info(
+            "llm_cache_initialised enabled=%s redis_url=%s",
+            _llm_cache.enabled,
+            "set" if settings.redis_url else "unset",
+        )
+    except Exception as exc:
+        _logging.getLogger(__name__).warning("llm_cache_init_failed err=%s", exc)
+        app.state.llm_cache = None
+
+    yield
+
 
 app = FastAPI(
     title="Clinical Evidence RAG Agent",
     version="0.1.0",
     description="Hybrid clinical RAG API with citations, tools, and evaluation.",
+    lifespan=lifespan,
 )
 
 # Wire rate limiter into the app so route-level @limiter.limit() decorators work.
@@ -92,26 +128,6 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
 app.add_middleware(MaxBodySizeMiddleware)
 # Day 25 — Prometheus in-flight gauge + per-request duration histogram.
 app.add_middleware(HttpInFlightMiddleware)
-
-# Day 27 — initialise LLM response cache (no-op when REDIS_URL is unset).
-# Cache failures are swallowed: the service must start even if Redis is
-# unreachable; the cache layer will log a warning on first use.
-try:
-    from app.cache.redis_cache import build_cache as _build_cache
-
-    _llm_cache = _build_cache(settings.redis_url)
-    app.state.llm_cache = _llm_cache
-    import logging as _log_mod
-    _log_mod.getLogger(__name__).info(
-        "llm_cache_initialised enabled=%s redis_url=%s",
-        _llm_cache.enabled,
-        "set" if settings.redis_url else "unset",
-    )
-except Exception as _exc:  # noqa: BLE001
-    import logging as _log_mod
-    _log_mod.getLogger(__name__).warning("llm_cache_init_failed err=%s", _exc)
-    app.state.llm_cache = None
-
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):

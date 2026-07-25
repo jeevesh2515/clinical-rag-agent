@@ -118,36 +118,47 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
 
       revealElements.forEach((el) => {
         const htmlEl = el as HTMLElement
+        
+        // Once an element is fully revealed, lock it at solid opacity 1
+        if (htmlEl.dataset.revealed === 'true') {
+          htmlEl.style.opacity = '1'
+          htmlEl.style.transform = 'translate3d(0px, 0px, 0px)'
+          return
+        }
+
         const rect = htmlEl.getBoundingClientRect()
         const elementTop = rect.top
         
-        // startReveal: element enters the bottom of the viewport
-        const startReveal = viewportHeight
-        // endReveal: element is 50% into the viewport from the bottom (middle of screen)
-        const endReveal = viewportHeight * 0.50
-        
+        // startReveal: element top enters 95% of viewport height
+        const startReveal = viewportHeight * 0.95
+        // endReveal: element top reaches 80% of viewport height (fully visible early!)
+        const endReveal = viewportHeight * 0.80
+
         let progress = 0
         if (elementTop < startReveal) {
           progress = (startReveal - elementTop) / (startReveal - endReveal)
           progress = Math.max(0, Math.min(1, progress))
         }
 
-        // Apply smooth linear mapping
-        const easeProgress = progress
-
-        htmlEl.style.transition = 'none'
-        htmlEl.style.opacity = `${easeProgress}`
-        
-        if (htmlEl.classList.contains('reveal-left')) {
-          const shift = (1 - easeProgress) * (window.innerWidth < 640 ? -15 : -40)
-          htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
-        } else if (htmlEl.classList.contains('reveal-right')) {
-          const shift = (1 - easeProgress) * (window.innerWidth < 640 ? 15 : 40)
-          htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
+        if (progress >= 1) {
+          htmlEl.dataset.revealed = 'true'
+          htmlEl.style.opacity = '1'
+          htmlEl.style.transform = 'translate3d(0px, 0px, 0px)'
         } else {
-          // reveal-bottom or reveal-on-scroll
-          const shift = (1 - easeProgress) * (window.innerWidth < 640 ? 15 : 30)
-          htmlEl.style.transform = `translate3d(0px, ${shift}px, 0px)`
+          htmlEl.style.transition = 'none'
+          htmlEl.style.opacity = `${progress}`
+          
+          if (htmlEl.classList.contains('reveal-left')) {
+            const shift = (1 - progress) * (window.innerWidth < 640 ? -15 : -30)
+            htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
+          } else if (htmlEl.classList.contains('reveal-right')) {
+            const shift = (1 - progress) * (window.innerWidth < 640 ? 15 : 30)
+            htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
+          } else {
+            // reveal-bottom or reveal-on-scroll
+            const shift = (1 - progress) * (window.innerWidth < 640 ? 15 : 25)
+            htmlEl.style.transform = `translate3d(0px, ${shift}px, 0px)`
+          }
         }
       })
     }

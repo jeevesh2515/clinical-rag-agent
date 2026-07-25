@@ -121,10 +121,10 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         const rect = htmlEl.getBoundingClientRect()
         const elementTop = rect.top
         
-        // startReveal: Begins 10% below bottom of viewport (animation starts early as element approaches screen)
-        const startReveal = viewportHeight * 1.10
-        // endReveal: Reaches 100% full opacity & zero translation when top edge reaches 85% viewport height (just 15% from screen bottom!)
-        const endReveal = viewportHeight * 0.85
+        // startReveal: Begins exactly when top edge touches viewport bottom (1.00 * viewportHeight)
+        const startReveal = viewportHeight * 1.00
+        // endReveal: Reaches 100% full opacity & zero translation when top edge reaches 75% viewport height (25% from screen bottom)
+        const endReveal = viewportHeight * 0.75
 
         let progress = 0
         if (elementTop < startReveal) {

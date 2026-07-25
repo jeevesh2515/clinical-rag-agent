@@ -599,19 +599,19 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
           <div className="space-y-3 sm:space-y-6">
             <h4 className="font-label-md text-xs sm:text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Documentation</h4>
             <ul className="space-y-2 sm:space-y-3 font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">API Reference</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">System Architecture</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">OKF Documentation</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Security Whitepaper</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent#api-reference" target="_blank" rel="noreferrer">API Reference</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent#architecture" target="_blank" rel="noreferrer">System Architecture</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent/blob/main/hypertension-okf/INDEX.md" target="_blank" rel="noreferrer">OKF Documentation</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent#security--safety" target="_blank" rel="noreferrer">Security Whitepaper</a></li>
             </ul>
           </div>
           <div className="space-y-3 sm:space-y-6">
             <h4 className="font-label-md text-xs sm:text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Legal</h4>
             <ul className="space-y-2 sm:space-y-3 font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Privacy Policy</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Terms of Service</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">GDPR Compliance</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Ethics Statement</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent" target="_blank" rel="noreferrer">Privacy Policy</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent" target="_blank" rel="noreferrer">Terms of Service</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent" target="_blank" rel="noreferrer">GDPR Compliance</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent" target="_blank" rel="noreferrer">Ethics Statement</a></li>
             </ul>
           </div>
           <div className="space-y-4 sm:space-y-6">
@@ -624,7 +624,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                 <span className="material-symbols-outlined text-sm sm:text-base text-clinical-black dark:text-white">link</span>
               </button>
               <button 
-                onClick={() => window.open('mailto:info@example.com')}
+                onClick={() => window.open('https://github.com/jeevesh2515/clinical-rag-agent/issues', '_blank')}
                 className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
                 <span className="material-symbols-outlined text-sm sm:text-base text-clinical-black dark:text-white">alternate_email</span>

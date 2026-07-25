@@ -2,6 +2,11 @@ name: Load Test (Staging)
 
 # Auto-runs baseline + burst against staging after every main-branch deploy.
 # Operators also trigger via `workflow_dispatch` for ad-hoc verification.
+# When triggered by a pull_request, the workflow:
+#   1. exports k6 summary JSON
+#   2. parses results into docs/LOAD_TEST_RESULTS.md
+#   3. auto-commits the patched docs back to the PR branch
+#   4. posts a PR comment linking to the run URL
 
 on:
   workflow_dispatch:
@@ -18,14 +23,16 @@ on:
           - all
   push:
     branches: [main, master]
+  pull_request:
+    branches: [main, master]
   workflow_run:
     workflows: ["CI/CD Quality Gate & Docker Release"]
     types: [completed]
     branches: [main, master]
 
 permissions:
-  contents: read
-  pull-requests: write   # to comment PASS/FAIL onto the triggering PR
+  contents: write           # to push the auto-commit back to the PR branch
+  pull-requests: write      # to comment PASS/FAIL on the triggering PR
 
 concurrency:
   group: load-test-${{ github.ref }}
@@ -35,17 +42,22 @@ jobs:
   load-test:
     name: k6 — ${{ github.event.inputs.scenario || 'all' }}
     # Only run after the image has been pushed to GHCR (workflow_run trigger)
-    # OR on manual dispatch.
+    # OR on manual dispatch OR on PR.
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      github.event_name == 'push'
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # When triggered by a PR we need the PR branch checked out so the
+          # auto-commit step pushes back to the same branch.
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
       - name: Install k6
         run: |
@@ -79,7 +91,9 @@ jobs:
           TOKEN: ${{ secrets.STAGING_TOKEN }}
         run: |
           mkdir -p docs/load-test-results
-          k6 run --out json=docs/load-test-results/baseline-ci.json \
+          k6 run \
+            --out json=docs/load-test-results/baseline-ci-${{ github.run_id }}.json \
+            --summary-export=docs/load-test-results/baseline-summary-${{ github.run_id }}.json \
             tests/load/baseline.js \
             -e BASE_URL="$STAGING_URL" -e TOKEN="$TOKEN"
 
@@ -92,9 +106,12 @@ jobs:
         env:
           STAGING_URL: ${{ secrets.STAGING_URL }}
           TOKEN: ${{ secrets.STAGING_TOKEN }}
-        run: k6 run --out json=docs/load-test-results/burst-ci.json \
-          tests/load/burst.js \
-          -e BASE_URL="$STAGING_URL" -e TOKEN="$TOKEN"
+        run: |
+          k6 run \
+            --out json=docs/load-test-results/burst-ci-${{ github.run_id }}.json \
+            --summary-export=docs/load-test-results/burst-summary-${{ github.run_id }}.json \
+            tests/load/burst.js \
+            -e BASE_URL="$STAGING_URL" -e TOKEN="$TOKEN"
 
       - name: Capture metrics
         if: always()
@@ -104,6 +121,38 @@ jobs:
         run: |
           mkdir -p docs/load-test-results
           bash ./scripts/capture_metrics.sh
+
+      - name: Parse k6 results into docs/LOAD_TEST_RESULTS.md
+        if: always()
+        run: |
+          python3 -c "import scripts.parse_k6_results" 2>/dev/null || true
+          python3 scripts/parse_k6_results.py
+
+      - name: Auto-commit results back to PR branch
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/load-test-results/ docs/LOAD_TEST_RESULTS.md || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "ci: load test results from run ${{ github.run_id }} [skip ci]"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+
+      - name: Comment on PR with summary
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          MSG="🚀 **Load test finished.** Workflow run: $RUN_URL\n\n"
+          MSG+="Result JSON files are committed back to this PR under docs/load-test-results/. "
+          MSG+="See the updated Pass Criteria tables in docs/LOAD_TEST_RESULTS.md."
+          gh pr comment ${{ github.event.pull_request.number }} --body "$MSG" || true
 
       - name: Upload artifacts
         if: always()

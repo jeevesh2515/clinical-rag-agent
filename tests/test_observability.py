@@ -113,7 +113,7 @@ class TestReadyEndpoint:
     def test_ready_structure_is_correct(self, client):
         response = client.get("/api/ready")
         payload = response.json()
-        assert set(payload.keys()) == {"status", "db", "okf", "request_id"}
+        assert set(payload.keys()) == {"status", "db", "okf", "chunks", "request_id"}
         assert isinstance(payload["okf"], (int, str))
 
 

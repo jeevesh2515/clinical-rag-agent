@@ -56,7 +56,7 @@ function AnimatedCounter({
   }, [target, duration, startValue])
 
   return (
-    <div ref={elementRef} className="font-headline-xl text-[72px] font-black leading-none">
+    <div ref={elementRef} className="font-headline-xl text-4xl sm:text-6xl md:text-[72px] font-black leading-none">
       {prefix}{count.toFixed(decimals)}{suffix}
     </div>
   )
@@ -139,14 +139,14 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         htmlEl.style.opacity = `${easeProgress}`
         
         if (htmlEl.classList.contains('reveal-left')) {
-          const shift = (1 - easeProgress) * -40
+          const shift = (1 - easeProgress) * (window.innerWidth < 640 ? -15 : -40)
           htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
         } else if (htmlEl.classList.contains('reveal-right')) {
-          const shift = (1 - easeProgress) * 40
+          const shift = (1 - easeProgress) * (window.innerWidth < 640 ? 15 : 40)
           htmlEl.style.transform = `translate3d(${shift}px, 0px, 0px)`
         } else {
           // reveal-bottom or reveal-on-scroll
-          const shift = (1 - easeProgress) * 30
+          const shift = (1 - easeProgress) * (window.innerWidth < 640 ? 15 : 30)
           htmlEl.style.transform = `translate3d(0px, ${shift}px, 0px)`
         }
       })
@@ -181,10 +181,10 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
     <div className="bg-white dark:bg-slate-950 text-clinical-black dark:text-white font-body-md selection:bg-brand-accent selection:text-white min-h-screen flex flex-col transition-colors duration-300">
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-b border-clinical-black dark:border-slate-800 shadow-sm transition-colors duration-300">
-        <div className="flex justify-between items-center px-3 sm:px-gutter py-2.5 sm:py-3 max-w-screen-2xl mx-auto w-full gap-2">
+        <div className="flex justify-between items-center px-3 sm:px-gutter py-2 sm:py-3 max-w-screen-2xl mx-auto w-full gap-2 overflow-hidden">
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="group flex items-center gap-2 sm:gap-3 text-left focus:outline-none shrink-0"
+            className="group flex items-center gap-1.5 sm:gap-3 text-left focus:outline-none shrink-0"
             title="Back to Top"
           >
             <div className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
@@ -259,13 +259,13 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
               <>
                 <button 
                   onClick={onLogin} 
-                  className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-label-md border-2 border-clinical-black dark:border-white bg-white dark:bg-slate-900 text-clinical-black dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150 font-bold uppercase tracking-wider"
+                  className="px-2 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-label-md border-2 border-clinical-black dark:border-white bg-white dark:bg-slate-900 text-clinical-black dark:text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150 font-bold uppercase tracking-wider"
                 >
                   Login
                 </button>
                 <button 
                   onClick={onRegister} 
-                  className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-label-md bg-clinical-black dark:bg-brand-accent text-white border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150 uppercase tracking-wider font-bold"
+                  className="px-2 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-label-md bg-clinical-black dark:bg-brand-accent text-white border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all duration-150 uppercase tracking-wider font-bold"
                 >
                   Register
                 </button>
@@ -282,25 +282,25 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         </div>
       </nav>
 
-      <main className="pt-16 flex-grow">
+      <main className="pt-16 flex-grow overflow-x-hidden max-w-full">
         {/* Hero Section */}
-        <section id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-gutter py-20 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-colors duration-300">
-          <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 parallax-element" data-speed="0.05">
-              <div className="inline-block px-3 py-1 bg-brand-accent text-white font-code-sm text-code-sm uppercase tracking-widest neo-brutal-shadow-sm font-bold">
+        <section id="hero" className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden px-4 sm:px-gutter py-12 sm:py-20 bg-[radial-gradient(#1a1a1a_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#ffffff_0.75px,transparent_0.75px)] [background-size:24px_24px] [background-position:center] transition-colors duration-300">
+          <div className="relative z-10 max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+            <div className="space-y-6 sm:space-y-8 parallax-element" data-speed="0.05">
+              <div className="inline-block px-2.5 py-1 bg-brand-accent text-white font-code-sm text-[10px] sm:text-code-sm uppercase tracking-widest neo-brutal-shadow-sm font-bold max-w-full truncate">
                 Precision Hypertension RAG
               </div>
-              <h1 className="font-headline-xl text-3xl sm:text-5xl lg:text-[64px] leading-tight font-black text-clinical-black dark:text-white uppercase">
+              <h1 className="font-headline-xl text-2xl xs:text-3xl sm:text-5xl lg:text-[64px] leading-tight font-black text-clinical-black dark:text-white uppercase">
                 Clinical Precision.<br />
                 <span className="text-brand-accent">Engineered</span> For Care.
               </h1>
-              <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 max-w-lg border-l-4 border-outline-variant dark:border-slate-700 pl-6">
+              <p className="font-body-md text-sm sm:text-headline-md text-on-surface-variant dark:text-slate-400 max-w-lg border-l-4 border-outline-variant dark:border-slate-700 pl-4 sm:pl-6">
                 The definitive operating system for high-stakes medical AI. Deploy hybrid retrieval architectures with absolute safety guardrails and immutable provenance.
               </p>
-              <div className="flex flex-wrap gap-4 pt-4">
+              <div className="flex flex-col xs:flex-row flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4">
                 <button 
                   onClick={currentUser ? onGoToDashboard : onLogin}
-                  className="group relative px-8 py-4 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center gap-2 overflow-hidden"
+                  className="group relative w-full xs:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-clinical-black dark:bg-brand-accent text-white font-headline-md text-xs sm:text-base border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-clinical-black/90 dark:hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center justify-center gap-2 overflow-hidden"
                 >
                   <span className="relative z-10 uppercase font-bold tracking-wide">
                     {currentUser ? 'Return to Workstation' : 'Initialize Interface'}
@@ -309,7 +309,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                 </button>
                 <button 
                   onClick={() => window.open('https://github.com/jeevesh2515/clinical-rag-agent', '_blank')}
-                  className="px-8 py-4 bg-white dark:bg-slate-900 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
+                  className="w-full xs:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white dark:bg-slate-900 text-clinical-black dark:text-white text-xs sm:text-base border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide flex items-center justify-center"
                 >
                   View Whitepaper
                 </button>
@@ -318,69 +318,73 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             
             <div className="relative parallax-element" data-speed="-0.03">
               {/* CORE_ENGINE_V3 Visual Block */}
-              <div className="relative w-full aspect-square border-2 border-clinical-black dark:border-white bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-8 scanline-effect overflow-hidden">
-                <div className="tipped-label dark:border-white dark:text-white" style={{ right: '48px' }}>CORE_ENGINE_V3_LIVE</div>
-                <div className="h-full flex flex-col justify-between">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2">
-                      <div className="w-12 h-1 bg-brand-accent"></div>
-                      <div className="font-code-sm text-[10px] text-on-surface-variant dark:text-slate-400">Uptime: 99.9999%</div>
-                      <div className="font-code-sm text-[10px] text-on-surface-variant dark:text-slate-400">Lat: 24ms</div>
-                    </div>
-                    <div className="text-right">
-                      <span className="material-symbols-outlined text-brand-accent animate-pulse">monitoring</span>
-                    </div>
+              <div className="relative w-full aspect-square min-h-[360px] sm:min-h-[420px] border-2 border-clinical-black dark:border-white bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl neo-brutal-shadow dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-4 sm:p-6 scanline-effect overflow-hidden flex flex-col justify-between">
+                <div className="tipped-label dark:border-white dark:text-white text-[9px] sm:text-[10px]" style={{ right: '16px' }}>CORE_ENGINE_V3_LIVE</div>
+                
+                {/* Top Header */}
+                <div className="flex justify-between items-start shrink-0">
+                  <div className="space-y-1">
+                    <div className="w-8 sm:w-12 h-1 bg-brand-accent"></div>
+                    <div className="font-code-sm text-[9px] sm:text-[10px] text-on-surface-variant dark:text-slate-400">Uptime: 99.9999%</div>
+                    <div className="font-code-sm text-[9px] sm:text-[10px] text-on-surface-variant dark:text-slate-400">Lat: 24ms</div>
                   </div>
-                  <div className="flex-1 flex items-center justify-center py-8">
-                    <div className="relative w-48 h-48 border-4 border-clinical-black dark:border-white flex items-center justify-center">
-                      <div className="absolute inset-2 border border-clinical-black/20 dark:border-white/20 animate-spin-slow"></div>
-                      <div className="absolute inset-6 border-2 border-brand-accent/40 animate-spin-slower-reverse"></div>
-                      <span className="material-symbols-outlined text-6xl text-clinical-black dark:text-white" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
-                    </div>
+                  <div className="text-right">
+                    <span className="material-symbols-outlined text-brand-accent animate-pulse text-xl sm:text-2xl">monitoring</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 border-2 border-clinical-black dark:border-slate-700 bg-white dark:bg-slate-950">
-                      <div className="text-[10px] font-code-sm text-outline dark:text-slate-400 uppercase">Neural Integrity</div>
-                      <div className="text-xl font-headline-md font-black">98.4%</div>
-                    </div>
-                    <div className="p-3 border-2 border-clinical-black dark:border-slate-700 bg-brand-accent text-white">
-                      <div className="text-[10px] font-code-sm text-white/70 uppercase">Throughput</div>
-                      <div className="text-xl font-headline-md font-black">1.2GB/s</div>
-                    </div>
+                </div>
+
+                {/* Center Visual */}
+                <div className="flex-1 min-h-0 flex items-center justify-center py-2 sm:py-4">
+                  <div className="relative w-32 h-32 sm:w-44 sm:h-44 border-4 border-clinical-black dark:border-white flex items-center justify-center shrink-0">
+                    <div className="absolute inset-2 border border-clinical-black/20 dark:border-white/20 animate-spin-slow"></div>
+                    <div className="absolute inset-4 sm:inset-5 border-2 border-brand-accent/40 animate-spin-slower-reverse"></div>
+                    <span className="material-symbols-outlined text-4xl sm:text-5xl text-clinical-black dark:text-white" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
+                  </div>
+                </div>
+
+                {/* Bottom Metric Cards */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 shrink-0">
+                  <div className="p-2 sm:p-2.5 border-2 border-clinical-black dark:border-slate-700 bg-white dark:bg-slate-950">
+                    <div className="text-[9px] sm:text-[10px] font-code-sm text-outline dark:text-slate-400 uppercase leading-none">Neural Integrity</div>
+                    <div className="text-sm sm:text-lg font-headline-md font-black leading-tight mt-1">98.4%</div>
+                  </div>
+                  <div className="p-2 sm:p-2.5 border-2 border-clinical-black dark:border-slate-700 bg-brand-accent text-white">
+                    <div className="text-[9px] sm:text-[10px] font-code-sm text-white/70 uppercase leading-none">Throughput</div>
+                    <div className="text-sm sm:text-lg font-headline-md font-black leading-tight mt-1">1.2GB/s</div>
                   </div>
                 </div>
               </div>
               {/* Decorative elements */}
-              <div className="absolute -top-4 -right-4 w-12 h-12 border-2 border-clinical-black dark:border-white bg-tertiary-fixed-dim dark:bg-slate-800 neo-brutal-shadow-sm dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] flex items-center justify-center z-20">
-                <span className="material-symbols-outlined text-clinical-black dark:text-white">shield</span>
+              <div className="absolute top-2 sm:-top-4 right-2 sm:-right-4 w-10 h-10 sm:w-12 sm:h-12 border-2 border-clinical-black dark:border-white bg-tertiary-fixed-dim dark:bg-slate-800 neo-brutal-shadow-sm dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] flex items-center justify-center z-20">
+                <span className="material-symbols-outlined text-sm sm:text-base text-clinical-black dark:text-white">shield</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* Features Bento Grid */}
-        <section className="py-16 bg-surface-container-low dark:bg-slate-900/50 border-t-2 border-clinical-black dark:border-slate-800 px-gutter transition-colors duration-300">
+        <section className="py-10 sm:py-16 bg-surface-container-low dark:bg-slate-900/50 border-t-2 border-clinical-black dark:border-slate-800 px-4 sm:px-gutter transition-colors duration-300">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-16 reveal-on-scroll">
-              <h2 className="font-headline-xl text-headline-xl font-black uppercase text-clinical-black dark:text-white tracking-tighter">Clinical Components</h2>
-              <div className="w-24 h-2 bg-brand-accent mt-4"></div>
+            <div className="mb-8 sm:mb-16 reveal-on-scroll">
+              <h2 className="font-headline-xl text-2xl sm:text-headline-xl font-black uppercase text-clinical-black dark:text-white tracking-tighter">Clinical Components</h2>
+              <div className="w-16 sm:w-24 h-1.5 sm:h-2 bg-brand-accent mt-2 sm:mt-4"></div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
               {/* Hybrid Retrieval */}
-              <div id="retrieval" className="md:col-span-8 relative p-8 overflow-hidden bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
-                <div className="tipped-label dark:bg-white dark:text-slate-950 dark:border-white">V3_RETRIEVAL</div>
-                <div className="flex flex-col md:flex-row gap-8 min-w-0">
-                  <div className="flex-1 space-y-4">
-                    <span className="material-symbols-outlined text-4xl text-brand-accent">layers</span>
-                    <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Hybrid Retrieval</h3>
-                    <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Seamlessly merge vector-based semantic search with deterministic clinical coding (ICD-11, SNOMED CT) for zero-hallucination patient context extraction.</p>
-                    <div className="flex gap-2 pt-4">
-                      <span className="px-2 py-1 bg-surface-container-highest dark:bg-slate-950 border border-clinical-black dark:border-slate-700 font-code-sm text-body-sm text-clinical-black dark:text-white">SNOMED_MAP</span>
-                      <span className="px-2 py-1 bg-surface-container-highest dark:bg-slate-950 border border-clinical-black dark:border-slate-700 font-code-sm text-body-sm text-clinical-black dark:text-white">VECTOR_V4</span>
+              <div id="retrieval" className="md:col-span-8 relative p-5 sm:p-8 overflow-hidden bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] sm:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] sm:dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '100ms' }}>
+                <div className="tipped-label dark:bg-white dark:text-slate-950 dark:border-white text-[9px] sm:text-[10px]">V3_RETRIEVAL</div>
+                <div className="flex flex-col md:flex-row gap-6 sm:gap-8 min-w-0">
+                  <div className="flex-1 space-y-3 sm:space-y-4">
+                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-brand-accent">layers</span>
+                    <h3 className="font-headline-lg text-lg sm:text-headline-lg font-black uppercase text-clinical-black dark:text-white">Hybrid Retrieval</h3>
+                    <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-xs sm:text-body-md">Seamlessly merge vector-based semantic search with deterministic clinical coding (ICD-11, SNOMED CT) for zero-hallucination patient context extraction.</p>
+                    <div className="flex flex-wrap gap-2 pt-2 sm:pt-4">
+                      <span className="px-2 py-1 bg-surface-container-highest dark:bg-slate-950 border border-clinical-black dark:border-slate-700 font-code-sm text-[10px] sm:text-body-sm text-clinical-black dark:text-white">SNOMED_MAP</span>
+                      <span className="px-2 py-1 bg-surface-container-highest dark:bg-slate-950 border border-clinical-black dark:border-slate-700 font-code-sm text-[10px] sm:text-body-sm text-clinical-black dark:text-white">VECTOR_V4</span>
                     </div>
                   </div>
-                  <div className="w-72 h-72 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0 group">
+                  <div className="w-full max-w-[260px] sm:w-72 h-56 sm:h-72 mx-auto sm:mx-0 bg-surface-container dark:bg-slate-950 rounded-sm border-2 border-clinical-black dark:border-slate-700 overflow-hidden relative shrink-0 group">
                     <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-500 mix-blend-color bg-blue-500/40 dark:bg-orange-500/60"></div>
                     <img 
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 
@@ -392,42 +396,42 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
               </div>
 
               {/* OKF Spine */}
-              <div className="md:col-span-4 group p-8 bg-tertiary-fixed dark:bg-amber-950/20 border-2 border-clinical-black dark:border-amber-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#f59e0b] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '200ms' }}>
-                <div className="tipped-label dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500">OKF_CORE</div>
-                <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-amber-400">verified</span>
-                  <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">OKF Spine</h3>
-                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md">The Open Knowledge Framework ensures that every decision made by the system is tethered to validated medical literature.</p>
+              <div className="md:col-span-4 group p-5 sm:p-8 bg-tertiary-fixed dark:bg-amber-950/20 border-2 border-clinical-black dark:border-amber-500/45 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] sm:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#f59e0b] sm:dark:shadow-[6px_6px_0px_0px_#f59e0b] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '200ms' }}>
+                <div className="tipped-label dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500 text-[9px] sm:text-[10px]">OKF_CORE</div>
+                <div className="space-y-3 sm:space-y-4">
+                  <span className="material-symbols-outlined text-3xl sm:text-4xl text-clinical-black dark:text-amber-400">verified</span>
+                  <h3 className="font-headline-lg text-lg sm:text-headline-lg font-black uppercase text-clinical-black dark:text-white">OKF Spine</h3>
+                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-xs sm:text-body-md">The Open Knowledge Framework ensures that every decision made by the system is tethered to validated medical literature.</p>
                 </div>
               </div>
 
               {/* Safety Guardrails */}
-              <div id="safety" className="md:col-span-4 group p-8 bg-secondary-fixed dark:bg-emerald-950/20 border-2 border-clinical-black dark:border-emerald-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#10b981] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
-                <div className="tipped-label dark:bg-emerald-500 dark:text-slate-950 dark:border-emerald-500">SAFETY_V1</div>
-                <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-clinical-black dark:text-emerald-400">security</span>
-                  <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Safety Guardrails</h3>
-                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Multi-layer verification protocols that prevent off-label advice and maintain strict clinical boundaries.</p>
+              <div id="safety" className="md:col-span-4 group p-5 sm:p-8 bg-secondary-fixed dark:bg-emerald-950/20 border-2 border-clinical-black dark:border-emerald-500/45 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] sm:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#10b981] sm:dark:shadow-[6px_6px_0px_0px_#10b981] hover:translate-x-1 hover:translate-y-1 transition-all reveal-left" style={{ transitionDelay: '300ms' }}>
+                <div className="tipped-label dark:bg-emerald-500 dark:text-slate-950 dark:border-emerald-500 text-[9px] sm:text-[10px]">SAFETY_V1</div>
+                <div className="space-y-3 sm:space-y-4">
+                  <span className="material-symbols-outlined text-3xl sm:text-4xl text-clinical-black dark:text-emerald-400">security</span>
+                  <h3 className="font-headline-lg text-lg sm:text-headline-lg font-black uppercase text-clinical-black dark:text-white">Safety Guardrails</h3>
+                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-xs sm:text-body-md">Multi-layer verification protocols that prevent off-label advice and maintain strict clinical boundaries.</p>
                 </div>
               </div>
 
               {/* Full Provenance */}
-              <div id="provenance" className="md:col-span-4 group p-8 bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-clinical-black dark:border-indigo-500/45 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#6366f1] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
-                <div className="tipped-label bg-indigo-600 dark:bg-indigo-500 text-white dark:text-slate-950 border-indigo-600 dark:border-indigo-500">AUDIT_TRACE</div>
-                <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-indigo-600 dark:text-indigo-400">menu_book</span>
-                  <h3 className="font-headline-lg text-headline-lg font-black uppercase text-clinical-black dark:text-white">Full Provenance</h3>
-                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md">Complete chain of custody for every data point used in the clinical inference process.</p>
+              <div id="provenance" className="md:col-span-4 group p-5 sm:p-8 bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-clinical-black dark:border-indigo-500/45 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] sm:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#6366f1] sm:dark:shadow-[6px_6px_0px_0px_#6366f1] hover:translate-x-1 hover:translate-y-1 transition-all reveal-bottom" style={{ transitionDelay: '400ms' }}>
+                <div className="tipped-label bg-indigo-600 dark:bg-indigo-500 text-white dark:text-slate-950 border-indigo-600 dark:border-indigo-500 text-[9px] sm:text-[10px]">AUDIT_TRACE</div>
+                <div className="space-y-3 sm:space-y-4">
+                  <span className="material-symbols-outlined text-3xl sm:text-4xl text-indigo-600 dark:text-indigo-400">menu_book</span>
+                  <h3 className="font-headline-lg text-lg sm:text-headline-lg font-black uppercase text-clinical-black dark:text-white">Full Provenance</h3>
+                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-xs sm:text-body-md">Complete chain of custody for every data point used in the clinical inference process.</p>
                 </div>
               </div>
 
               {/* Real-Time Audit */}
-              <div className="md:col-span-4 group p-8 bg-clinical-black dark:bg-slate-900 text-white border-2 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '500ms' }}>
-                <div className="tipped-label bg-white dark:bg-white text-clinical-black dark:text-slate-950 dark:border-white">LIVE_SYNC</div>
-                <div className="space-y-4">
-                  <span className="material-symbols-outlined text-4xl text-brand-accent">radar</span>
-                  <h3 className="font-headline-lg text-headline-lg font-black uppercase text-white">Real-Time Audit</h3>
-                  <p className="text-surface-variant dark:text-slate-300 font-body-md">Streaming monitoring of model drift and logic deviations with instant clinician alerting.</p>
+              <div className="md:col-span-4 group p-5 sm:p-8 bg-clinical-black dark:bg-slate-900 text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] sm:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] sm:dark:shadow-[6px_6px_0px_0px_#ffffff] hover:translate-x-1 hover:translate-y-1 transition-all reveal-right" style={{ transitionDelay: '500ms' }}>
+                <div className="tipped-label bg-white dark:bg-white text-clinical-black dark:text-slate-950 dark:border-white text-[9px] sm:text-[10px]">LIVE_SYNC</div>
+                <div className="space-y-3 sm:space-y-4">
+                  <span className="material-symbols-outlined text-3xl sm:text-4xl text-brand-accent">radar</span>
+                  <h3 className="font-headline-lg text-lg sm:text-headline-lg font-black uppercase text-white">Real-Time Audit</h3>
+                  <p className="text-surface-variant dark:text-slate-300 font-body-md text-xs sm:text-body-md">Streaming monitoring of model drift and logic deviations with instant clinician alerting.</p>
                 </div>
               </div>
             </div>
@@ -435,55 +439,55 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         </section>
 
         {/* Clinical BMI Teaser Section */}
-        <section id="bmi-teaser" className="py-16 bg-white dark:bg-slate-950 border-t-2 border-clinical-black dark:border-slate-800 px-gutter">
+        <section id="bmi-teaser" className="py-10 sm:py-16 bg-white dark:bg-slate-950 border-t-2 border-clinical-black dark:border-slate-800 px-4 sm:px-gutter">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-[#fafafa] dark:bg-slate-900 border-4 border-clinical-black dark:border-white p-6 sm:p-10 clinical-shadow relative overflow-hidden">
-              <div className="tipped-label dark:border-white dark:text-white" style={{ right: '24px' }}>CLINICAL_TOOL</div>
+            <div className="bg-[#fafafa] dark:bg-slate-900 border-2 sm:border-4 border-clinical-black dark:border-white p-4 sm:p-10 clinical-shadow relative overflow-hidden">
+              <div className="tipped-label dark:border-white dark:text-white text-[9px] sm:text-[10px]" style={{ right: '16px' }}>CLINICAL_TOOL</div>
               
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="space-y-4 max-w-xl text-left">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+                <div className="space-y-3 sm:space-y-4 max-w-xl text-left">
                   <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-brand-accent inline-block"></span>
-                    <span className="text-xs font-bold uppercase tracking-widest text-brand-accent font-code-sm">Cardiovascular Health Feature</span>
+                    <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-brand-accent inline-block"></span>
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-brand-accent font-code-sm">Cardiovascular Health Feature</span>
                   </div>
 
-                  <h3 className="font-headline-xl text-2xl sm:text-3xl font-black uppercase text-clinical-black dark:text-white tracking-tight leading-tight">
+                  <h3 className="font-headline-xl text-xl sm:text-3xl font-black uppercase text-clinical-black dark:text-white tracking-tight leading-tight">
                     Clinical BMI & Hypertension Risk Assessor
                   </h3>
 
-                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-sm sm:text-base leading-relaxed">
+                  <p className="text-on-surface-variant dark:text-slate-300 font-body-md text-xs sm:text-base leading-relaxed">
                     Track your Body Mass Index against official WHO categories and discover how weight management directly impacts your systolic blood pressure & ACC/AHA hypertension risk. Save your health vitals securely to your private profile.
                   </p>
 
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <span className="px-2.5 py-1 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-xs font-bold uppercase font-code-sm">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1 sm:pt-2">
+                    <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white dark:bg-slate-950 border sm:border-2 border-clinical-black dark:border-slate-700 text-[10px] sm:text-xs font-bold uppercase font-code-sm">
                       WHO BMI Categories
                     </span>
-                    <span className="px-2.5 py-1 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-xs font-bold uppercase font-code-sm">
+                    <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white dark:bg-slate-950 border sm:border-2 border-clinical-black dark:border-slate-700 text-[10px] sm:text-xs font-bold uppercase font-code-sm">
                       SBP Impact (-1 mmHg/kg)
                     </span>
-                    <span className="px-2.5 py-1 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-slate-700 text-xs font-bold uppercase font-code-sm">
+                    <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-white dark:bg-slate-950 border sm:border-2 border-clinical-black dark:border-slate-700 text-[10px] sm:text-xs font-bold uppercase font-code-sm">
                       Private Vitals Sync
                     </span>
                   </div>
                 </div>
 
-                <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] text-center space-y-4">
-                  <div className="w-14 h-14 bg-brand-accent text-white flex items-center justify-center border-2 border-clinical-black dark:border-white font-bold shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-                    <span className="material-symbols-outlined text-3xl">scale</span>
+                <div className="w-full md:w-auto shrink-0 flex flex-col items-center justify-center p-4 sm:p-6 bg-white dark:bg-slate-950 border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] text-center space-y-3 sm:space-y-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-brand-accent text-white flex items-center justify-center border-2 border-clinical-black dark:border-white font-bold shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
+                    <span className="material-symbols-outlined text-2xl sm:text-3xl">scale</span>
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 block font-code-sm">Free Health Tool</span>
-                    <span className="text-base font-black uppercase text-clinical-black dark:text-white font-headline-md">Measure Your BMI</span>
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gray-500 block font-code-sm">Free Health Tool</span>
+                    <span className="text-sm sm:text-base font-black uppercase text-clinical-black dark:text-white font-headline-md">Measure Your BMI</span>
                   </div>
 
                   <button
                     onClick={currentUser ? onGoToDashboard : onRegister}
-                    className="w-full px-6 py-3 bg-brand-accent text-white font-headline-md text-xs font-bold uppercase tracking-wider border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center justify-center gap-2"
+                    className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-brand-accent text-white font-headline-md text-[11px] sm:text-xs font-bold uppercase tracking-wider border-2 border-clinical-black dark:border-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all flex items-center justify-center gap-2"
                   >
                     <span>{currentUser ? 'Open Calculator in App' : 'Sign Up to Calculate BMI'}</span>
-                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                    <span className="material-symbols-outlined text-sm sm:text-base">arrow_forward</span>
                   </button>
                 </div>
               </div>
@@ -492,31 +496,31 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         </section>
 
         {/* Initialize Interface Section */}
-        <section id="demo" className="py-32 bg-white dark:bg-slate-950 relative overflow-hidden border-y-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
-          <div className="relative z-10 max-w-4xl mx-auto text-center px-gutter">
-            <div className="flex justify-center mb-8">
-              <div className="w-20 h-20 border-4 border-clinical-black dark:border-white flex items-center justify-center bg-white dark:bg-slate-900 neo-brutal-shadow dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] rotate-12">
-                <span className="material-symbols-outlined text-4xl text-brand-accent" style={{ fontVariationSettings: "'FILL' 1" }}>terminal</span>
+        <section id="demo" className="py-12 sm:py-32 bg-white dark:bg-slate-950 relative overflow-hidden border-y-2 sm:border-y-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
+          <div className="relative z-10 max-w-4xl mx-auto text-center px-4 sm:px-gutter">
+            <div className="flex justify-center mb-6 sm:mb-8">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 border-2 sm:border-4 border-clinical-black dark:border-white flex items-center justify-center bg-white dark:bg-slate-900 neo-brutal-shadow dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] rotate-12">
+                <span className="material-symbols-outlined text-2xl sm:text-4xl text-brand-accent" style={{ fontVariationSettings: "'FILL' 1" }}>terminal</span>
               </div>
             </div>
-            <h2 className="font-headline-xl text-2xl sm:text-4xl lg:text-[48px] font-black uppercase text-clinical-black dark:text-white mb-6">Experience the Protocol</h2>
-            <p className="font-body-md text-headline-md text-on-surface-variant dark:text-slate-400 mb-12">
+            <h2 className="font-headline-xl text-xl sm:text-4xl lg:text-[48px] font-black uppercase text-clinical-black dark:text-white mb-4 sm:mb-6">Experience the Protocol</h2>
+            <p className="font-body-md text-xs sm:text-headline-md text-on-surface-variant dark:text-slate-400 mb-8 sm:mb-12 max-w-2xl mx-auto">
               Enter the sandbox to test the Hybrid Retrieval engine against anonymized clinical datasets in real-time. Full HIPAA compliance simulated.
             </p>
             <button 
               onClick={onLogin}
-              className="group relative px-12 py-6 bg-brand-accent text-white font-headline-lg border-4 border-clinical-black dark:border-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-150 flex items-center gap-4 mx-auto overflow-hidden"
+              className="group relative w-full sm:w-auto px-6 sm:px-12 py-4 sm:py-6 bg-brand-accent text-white font-headline-lg text-sm sm:text-headline-lg border-2 sm:border-4 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] sm:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] sm:dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[4px] sm:hover:translate-x-[6px] hover:translate-y-[4px] sm:hover:translate-y-[6px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 flex items-center justify-center gap-2 sm:gap-4 mx-auto overflow-hidden max-w-full"
             >
               <span className="relative z-10 uppercase tracking-widest font-bold">Launch Fidelity Simulator</span>
-              <span className="material-symbols-outlined relative z-10 group-hover:translate-x-2 transition-transform">arrow_forward_ios</span>
+              <span className="material-symbols-outlined relative z-10 group-hover:translate-x-2 transition-transform text-base sm:text-xl">arrow_forward_ios</span>
             </button>
           </div>
         </section>
 
         {/* Scroll-Linked Horizontal Marquee Divider */}
-        <div className="w-full overflow-hidden border-b-4 border-clinical-black dark:border-slate-800 bg-brand-accent py-5 text-white uppercase font-headline-xl tracking-widest text-xl select-none z-10 relative">
+        <div className="w-full overflow-hidden border-b-2 sm:border-b-4 border-clinical-black dark:border-slate-800 bg-brand-accent py-3 sm:py-5 text-white uppercase font-headline-xl tracking-widest text-sm sm:text-xl select-none z-10 relative">
           <div 
-            className="flex whitespace-nowrap gap-16"
+            className="flex whitespace-nowrap gap-8 sm:gap-16"
             style={{ transform: `translate3d(-${scrollOffset * 0.4}px, 0px, 0px)` }}
           >
             {Array(10).fill("CLINICAL RAG • OKF SPINE • ZERO HALLUCINATION • HIPAA COMPLIANT • CORE ENGINE V3").map((text, i) => (
@@ -526,40 +530,41 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         </div>
 
         {/* Stats Section */}
-        <section className="grid grid-cols-1 md:grid-cols-3 border-b-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
-          <div className="p-16 border-r-2 border-clinical-black dark:border-slate-850 flex flex-col items-center justify-center text-center space-y-4">
+        <section className="grid grid-cols-1 md:grid-cols-3 border-b-2 sm:border-b-4 border-clinical-black dark:border-slate-800 transition-colors duration-300">
+          <div className="p-8 sm:p-16 border-b-2 md:border-b-0 md:border-r-2 border-clinical-black dark:border-slate-850 flex flex-col items-center justify-center text-center space-y-2 sm:space-y-4">
             <AnimatedCounter target={0.0} decimals={1} suffix="%" startValue={5.0} />
-            <div className="font-headline-md text-headline-md uppercase font-bold text-clinical-black dark:text-white">Hallucination Rate</div>
-            <p className="font-body-sm text-on-surface-variant dark:text-slate-400">Validated via Peer-Review Benchmarks</p>
+            <div className="font-headline-md text-sm sm:text-headline-md uppercase font-bold text-clinical-black dark:text-white">Hallucination Rate</div>
+            <p className="font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">Validated via Peer-Review Benchmarks</p>
           </div>
-          <div className="p-16 border-r-2 border-clinical-black dark:border-slate-850 bg-clinical-black dark:bg-slate-900 text-white flex flex-col items-center justify-center text-center space-y-4">
+          <div className="p-8 sm:p-16 border-b-2 md:border-b-0 md:border-r-2 border-clinical-black dark:border-slate-850 bg-clinical-black dark:bg-slate-900 text-white flex flex-col items-center justify-center text-center space-y-2 sm:space-y-4">
             <AnimatedCounter target={400} decimals={0} suffix="ms" startValue={100} />
-            <div className="font-headline-md text-headline-md uppercase font-bold">Inference Latency</div>
-            <p className="font-body-sm text-surface-variant dark:text-slate-400">At 95th percentile system-wide</p>
+            <div className="font-headline-md text-sm sm:text-headline-md uppercase font-bold">Inference Latency</div>
+            <p className="font-body-sm text-xs sm:text-body-sm text-surface-variant dark:text-slate-400">At 95th percentile system-wide</p>
           </div>
-          <div className="p-16 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="p-8 sm:p-16 flex flex-col items-center justify-center text-center space-y-2 sm:space-y-4">
             <AnimatedCounter target={1.2} decimals={1} suffix="M+" startValue={0.0} />
-            <div className="font-headline-md text-headline-md uppercase font-bold text-clinical-black dark:text-white">Cases Evaluated</div>
-            <p className="font-body-sm text-on-surface-variant dark:text-slate-400">Across 14 tertiary care networks</p>
+            <div className="font-headline-md text-sm sm:text-headline-md uppercase font-bold text-clinical-black dark:text-white">Cases Evaluated</div>
+            <p className="font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">Across 14 tertiary care networks</p>
           </div>
         </section>
+
         {/* Next Step Section */}
-        <section className="py-24 bg-stone-50 dark:bg-slate-900 border-b-4 border-clinical-black dark:border-slate-800 px-gutter relative overflow-hidden transition-colors duration-300">
-          <div className="max-w-4xl mx-auto text-center space-y-6 reveal-bottom">
-            <h3 className="font-headline-xl text-2xl sm:text-3xl lg:text-[40px] font-black uppercase text-clinical-black dark:text-white">Ready for the Next Step?</h3>
-            <p className="text-on-surface-variant dark:text-slate-400 font-body-md max-w-lg mx-auto leading-relaxed border-l-4 border-brand-accent pl-6 text-left md:text-center md:border-l-0 md:pl-0">
+        <section className="py-12 sm:py-24 bg-stone-50 dark:bg-slate-900 border-b-2 sm:border-b-4 border-clinical-black dark:border-slate-800 px-4 sm:px-gutter relative overflow-hidden transition-colors duration-300">
+          <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6 reveal-bottom">
+            <h3 className="font-headline-xl text-xl sm:text-3xl lg:text-[40px] font-black uppercase text-clinical-black dark:text-white">Ready for the Next Step?</h3>
+            <p className="text-on-surface-variant dark:text-slate-400 font-body-md text-xs sm:text-body-md max-w-lg mx-auto leading-relaxed border-l-4 border-brand-accent pl-4 text-left md:text-center md:border-l-0 md:pl-0">
               Audit results verified. Select an action below to authenticate and enter the clinical dashboard or scroll back to review the guidelines.
             </p>
-            <div className="flex flex-wrap justify-center gap-4 pt-6">
+            <div className="flex flex-col xs:flex-row flex-wrap justify-center gap-3 sm:gap-4 pt-4 sm:pt-6">
               <button 
                 onClick={onLogin}
-                className="px-8 py-4 bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide"
+                className="w-full xs:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-brand-accent text-white font-headline-md text-xs sm:text-base border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-brand-accent/90 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide flex items-center justify-center"
               >
                 Sign In to Dashboard
               </button>
               <button 
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="px-8 py-4 bg-white dark:bg-slate-950 text-clinical-black dark:text-white border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide flex items-center gap-2"
+                className="w-full xs:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white dark:bg-slate-950 text-clinical-black dark:text-white text-xs sm:text-base border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-150 uppercase font-bold tracking-wide flex items-center justify-center gap-2"
               >
                 <span>Scroll to Top</span>
                 <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
@@ -570,9 +575,9 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface-container-high dark:bg-slate-900 border-t-2 border-clinical-black dark:border-slate-800 py-20 px-gutter transition-colors duration-300">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 w-full">
-          <div className="space-y-6 lg:col-span-1">
+      <footer className="bg-surface-container-high dark:bg-slate-900 border-t-2 border-clinical-black dark:border-slate-800 py-10 sm:py-20 px-4 sm:px-gutter transition-colors duration-300">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 w-full">
+          <div className="space-y-4 sm:space-y-6 sm:col-span-2 lg:col-span-1">
             <button 
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="group flex items-center gap-3 text-left focus:outline-none"
@@ -581,57 +586,57 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
               <div className="w-8 h-8 border-2 border-clinical-black dark:border-white bg-brand-accent flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all duration-150 font-bold shrink-0">
                 <Stethoscope size={16} className="text-white transition-transform group-hover:rotate-[15deg]" />
               </div>
-              <span className="font-headline-md text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight">Clinical Workflows</span>
+              <span className="font-headline-md text-sm sm:text-headline-md font-bold text-clinical-black dark:text-white group-hover:text-brand-accent transition-colors uppercase tracking-tight">Clinical Workflows</span>
             </button>
-            <p className="font-body-sm text-on-surface-variant dark:text-slate-400">
+            <p className="font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">
               Advancing patient outcomes through deterministic artificial intelligence. Engineered for professionals, by professionals.
             </p>
-            <div className="font-code-sm text-[10px] text-brand-accent border border-brand-accent inline-block px-2 py-1 font-bold">
+            <div className="font-code-sm text-[9px] sm:text-[10px] text-brand-accent border border-brand-accent inline-block px-2 py-1 font-bold">
               HIPAA COMPLIANT STACK
             </div>
           </div>
-          <div className="space-y-6">
-            <h4 className="font-label-md text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Documentation</h4>
-            <ul className="space-y-3 font-body-sm text-on-surface-variant dark:text-slate-400">
+          <div className="space-y-3 sm:space-y-6">
+            <h4 className="font-label-md text-xs sm:text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Documentation</h4>
+            <ul className="space-y-2 sm:space-y-3 font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">API Reference</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">System Architecture</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">OKF Documentation</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Security Whitepaper</a></li>
             </ul>
           </div>
-          <div className="space-y-6">
-            <h4 className="font-label-md text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Legal</h4>
-            <ul className="space-y-3 font-body-sm text-on-surface-variant dark:text-slate-400">
+          <div className="space-y-3 sm:space-y-6">
+            <h4 className="font-label-md text-xs sm:text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Legal</h4>
+            <ul className="space-y-2 sm:space-y-3 font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Privacy Policy</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Terms of Service</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">GDPR Compliance</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="#">Ethics Statement</a></li>
             </ul>
           </div>
-          <div className="space-y-6">
-            <h4 className="font-label-md text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Connect</h4>
-            <div className="flex gap-4">
+          <div className="space-y-4 sm:space-y-6">
+            <h4 className="font-label-md text-xs sm:text-label-md font-bold uppercase tracking-widest text-clinical-black dark:text-white">Connect</h4>
+            <div className="flex gap-3 sm:gap-4">
               <button 
                 onClick={() => window.open('https://github.com/jeevesh2515/clinical-rag-agent', '_blank')}
-                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
+                className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
-                <span className="material-symbols-outlined text-clinical-black dark:text-white">link</span>
+                <span className="material-symbols-outlined text-sm sm:text-base text-clinical-black dark:text-white">link</span>
               </button>
               <button 
                 onClick={() => window.open('mailto:info@example.com')}
-                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
+                className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
-                <span className="material-symbols-outlined text-clinical-black dark:text-white">alternate_email</span>
+                <span className="material-symbols-outlined text-sm sm:text-base text-clinical-black dark:text-white">alternate_email</span>
               </button>
               <button 
                 onClick={() => navigator.clipboard.writeText(window.location.href)}
-                className="w-10 h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
+                className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-clinical-black dark:border-slate-800 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none dark:hover:shadow-none hover:bg-stone-100 dark:hover:bg-slate-850 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all bg-white dark:bg-slate-900 text-clinical-black dark:text-white"
               >
-                <span className="material-symbols-outlined text-clinical-black dark:text-white">share</span>
+                <span className="material-symbols-outlined text-sm sm:text-base text-clinical-black dark:text-white">share</span>
               </button>
             </div>
-            <div className="pt-4">
-              <p className="font-code-sm text-[10px] text-outline-variant">© 2024 Clinical Workflows AI.<br />Engineered in California.</p>
+            <div className="pt-2 sm:pt-4">
+              <p className="font-code-sm text-[10px] text-on-surface-variant dark:text-slate-400">© 2024 Clinical Workflows AI.<br />Engineered in California.</p>
             </div>
           </div>
         </div>

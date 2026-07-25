@@ -1138,33 +1138,47 @@ interface NoteItem {
 }
 
 function loadLocalNotesStack(u: UserProfile | null): NoteItem[] {
+  if (!u) return []
   let list: NoteItem[] = []
+  
+  // 1. Authoritative database user notes priority
+  if (u.notes) {
+    try {
+      const parsed = JSON.parse(u.notes)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    } catch {
+      if (u.notes.trim()) {
+        return [{
+          id: 'note-legacy-db',
+          text: u.notes.trim(),
+          created_at: new Date().toISOString()
+        }]
+      }
+    }
+  }
+
+  // 2. User-scoped local storage fallback
   const key = getStorageKey(u, 'notes_stack')
   if (key) {
     try {
       const raw = localStorage.getItem(key)
-      if (raw) list = JSON.parse(raw)
-    } catch {}
-  }
-  if (!list || list.length === 0) {
-    try {
-      const backup = localStorage.getItem('cw_notes_stack_backup')
-      if (backup) list = JSON.parse(backup)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) list = parsed
+      }
     } catch {}
   }
   return list
 }
 
 function saveLocalNotesStack(u: UserProfile | null, stack: NoteItem[]) {
+  if (!u) return
   const key = getStorageKey(u, 'notes_stack')
   if (key) {
     try {
       localStorage.setItem(key, JSON.stringify(stack))
     } catch {}
   }
-  try {
-    localStorage.setItem('cw_notes_stack_backup', JSON.stringify(stack))
-  } catch {}
 }
 
 // ─── Profile Modal ──────────────────────────────────────────────────────────
@@ -1217,7 +1231,7 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
     }
   }, [isOpen, user?.username, user?.id])
 
-  const handlePushNote = (textToPush: string) => {
+  const handlePushNote = async (textToPush: string) => {
     if (!textToPush.trim()) return
     const newNote: NoteItem = {
       id: `note-${Date.now()}`,
@@ -1227,12 +1241,30 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
     const updated = [newNote, ...notesStack.filter(n => n.text !== textToPush.trim())]
     setNotesStack(updated)
     saveLocalNotesStack(user, updated)
+
+    const jsonNotes = JSON.stringify(updated)
+    try {
+      const updatedUser = await api.updateProfile({ notes: jsonNotes })
+      onUpdateUser(updatedUser)
+      saveLocalUserProfile(updatedUser)
+    } catch (err) {
+      console.error('Failed to sync notes stack push to backend:', err)
+    }
   }
 
-  const handleDeleteNote = (id: string) => {
+  const handleDeleteNote = async (id: string) => {
     const updated = notesStack.filter(n => n.id !== id)
     setNotesStack(updated)
     saveLocalNotesStack(user, updated)
+
+    const jsonNotes = JSON.stringify(updated)
+    try {
+      const updatedUser = await api.updateProfile({ notes: jsonNotes })
+      onUpdateUser(updatedUser)
+      saveLocalUserProfile(updatedUser)
+    } catch (err) {
+      console.error('Failed to sync notes stack deletion to backend:', err)
+    }
   }
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -1241,29 +1273,39 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
     setProfileSuccess(false)
     setIsSavingProfile(true)
 
+    let currentStack = [...notesStack]
     if (notes.trim()) {
-      handlePushNote(notes.trim())
+      const newNote: NoteItem = {
+        id: `note-${Date.now()}`,
+        text: notes.trim(),
+        created_at: new Date().toISOString()
+      }
+      currentStack = [newNote, ...currentStack.filter(n => n.text !== notes.trim())]
+      setNotesStack(currentStack)
+      saveLocalNotesStack(user, currentStack)
+      setNotes('')
     }
+
+    const notesPayload = JSON.stringify(currentStack)
 
     try {
       const updated = await api.updateProfile({
         full_name: fullName,
         email,
         date_of_birth: dateOfBirth,
-        notes
+        notes: notesPayload
       })
       onUpdateUser(updated)
       saveLocalUserProfile(updated)
       setProfileSuccess(true)
       setTimeout(() => setProfileSuccess(false), 3000)
     } catch (err) {
-      // Graceful fallback: update local user profile so changes are saved in UI state & stored
       const fallbackUser: UserProfile = {
         ...user,
         full_name: fullName,
         email,
         date_of_birth: dateOfBirth,
-        notes
+        notes: notesPayload
       }
       onUpdateUser(fallbackUser)
       saveLocalUserProfile(fallbackUser)
@@ -1835,90 +1877,52 @@ function ClinicalCatPet() {
 // ─── Local Storage & Hybrid Sync Persistence ────────────────────────────────
 function getStorageKey(u: UserProfile | null, suffix: string): string | null {
   if (!u) return null
-  const identifier = (u.username || u.email || u.id || 'user').toLowerCase().trim()
+  const identifier = (u.id || u.username || u.email || 'user').toLowerCase().trim()
   return `cw_storage_${identifier.replace(/[^a-zA-Z0-9_-]/g, '_')}_${suffix}`
 }
 
 function loadLocalConvs(u: UserProfile | null): ConversationSummary[] {
-  let list: ConversationSummary[] = []
-  const primaryKey = getStorageKey(u, 'conv_list')
-  if (primaryKey) {
+  if (!u) return []
+  const key = getStorageKey(u, 'conv_list')
+  if (key) {
     try {
-      const raw = localStorage.getItem(primaryKey)
-      if (raw) list = JSON.parse(raw)
+      const raw = localStorage.getItem(key)
+      if (raw) return JSON.parse(raw)
     } catch {}
   }
-
-  if (!list || list.length === 0) {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && (key.endsWith('_conv_list') || key === 'cw_conv_list_backup')) {
-        try {
-          const raw = localStorage.getItem(key)
-          if (raw) {
-            const parsed = JSON.parse(raw)
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              list = parsed
-              break
-            }
-          }
-        } catch {}
-      }
-    }
-  }
-  return list
+  return []
 }
 
 function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
-  // CRITICAL PROTECTION: Never overwrite an existing conversation list with an empty array!
-  if (!convs || convs.length === 0) return
-
+  if (!u || !convs) return
   const key = getStorageKey(u, 'conv_list')
   if (key) {
     try {
       localStorage.setItem(key, JSON.stringify(convs))
     } catch {}
   }
-  try {
-    localStorage.setItem('cw_conv_list_backup', JSON.stringify(convs))
-  } catch {}
 }
 
 function loadLocalConvDetail(u: UserProfile | null, convId: string): Conversation | null {
-  const primaryKey = getStorageKey(u, `conv_${convId}`)
-  if (primaryKey) {
+  if (!u || !convId) return null
+  const key = getStorageKey(u, `conv_${convId}`)
+  if (key) {
     try {
-      const raw = localStorage.getItem(primaryKey)
+      const raw = localStorage.getItem(key)
       if (raw) return JSON.parse(raw)
     } catch {}
-  }
-
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && key.includes(convId)) {
-      try {
-        const raw = localStorage.getItem(key)
-        if (raw) {
-          const parsed = JSON.parse(raw)
-          if (parsed && parsed.messages && parsed.messages.length > 0) return parsed
-        }
-      } catch {}
-    }
   }
   return null
 }
 
 function saveLocalConvDetail(u: UserProfile | null, convId: string, conv: Conversation) {
-  if (!conv || !conv.messages || conv.messages.length === 0) return
+  if (!u || !conv || !conv.messages || conv.messages.length === 0) return
   const key = getStorageKey(u, `conv_${convId}`)
   if (key) {
     try {
       localStorage.setItem(key, JSON.stringify(conv))
     } catch {}
   }
-  try {
-    localStorage.setItem(`cw_conv_${convId}_backup`, JSON.stringify(conv))
-  } catch {}
 }
 
 function saveLocalUserProfile(u: UserProfile | null) {

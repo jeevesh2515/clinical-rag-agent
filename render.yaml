@@ -25,4 +25,4 @@ services:
       - key: COHERE_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: "https://clinical-workflows.vercel.app,http://localhost:5173"
+        value: "https://clinical-workflows.vercel.app,https://clinical-workflows-api.onrender.com,http://localhost:5173"

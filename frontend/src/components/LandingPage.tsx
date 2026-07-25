@@ -121,10 +121,10 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         const rect = htmlEl.getBoundingClientRect()
         const elementTop = rect.top
         
-        // startReveal: Begins exactly when top edge touches viewport bottom (1.00 * viewportHeight)
-        const startReveal = viewportHeight * 1.00
-        // endReveal: Reaches 100% full opacity & zero translation when top edge reaches 75% viewport height (25% from screen bottom)
-        const endReveal = viewportHeight * 0.75
+        // startReveal: Begins when element top enters 95% of viewport height (5% inside screen)
+        const startReveal = viewportHeight * 0.95
+        // endReveal: Reaches 100% full opacity & zero translation gradually when top reaches 45% viewport height (near middle of screen)
+        const endReveal = viewportHeight * 0.45
 
         let progress = 0
         if (elementTop < startReveal) {
@@ -132,8 +132,8 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
           progress = Math.max(0, Math.min(1, progress))
         }
 
-        // Apply smooth ease-out curve to user's scroll position
-        const easeProgress = 1 - Math.pow(1 - progress, 2)
+        // Linear gradual 1-to-1 scroll transition
+        const easeProgress = progress
 
         htmlEl.style.transition = 'none'
         htmlEl.style.opacity = `${easeProgress}`

@@ -1,6 +1,7 @@
 import hashlib
 import ipaddress
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,7 +17,9 @@ from app.models import IngestSource
 
 _log = logging.getLogger(__name__)
 
-DEFAULT_RAW_DOCUMENT_DIR = Path("data/source_documents/raw")
+DEFAULT_RAW_DOCUMENT_DIR = Path(
+    os.environ.get("UPLOAD_DIR", "data/source_documents/raw")
+)
 MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 
 

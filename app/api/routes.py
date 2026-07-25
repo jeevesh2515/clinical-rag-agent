@@ -168,7 +168,16 @@ def ingest(request: Request, ingest_request: IngestRequest, store: object = Depe
         total_chunks=len(result.chunks),
         total_documents=len({chunk.source_id for chunk in result.chunks}),
     )
-    save_manifest(manifest)
+    try:
+        save_manifest(manifest)
+    except OSError as exc:
+        # Serverless environments (Vercel) have a read-only filesystem except
+        # for /tmp/. The manifest is informational-only; the chunks are
+        # already persisted in the store, so a failed manifest write must
+        # never crash the ingestion endpoint.
+        logging.getLogger(__name__).warning(
+            "manifest_save_skipped err=%s", exc,
+        )
 
     return IngestResponse(
         documents=len({chunk.source_id for chunk in result.chunks}),

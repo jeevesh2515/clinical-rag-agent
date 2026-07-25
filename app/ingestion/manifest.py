@@ -41,7 +41,11 @@ def save_manifest(
     manifest: IngestionManifest,
     manifest_dir: Path = DEFAULT_MANIFEST_DIR,
 ) -> Path:
-    manifest_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        manifest_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        manifest_dir = Path("/tmp/manifests")
+        manifest_dir.mkdir(parents=True, exist_ok=True)
     path = manifest_dir / f"{manifest.manifest_id}.json"
     path.write_text(json.dumps(asdict(manifest, dict_factory=_compact_dict), indent=2))
     return path

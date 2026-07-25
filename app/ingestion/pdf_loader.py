@@ -1,5 +1,6 @@
 import hashlib
 import ipaddress
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +13,8 @@ from pypdf.errors import PdfReadError, PdfStreamError
 from app.ingestion.chunker import TextChunk, chunk_page
 from app.ingestion.manifest import ManifestEntry
 from app.models import IngestSource
+
+_log = logging.getLogger(__name__)
 
 DEFAULT_RAW_DOCUMENT_DIR = Path("data/source_documents/raw")
 MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
@@ -130,8 +133,23 @@ def ingest_sources(sources: list[IngestSource]) -> IngestResult:
     now = datetime.now(timezone.utc).isoformat()
 
     for source in sources:
-        path = download_pdf(source)
-        chunks = extract_pdf_chunks(source, path)
+        try:
+            path = download_pdf(source)
+        except Exception as exc:
+            _log.warning(
+                "ingest_skip source=%s reason=%s",
+                source.source_id, str(exc),
+            )
+            continue
+        try:
+            chunks = extract_pdf_chunks(source, path)
+        except Exception as exc:
+            _log.warning(
+                "ingest_skip_parse source=%s reason=%s",
+                source.source_id, str(exc),
+            )
+            path.unlink(missing_ok=True)
+            continue
         file_hash = hashlib.sha256(path.read_bytes()).hexdigest()
         page_count = len({c.page for c in chunks})
         all_chunks.extend(chunks)
@@ -149,6 +167,9 @@ def ingest_sources(sources: list[IngestSource]) -> IngestResult:
                 ingested_at=now,
             )
         )
+
+    if not entries:
+        _log.warning("ingest_empty all sources failed — returning empty result")
 
     return IngestResult(chunks=all_chunks, entries=entries)
 

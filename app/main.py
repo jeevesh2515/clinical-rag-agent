@@ -180,12 +180,12 @@ async def attach_optional_user(request: Request, call_next):
         token = auth_header.split(" ", 1)[1].strip()
         try:
             from app.auth.security import decode_access_token  # noqa: E402
-            from app.db import User as _User  # noqa: E402
+            from app.db import SessionLocal as _SessionLocal, User as _User  # noqa: E402
             payload = decode_access_token(token)
             if payload:
                 uid = payload.get("uid")
                 if uid:
-                    with SessionLocal() as _db:
+                    with _SessionLocal() as _db:
                         if _db.query(_User).filter(_User.id == uid).one_or_none():
                             request.state.user_id = uid
         except Exception:

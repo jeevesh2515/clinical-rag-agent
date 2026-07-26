@@ -610,8 +610,8 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
             <ul className="space-y-2 sm:space-y-3 font-body-sm text-xs sm:text-body-sm text-on-surface-variant dark:text-slate-400">
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Privacy Policy</a></li>
               <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent/blob/main/TERMS.md" target="_blank" rel="noreferrer">Terms of Service</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">GDPR Compliance</a></li>
-              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent#limitations--disclaimer" target="_blank" rel="noreferrer">Ethics Statement</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent/blob/main/GDPR.md" target="_blank" rel="noreferrer">GDPR Compliance</a></li>
+              <li><a className="hover:text-brand-accent hover:underline transition-all" href="https://github.com/jeevesh2515/clinical-rag-agent/blob/main/ETHICS.md" target="_blank" rel="noreferrer">Ethics Statement</a></li>
             </ul>
           </div>
           <div className="space-y-4 sm:space-y-6">

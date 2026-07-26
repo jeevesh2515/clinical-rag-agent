@@ -33,17 +33,16 @@ A keep-warm cron pings `/api/warmup` daily at 8am UTC to reduce cold starts.
 |---|---|
 | Health check (warm) | 170-310ms |
 | Frontend HTML (warm) | ~195ms |
-| JS bundle (1MB) | ~195ms |
+| JS bundle (437KB, gzip 130KB) | ~160ms |
 | Query response (no API key) | ~260ms (extractive fallback) |
 | Cold start (first request after idle) | 3-8s (Vercel serverless) |
 
-### Current Limitations (no API keys in production)
+### Current Status (as of 2026-07-26)
 
-- No OpenRouter API key configured → LLM generation falls back to extractive summarization
-- No documents ingested → queries return "out_of_domain" intent
-- To enable full functionality, add environment variables in Vercel dashboard
-- Same caveat applies to bare K8s deployments: the pod starts with an empty
-  HybridStore. The `postStart` lifecycle hook in `k8s/deployment.yaml`
+- **Corpus seeded:** ✅ 159 chunks from NICE NG136, WHO, and CDC guidelines in production Neon DB
+- **No API keys in production:** LLM generation falls back to extractive summarization (works, but less fluent)
+- To add API keys, set environment variables in Vercel dashboard
+- K8s deployments: the `postStart` lifecycle hook in `k8s/deployment.yaml`
   re-ingests the default public guidelines on first boot. For additional
   corpora, call `POST /api/ingest` once per environment.
 

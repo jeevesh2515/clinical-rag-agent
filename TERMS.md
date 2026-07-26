@@ -62,7 +62,13 @@ We may update these Terms at any time. Continued use of the application after ch
 
 These Terms are governed by the laws of the jurisdiction in which the project maintainer resides, without regard to conflict of law principles.
 
-## 14. Contact
+## 14. Related Documents
+
+- [PRIVACY.md](PRIVACY.md) — Data collection, storage, and usage practices
+- [GDPR.md](GDPR.md) — Data controller info, legal basis, retention, user rights
+- [ETHICS.md](ETHICS.md) — Clinical disclaimer, intended use, responsible AI principles
+
+## 15. Contact
 
 For questions or concerns, open an issue at:
 https://github.com/jeevesh2515/clinical-rag-agent/issues

@@ -16,7 +16,7 @@ ClaimSupportType = Literal[
     "direct_guideline_support", "inferred_workflow_suggestion", "unsupported_claim"
 ]
 ConfidenceLabel = Literal["high", "medium", "low", "none"]
-ApiErrorCode = Literal["validation_error"]
+ApiErrorCode = Literal["validation_error", "internal_error"]
 
 
 class Citation(BaseModel):

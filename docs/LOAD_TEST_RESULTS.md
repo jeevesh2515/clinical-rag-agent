@@ -198,8 +198,18 @@ Date: 2026-07-25
 Operator: (assigned per release run)
 Baseline run id: _TBD_
 Burst run id: _TBD_
+
+## Sandbox status (2026-07-26)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Corpus seeded | ✅ Done | 159 chunks from 3 clinical guidelines in production Neon DB |
+| Production /api/query | ✅ Verified | Returns cited answers with provenance |
+| Local smoke test (docker) | ❌ Blocked | Docker daemon not available in sandbox |
+| Staging baseline + burst | ❌ Blocked | Requires K8s + Neon staging cluster |
+
 Sandbox limitation note: docker daemon not reachable from this Claude Code
 session, so the Phase 1 local smoke could not be executed here. Operator
-runs `make load-test:smoke` on the developer machine to populate the Local
-columns, then `make load-test:all` against staging to populate the Staging
-columns.
+runs `make load-test:smoke` on the developer machine (where Docker Desktop
+is running) to populate the Local columns, then `make load-test:all` against
+staging to populate the Staging columns.

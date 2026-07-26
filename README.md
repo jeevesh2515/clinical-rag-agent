@@ -66,6 +66,7 @@ The system dynamically routes queries between a **curated OKF knowledge spine** 
 - 🧮 **Deterministic Calculators:** Native eGFR (CKD-EPI 2009), MAP, Pulse Pressure, and BMI calculators — zero LLM math drift.
 - 📊 **LLM-as-Judge Evaluation:** LangSmith evaluators measuring Faithfulness, Relevancy, Harmfulness, Citation Accuracy, and Refusal Correctness across 55 golden clinical test cases.
 - ⚡ **Offline & Keyless Fallback:** Fully operational without API keys using hash embeddings and deterministic fallback models.
+- 📜 **Compliance Layer:** `GDPR.md` (data rights, retention, supervisory authority) and `ETHICS.md` (clinical disclaimer, responsible AI principles, no-PHI policy).
 
 ---
 
@@ -273,6 +274,7 @@ npm run dev
 - 🛑 **Rate Limiting:** Protects auth endpoints (`/register` 3/min, `/login` 10/min) using IP rate-limiting middleware.
 - 🌐 **CORS Configuration:** Strictly restricted origin policies in production environments.
 - 📑 **Provenance Auditing:** Every citation carries document versioning (`review_date`, `effective_date`, `license_notes`).
+- ⚖️ **Compliance Documentation:** [GDPR.md](GDPR.md) covers data controller info, legal basis, retention, user rights, and data sharing. [ETHICS.md](ETHICS.md) covers intended use, system limitations, responsible AI principles, and contact for concerns.
 
 ---
 
@@ -368,6 +370,8 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Kuberne
 ├── hypertension-okf/    # 28 Curated OKF concept files
 ├── k8s/                 # Kubernetes manifests (Deployment, Service, ConfigMap, Secrets, Ingress, HPA)
 ├── tests/               # 251 automated pytest tests
+├── ETHICS.md            # Clinical disclaimer, intended use, responsible AI principles
+├── GDPR.md              # Data controller info, legal basis, user rights, retention
 ├── Dockerfile           # Multi-stage production container build
 ├── docker-compose.prod.yml # Production Docker compose configuration
 ├── Makefile             # Development task commands
@@ -380,6 +384,7 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Kuberne
 
 - **Hypertension Focus:** Knowledge domain is currently specialized for chronic hypertension guidelines.
 - **Educational Tool:** Synthetic scenarios only. Not approved for direct clinical decision support without formal institutional validation and HIPAA compliance controls.
+- **Compliance:** See [ETHICS.md](ETHICS.md) for intended use, system limitations, and responsible AI principles. See [GDPR.md](GDPR.md) for data processing, retention, and user rights.
 
 ---
 

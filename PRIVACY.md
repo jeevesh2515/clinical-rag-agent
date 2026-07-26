@@ -71,6 +71,11 @@ We may update this Privacy Policy. Changes will be reflected by updating the dat
 For questions or data-deletion requests, open an issue at:
 https://github.com/jeevesh2515/clinical-rag-agent/issues
 
+## 12. Related Documents
+
+- [GDPR.md](GDPR.md) — Data controller info, legal basis, retention, user rights, data sharing
+- [ETHICS.md](ETHICS.md) — Clinical disclaimer, intended use, responsible AI principles
+
 ## Disclaimer
 
 This project is for **educational and engineering demonstration only**. It does not provide medical advice, diagnosis, or treatment recommendations. Always consult a qualified healthcare provider.

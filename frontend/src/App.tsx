@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import {
   Plus, MessageSquare, LogOut,
@@ -9,12 +9,14 @@ import {
   PanelLeft, Sparkles, ChevronDown, ChevronRight,
   ArrowUp, FlaskRound, type LucideIcon
 } from 'lucide-react'
-import LoginPage from './components/LoginPage'
-import SignupPage from './components/SignupPage'
-import LandingPage from './components/LandingPage'
+import type { HealthVitals } from './components/BMICalculator'
 import Markdown from './components/Markdown'
 import ThemeToggle from './components/ThemeToggle'
-import BMICalculator, { HealthVitals } from './components/BMICalculator'
+
+const LoginPage = lazy(() => import('./components/LoginPage'))
+const SignupPage = lazy(() => import('./components/SignupPage'))
+const LandingPage = lazy(() => import('./components/LandingPage'))
+const BMICalculator = lazy(() => import('./components/BMICalculator'))
 import { decodeToken } from './utils/auth'
 import { generateFallbackResponse } from './utils/fallbackChat'
 
@@ -2398,13 +2400,15 @@ export default function App() {
   if (page === 'landing') {
     return (
       <>
-        <LandingPage 
-          onLogin={() => setPage('login')} 
-          onRegister={() => setPage('signup')} 
-          currentUser={user}
-          onGoToDashboard={() => setPage('dashboard')}
-          onShowProfile={() => setIsProfileModalOpen(true)}
-        />
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-brand-accent" /></div>}>
+          <LandingPage 
+            onLogin={() => setPage('login')} 
+            onRegister={() => setPage('signup')} 
+            currentUser={user}
+            onGoToDashboard={() => setPage('dashboard')}
+            onShowProfile={() => setIsProfileModalOpen(true)}
+          />
+        </Suspense>
         {user && (
           <ProfileModal
             isOpen={isProfileModalOpen}
@@ -2420,29 +2424,33 @@ export default function App() {
 
   if (page === 'login') {
     return (
-      <LoginPage 
-        onLogin={handleLogin} 
-        onSwitchToSignup={() => setPage('signup')} 
-        onBackToHome={() => setPage('landing')} 
-        currentUser={user}
-        onShowProfile={() => setIsProfileModalOpen(true)}
-        onGoToDashboard={() => setPage('dashboard')}
-        onLogout={handleLogout}
-      />
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-brand-accent" /></div>}>
+        <LoginPage 
+          onLogin={handleLogin} 
+          onSwitchToSignup={() => setPage('signup')} 
+          onBackToHome={() => setPage('landing')} 
+          currentUser={user}
+          onShowProfile={() => setIsProfileModalOpen(true)}
+          onGoToDashboard={() => setPage('dashboard')}
+          onLogout={handleLogout}
+        />
+      </Suspense>
     )
   }
 
   if (page === 'signup') {
     return (
-      <SignupPage 
-        onSignup={handleSignup} 
-        onSwitchToLogin={() => setPage('login')} 
-        onBackToHome={() => setPage('landing')} 
-        currentUser={user}
-        onShowProfile={() => setIsProfileModalOpen(true)}
-        onGoToDashboard={() => setPage('dashboard')}
-        onLogout={handleLogout}
-      />
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-brand-accent" /></div>}>
+        <SignupPage 
+          onSignup={handleSignup} 
+          onSwitchToLogin={() => setPage('login')} 
+          onBackToHome={() => setPage('landing')} 
+          currentUser={user}
+          onShowProfile={() => setIsProfileModalOpen(true)}
+          onGoToDashboard={() => setPage('dashboard')}
+          onLogout={handleLogout}
+        />
+      </Suspense>
     )
   }
 
@@ -2873,12 +2881,14 @@ export default function App() {
             >
               <X size={16} />
             </button>
-            <BMICalculator
-              user={user}
-              onSaveVitals={(vitals) => {
-                handleSaveVitals(vitals)
-              }}
-            />
+            <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-brand-accent" /></div>}>
+              <BMICalculator
+                user={user}
+                onSaveVitals={(vitals) => {
+                  handleSaveVitals(vitals)
+                }}
+              />
+            </Suspense>
           </div>
         </div>
       )}

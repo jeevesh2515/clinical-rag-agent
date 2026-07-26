@@ -147,7 +147,7 @@ class PgVectorStore:
                         :chunk_id, :source_id, :title, :page, :section, :text,
                         :source_url, :chunk_index, :organization, :publication_year,
                         :source_type, :source_version, :review_date, :effective_date,
-                        :license_notes, :ingested_at, :embedding::vector
+                        :license_notes, :ingested_at, CAST(:embedding AS vector)
                     ) ON CONFLICT (chunk_id) DO UPDATE SET
                         text = EXCLUDED.text,
                         embedding = EXCLUDED.embedding,

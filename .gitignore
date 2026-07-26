@@ -28,6 +28,8 @@ app/db/migrations/versions/__pycache__/
 
 # Local OS/editor files
 .DS_Store
+.vscode/
+.agents/
 
 # Local app/runtime outputs
 clinical_demo.db
@@ -54,9 +56,12 @@ PR.md
 PRIVATE_LEARNING_PLAN.md
 IMPLEMENTATION_SUMMARY.md
 FINAL_REPORT.md
+TODAY.md
 .vercel
 .gstack/
 test-results
 node_modules/
+frontend/node_modules/
 backend.log
 frontend/frontend.log
+skills-lock.json

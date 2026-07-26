@@ -194,47 +194,24 @@ class ApiClient {
     try {
       const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
       if (res.ok) {
-        const remoteUser: UserProfile = await res.json()
-        const cached = loadLocalUserProfile(remoteUser)
-        if (cached) {
-          return {
-            ...remoteUser,
-            full_name: remoteUser.full_name || cached.full_name,
-            email: remoteUser.email || cached.email || '',
-            date_of_birth: remoteUser.date_of_birth || cached.date_of_birth,
-            notes: remoteUser.notes || cached.notes,
-            health_vitals: remoteUser.health_vitals || cached.health_vitals,
-          }
-        }
-        return remoteUser
+        // Server response is the single source of truth — always use it directly
+        return await res.json()
       }
     } catch {
-      // Backend unreachable / network error — fallback to client-side token claims + cached profile
+      // Backend unreachable — fall back to token claims only
     }
     if (this.token) {
       const decoded = decodeToken(this.token)
       if (decoded) {
         const username = decoded.username || decoded.sub || 'user'
         const role = decoded.role || decoded.roles?.[0] || 'patient'
-        const baseUser: UserProfile = {
+        return {
           id: 'usr-' + username,
           username,
           email: decoded.email || `${username}@clinical.demo`,
           roles: decoded.roles || [role],
           is_active: true,
         }
-        const cached = loadLocalUserProfile(baseUser)
-        if (cached) {
-          return {
-            ...baseUser,
-            full_name: cached.full_name || baseUser.full_name,
-            email: cached.email || baseUser.email,
-            date_of_birth: cached.date_of_birth || baseUser.date_of_birth,
-            notes: cached.notes || baseUser.notes,
-            health_vitals: cached.health_vitals || baseUser.health_vitals,
-          }
-        }
-        return baseUser
       }
     }
     throw new Error('Failed to get user')
@@ -1139,49 +1116,24 @@ interface NoteItem {
   created_at: string
 }
 
+// Load notes from server-persisted user.notes field (cross-device authoritative source)
 function loadLocalNotesStack(u: UserProfile | null): NoteItem[] {
   if (!u) return []
-  let list: NoteItem[] = []
-  
-  // 1. Authoritative database user notes priority
   if (u.notes) {
     try {
       const parsed = JSON.parse(u.notes)
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
     } catch {
       if (u.notes.trim()) {
-        return [{
-          id: 'note-legacy-db',
-          text: u.notes.trim(),
-          created_at: new Date().toISOString()
-        }]
+        return [{ id: 'note-legacy-db', text: u.notes.trim(), created_at: new Date().toISOString() }]
       }
     }
   }
-
-  // 2. User-scoped local storage fallback
-  const key = getStorageKey(u, 'notes_stack')
-  if (key) {
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (Array.isArray(parsed)) list = parsed
-      }
-    } catch {}
-  }
-  return list
+  return []
 }
 
-function saveLocalNotesStack(u: UserProfile | null, stack: NoteItem[]) {
-  if (!u) return
-  const key = getStorageKey(u, 'notes_stack')
-  if (key) {
-    try {
-      localStorage.setItem(key, JSON.stringify(stack))
-    } catch {}
-  }
-}
+// No-op: notes are persisted exclusively via api.updateProfile on the server
+function saveLocalNotesStack(_u: UserProfile | null, _stack: NoteItem[]) { /* server-only persistence */ }
 
 // ─── Profile Modal ──────────────────────────────────────────────────────────
 
@@ -1876,81 +1828,13 @@ function ClinicalCatPet() {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
-// ─── Local Storage & Hybrid Sync Persistence ────────────────────────────────
-function getStorageKey(u: UserProfile | null, suffix: string): string | null {
-  if (!u) return null
-  const identifier = (u.id || u.username || u.email || 'user').toLowerCase().trim()
-  return `cw_storage_${identifier.replace(/[^a-zA-Z0-9_-]/g, '_')}_${suffix}`
-}
-
-function loadLocalConvs(u: UserProfile | null): ConversationSummary[] {
-  if (!u) return []
-  const key = getStorageKey(u, 'conv_list')
-  if (key) {
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) return JSON.parse(raw)
-    } catch {}
-  }
-  return []
-}
-
-function saveLocalConvs(u: UserProfile | null, convs: ConversationSummary[]) {
-  if (!u || !convs) return
-  const key = getStorageKey(u, 'conv_list')
-  if (key) {
-    try {
-      localStorage.setItem(key, JSON.stringify(convs))
-    } catch {}
-  }
-}
-
-function loadLocalConvDetail(u: UserProfile | null, convId: string): Conversation | null {
-  if (!u || !convId) return null
-  const key = getStorageKey(u, `conv_${convId}`)
-  if (key) {
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) return JSON.parse(raw)
-    } catch {}
-  }
-  return null
-}
-
-function saveLocalConvDetail(u: UserProfile | null, convId: string, conv: Conversation) {
-  if (!u || !conv || !conv.messages || conv.messages.length === 0) return
-  const key = getStorageKey(u, `conv_${convId}`)
-  if (key) {
-    try {
-      localStorage.setItem(key, JSON.stringify(conv))
-    } catch {}
-  }
-}
-
-function saveLocalUserProfile(u: UserProfile | null) {
-  const key = getStorageKey(u, 'profile')
-  if (!key || !u) return
-  try {
-    localStorage.setItem(key, JSON.stringify({
-      full_name: u.full_name,
-      email: u.email,
-      date_of_birth: u.date_of_birth,
-      notes: u.notes,
-      health_vitals: u.health_vitals
-    }))
-  } catch {}
-}
-
-function loadLocalUserProfile(u: UserProfile | null): Partial<UserProfile> | null {
-  const key = getStorageKey(u, 'profile')
-  if (key) {
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) return JSON.parse(raw)
-    } catch {}
-  }
-  return null
-}
+// ─── Server-Only Persistence (localStorage removed for all user data) ─────────
+// All user data (profile, notes, vitals, conversations) is fetched exclusively
+// from the backend API so every device/browser always sees the same up-to-date data.
+// localStorage is kept ONLY for: cw_token (auth), cw_theme, cw_model_id (device prefs).
+function loadLocalConvDetail(_u: UserProfile | null, _convId: string): Conversation | null { return null }
+function saveLocalConvDetail(_u: UserProfile | null, _convId: string, _conv: Conversation) { /* no-op: server-authoritative */ }
+function saveLocalUserProfile(_u: UserProfile | null) { /* no-op: server-authoritative */ }
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -2052,48 +1936,23 @@ export default function App() {
     }
   }, [])
 
-  // Multi-session persistence: load conversations & user profile details immediately
+  // Server-authoritative sync: always load conversations & profile from API on login
   useEffect(() => {
     if (user) {
       setIsFetchingConvs(true)
 
-      // 1. Immediately restore user profile details (full_name, email, date_of_birth, notes, health_vitals)
-      const cachedProfile = loadLocalUserProfile(user)
-      if (cachedProfile) {
-        setUser(prev => prev ? {
-          ...prev,
-          full_name: cachedProfile.full_name || prev.full_name,
-          email: cachedProfile.email || prev.email,
-          date_of_birth: cachedProfile.date_of_birth || prev.date_of_birth,
-          notes: cachedProfile.notes || prev.notes,
-          health_vitals: cachedProfile.health_vitals || prev.health_vitals
-        } : prev)
-      }
-
-      // 2. Immediately restore conversations into left sidebar
-      const localConvs = loadLocalConvs(user)
-      if (localConvs.length > 0) {
-        setConversations(localConvs)
-      }
-
-      // 3. Fetch remote conversations from API & merge with local conversations
+      // Fetch conversations exclusively from server — works on every device/browser
       api.listConversations()
         .then(remoteConvs => {
-          const map = new Map<string, ConversationSummary>()
-          localConvs.forEach(c => map.set(c.id, c))
-          remoteConvs.forEach(c => map.set(c.id, c))
-          const merged = Array.from(map.values()).sort((a, b) =>
+          const sorted = [...remoteConvs].sort((a, b) =>
             new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
           )
-          setConversations(merged)
-          saveLocalConvs(user, merged)
+          setConversations(sorted)
         })
-        .catch(() => {
-          if (localConvs.length > 0) setConversations(localConvs)
-        })
+        .catch(() => {})
         .finally(() => setIsFetchingConvs(false))
 
-      // Load available models
+      // Load available models (device preference kept in localStorage)
       api.listModels().then(({ models: mods, default_model }) => {
         setModels(mods)
         const stored = localStorage.getItem('cw_model_id')
@@ -2103,7 +1962,7 @@ export default function App() {
         }
       }).catch(() => {})
     }
-  }, [user?.username, user?.id, user?.email])
+  }, [user?.id])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, isLoading])
 
@@ -2227,13 +2086,7 @@ export default function App() {
 
   const handleDeleteConv = async (id: string) => {
     try { await api.deleteConversation(id) } catch {}
-    setConversations(prev => {
-      const updated = prev.filter(c => c.id !== id)
-      saveLocalConvs(user, updated)
-      return updated
-    })
-    const key = getStorageKey(user, `conv_${id}`)
-    if (key) localStorage.removeItem(key)
+    setConversations(prev => prev.filter(c => c.id !== id))
     if (currentConvId === id) { setCurrentConvId(null); setMessages([]) }
   }
 
@@ -2267,23 +2120,13 @@ export default function App() {
       const finalMsgs = [...updatedMsgs, assistantMsg]
       setMessages(finalMsgs)
 
-      saveLocalConvDetail(user, convId, {
-        id: convId,
-        title: convTitle,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        messages: finalMsgs,
-      })
-
       setConversations(prev => {
         const map = new Map<string, ConversationSummary>()
         prev.forEach(c => map.set(c.id, c))
         map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
-        const newList = Array.from(map.values()).sort((a, b) =>
+        return Array.from(map.values()).sort((a, b) =>
           new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
         )
-        saveLocalConvs(user, newList)
-        return newList
       })
 
       setPanelCitations(assistantMsg.citations || [])
@@ -2322,23 +2165,13 @@ export default function App() {
       const finalMsgs = [...messages, assistantMsg]
       setMessages(finalMsgs)
 
-      saveLocalConvDetail(user, convId, {
-        id: convId,
-        title: convTitle,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        messages: finalMsgs,
-      })
-
       setConversations(prev => {
         const map = new Map<string, ConversationSummary>()
         prev.forEach(c => map.set(c.id, c))
         map.set(convId!, { id: convId!, title: convTitle, updated_at: new Date().toISOString() })
-        const newList = Array.from(map.values()).sort((a, b) =>
+        return Array.from(map.values()).sort((a, b) =>
           new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
         )
-        saveLocalConvs(user, newList)
-        return newList
       })
 
       setPanelCitations(assistantMsg.citations || [])

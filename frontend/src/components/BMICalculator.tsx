@@ -33,24 +33,19 @@ export default function BMICalculator({ user, onSaveVitals, className = '' }: BM
 
   const [savedSuccess, setSavedSuccess] = useState(false)
 
-  // Load existing vitals if available
+  // Load vitals from server-provided user.health_vitals (cross-device authoritative)
+  // Falls back to defaults if no server data yet — no localStorage dependency
   useEffect(() => {
-    if (user) {
-      const storageKey = `cw_storage_${(user.id || user.email || 'user').replace(/[^a-zA-Z0-9_-]/g, '_')}_vitals`
-      try {
-        const raw = localStorage.getItem(storageKey)
-        if (raw) {
-          const parsed: HealthVitals = JSON.parse(raw)
-          if (parsed.unit_system) setUnitSystem(parsed.unit_system)
-          if (parsed.height_cm) setHeightCm(parsed.height_cm)
-          if (parsed.weight_kg) setWeightKg(parsed.weight_kg)
-          if (parsed.height_ft) setHeightFt(parsed.height_ft)
-          if (parsed.height_in) setHeightIn(parsed.height_in)
-          if (parsed.weight_lbs) setWeightLbs(parsed.weight_lbs)
-        }
-      } catch {}
+    if (user?.health_vitals) {
+      const hv = user.health_vitals
+      if (hv.unit_system) setUnitSystem(hv.unit_system)
+      if (hv.height_cm) setHeightCm(hv.height_cm)
+      if (hv.weight_kg) setWeightKg(hv.weight_kg)
+      if (hv.height_ft) setHeightFt(hv.height_ft)
+      if (hv.height_in) setHeightIn(hv.height_in)
+      if (hv.weight_lbs) setWeightLbs(hv.weight_lbs)
     }
-  }, [user])
+  }, [user?.id, user?.health_vitals])
 
   // Calculate BMI
   let computedBmi = 0
@@ -146,11 +141,7 @@ export default function BMICalculator({ user, onSaveVitals, className = '' }: BM
       updated_at: new Date().toISOString()
     }
 
-    if (user) {
-      const storageKey = `cw_storage_${(user.id || user.email || 'user').replace(/[^a-zA-Z0-9_-]/g, '_')}_vitals`
-      localStorage.setItem(storageKey, JSON.stringify(vitals))
-    }
-
+    // Persist to server via parent callback (api.updateProfile) — no localStorage needed
     if (onSaveVitals) {
       onSaveVitals(vitals)
     }

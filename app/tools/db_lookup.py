@@ -19,8 +19,11 @@ def ensure_demo_db(settings: Settings) -> None:
         conn.execute(
             text(
                 """
-                INSERT OR IGNORE INTO workflow_reference(key, value)
+                INSERT INTO workflow_reference(key, value)
                 VALUES
+                ('hypertension_follow_up', 'Book a blood pressure review within 4 weeks after medication changes in this demo workflow.'),
+                ('community_referral', 'Offer community lifestyle support referral when lifestyle counselling is documented.')
+                ON CONFLICT (key) DO NOTHING
                 ('hypertension_follow_up', 'Book a blood pressure review within 4 weeks after medication changes in this demo workflow.'),
                 ('community_referral', 'Offer community lifestyle support referral when lifestyle counselling is documented.')
                 """

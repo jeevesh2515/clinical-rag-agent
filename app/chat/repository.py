@@ -1,4 +1,4 @@
-"""Chat persistence layer backed by SQLite.
+"""Chat persistence layer backed by SQLAlchemy.
 
 Replaces the previous in-memory ``ChatRepository`` (a Python ``dict``) so
 conversations and messages survive process restarts.

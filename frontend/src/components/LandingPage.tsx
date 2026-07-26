@@ -637,7 +637,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
               </button>
             </div>
             <div className="pt-2 sm:pt-4">
-              <p className="font-code-sm text-[10px] text-on-surface-variant dark:text-slate-400">© 2026 Clinical Workflows AI.<br />Engineered in California.</p>
+              <p className="font-code-sm text-[10px] text-on-surface-variant dark:text-slate-400">© 2026 Clinical Workflows AI.<br />Made with love for healthcare.</p>
             </div>
           </div>
         </div>

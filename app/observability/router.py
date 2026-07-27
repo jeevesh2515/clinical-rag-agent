@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - e.g. Vercel serverless runtime
 router = APIRouter()
 
 
-@router.get("/metrics", include_in_schema=False)
+@router.api_route("/metrics", methods=["GET", "HEAD"], include_in_schema=False)
 def metrics() -> Response:
     """Return Prometheus exposition (openmetrics text format).
 

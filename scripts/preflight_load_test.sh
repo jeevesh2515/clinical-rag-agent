@@ -75,7 +75,7 @@ fi
 # ─── 3. /api/metrics returns Prometheus text ──────────────────────────────────
 echo
 echo "Gate 3 — Prometheus metrics endpoint"
-METRICS_TYPE="$(curl --proto '=https' --tlsv1.2 -sS --max-time "$HTTP_TIMEOUT" -I \
+METRICS_TYPE="$(curl --proto '=https' --tlsv1.2 -sS --max-time "$HTTP_TIMEOUT" -D - -o /dev/null \
   "$STAGING_URL/api/metrics" 2>/dev/null | grep -i '^content-type:' | head -1 || true)"
 if echo "$METRICS_TYPE" | grep -qi 'text/plain'; then
   ok "/api/metrics content-type is text/plain"

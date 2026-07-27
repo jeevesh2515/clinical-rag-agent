@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Loader2, AlertCircle, Stethoscope, Heart, Activity, Shield, Brain } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import ThemeToggle from './ThemeToggle'
-
-import { createDemoToken } from '../utils/auth'
+import { formatAuthError, safeReadErrorDetail } from '../utils/auth'
 
 const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
 
@@ -50,33 +49,19 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
         const data = await res.json()
         tokenToUse = data.access_token
       } else {
-        let detail = 'Invalid username or password'
-        try {
-          const err = await res.json()
-          detail = err.detail || detail
-        } catch {
-          detail = `Login failed: HTTP ${res.status}`
-        }
+        const detail = await safeReadErrorDetail(res, 'Invalid username or password', 'Login')
         throw new Error(detail)
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Login failed'
-      // If server is unreachable / sleeping / mobile fetch failure (Load failed on Safari), activate instant demo token fallback
-      if (
-        msg.includes('Failed to fetch') ||
-        msg.includes('Load failed') ||
-        msg.includes('NetworkError') ||
-        msg.includes('Network request failed') ||
-        msg.includes('HTTP 504') ||
-        msg.includes('HTTP 500') ||
-        msg.includes('TypeError')
-      ) {
-        tokenToUse = createDemoToken(username, '', 'patient')
-      } else {
-        setError(msg)
-        setIsLoading(false)
-        return
-      }
+      // Authentication must only succeed through a server-validated JWT.
+      // Earlier this code path silently fell back to a synthetic "demo" token
+      // (signed with the literal "demo_signature" string) on any network
+      // failure, leaving the user in a fake logged-in state with no DB
+      // account. Surface the error and let the user retry instead.
+      const raw = err instanceof Error ? err.message : 'Login failed'
+      setError(formatAuthError(raw))
+      setIsLoading(false)
+      return
     }
 
     if (tokenToUse) {
@@ -85,14 +70,18 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
       else localStorage.removeItem('cw_remember')
       try {
         await onLogin(tokenToUse)
-      } catch {
-        // Fallback login if backend user lookup fails
-        const fallback = createDemoToken(username, '', 'patient')
-        localStorage.setItem('cw_token', fallback)
-        await onLogin(fallback)
-      } finally {
+      } catch (profileErr) {
+        // The JWT was real but the post-login profile load failed (server
+        // died between issuing the JWT and returning /users/me, etc.).
+        // Clear the orphaned token so the next mount of App.tsx does not
+        // silently re-attempt auth with it, then ask the user to retry.
+        localStorage.removeItem('cw_token')
+        const detail = profileErr instanceof Error ? profileErr.message : 'Failed to load profile'
+        setError(`Logged you in, but the profile didn't finish loading: ${detail}. Please retry.`)
         setIsLoading(false)
+        return
       }
+      setIsLoading(false)
     }
   }
 

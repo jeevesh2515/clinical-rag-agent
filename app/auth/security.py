@@ -1,4 +1,3 @@
-import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -12,8 +11,8 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 if SECRET_KEY == _DEFAULT_KEY and os.getenv("APP_ENV", "local") != "local":
-    logging.getLogger(__name__).warning(
-        "JWT_SECRET_KEY is set to the insecure default. "
+    raise ValueError(
+        "JWT_SECRET_KEY is set to the insecure default in a non-local environment. "
         "Generate a strong key with: python3 -c \"import secrets; print(secrets.token_urlsafe(48))\" "
         "and set it as the JWT_SECRET_KEY environment variable."
     )

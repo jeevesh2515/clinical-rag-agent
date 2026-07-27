@@ -24,5 +24,43 @@ services:
         sync: false
       - key: COHERE_API_KEY
         sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: LANGSMITH_TRACING
+        value: "false"
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_PROJECT
+        value: "clinical-rag-agent"
+      - key: LANGSMITH_ENDPOINT
+        value: "https://api.smith.langchain.com"
+      - key: LANGCHAIN_TRACING_V2
+        value: "false"
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: "clinical-rag-agent"
+      - key: LANGCHAIN_ENDPOINT
+        value: "https://api.smith.langchain.com"
+      - key: REDIS_URL
+        sync: false
+      - key: REDIS_MAX_CONNECTIONS
+        value: "50"
+      - key: STORAGE_BACKEND
+        value: "local"
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        value: "us-east-1"
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: UPLOADS_LOCAL_ROOT
+        value: "/tmp/clinical-rag-uploads"
       - key: CORS_ORIGINS
-        value: "https://clinical-workflows.vercel.app,https://clinical-workflows-api.onrender.com,http://localhost:5173"
+        value: "https://clinical-workflows.vercel.app,https://clinical-rag-agent-b3aj.onrender.com,http://localhost:5173"

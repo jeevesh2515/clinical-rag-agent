@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, Stethoscope, Heart, Activity, Shield, Brain } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import ThemeToggle from './ThemeToggle'
-
-import { createDemoToken } from '../utils/auth'
+import { formatAuthError, safeReadErrorDetail } from '../utils/auth'
 
 const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
 
@@ -63,7 +62,6 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
     }
 
     setIsLoading(true)
-    let tokenToUse: string | null = null
 
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
@@ -71,58 +69,45 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, role }),
       })
-      if (res.ok) {
-        const loginRes = await fetch(`${API_BASE}/api/auth/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ username, password }),
-        })
-        if (loginRes.ok) {
-          const data = await loginRes.json()
-          tokenToUse = data.access_token
-        }
-      } else {
-        let detail = 'Registration failed'
-        try {
-          const err = await res.json()
-          detail = err.detail || detail
-        } catch {
-          detail = `Registration failed: HTTP ${res.status}`
-        }
+      if (!res.ok) {
+        const detail = await safeReadErrorDetail(res, 'Registration failed', 'Registration')
         throw new Error(detail)
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Registration failed'
-      // If server is unreachable / sleeping / mobile fetch failure (Load failed on Safari), activate instant demo token fallback
-      if (
-        msg.includes('Failed to fetch') ||
-        msg.includes('Load failed') ||
-        msg.includes('NetworkError') ||
-        msg.includes('Network request failed') ||
-        msg.includes('HTTP 504') ||
-        msg.includes('HTTP 500') ||
-        msg.includes('TypeError')
-      ) {
-        tokenToUse = createDemoToken(username, email, role)
-      } else {
-        setError(msg)
-        setIsLoading(false)
-        return
+      // Registration succeeded — now exchange the credentials for a JWT.
+      const loginRes = await fetch(`${API_BASE}/api/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ username, password }),
+      })
+      if (!loginRes.ok) {
+        const detail = await safeReadErrorDetail(loginRes, 'Account created but auto-login failed', 'Login')
+        throw new Error(detail)
       }
-    }
-
-    if (tokenToUse) {
+      const data = await loginRes.json()
+      const tokenToUse: string = data.access_token
       localStorage.setItem('cw_token', tokenToUse)
       try {
         await onSignup(tokenToUse)
-      } catch {
-        // Fallback signup if profile load fails
-        const fallback = createDemoToken(username, email, role)
-        localStorage.setItem('cw_token', fallback)
-        await onSignup(fallback)
-      } finally {
+      } catch (profileErr) {
+        // Account exists + JWT valid, but /users/me failed (server died between
+        // token issuance and profile load). Clear the orphaned token so the
+        // next mount doesn't re-attempt auth, then ask the user to retry.
+        localStorage.removeItem('cw_token')
+        const detail = profileErr instanceof Error ? profileErr.message : 'Failed to load profile'
+        setError(`Account created, but the profile didn't finish loading: ${detail}. Please sign in again.`)
         setIsLoading(false)
+        return
       }
+      setIsLoading(false)
+    } catch (err) {
+      // Auth must only succeed through a server-validated JWT. The previous
+      // fallback created a synthetic "demo" JWT on any network failure,
+      // leaving the user in a fake logged-in state with no DB account.
+      // Surface the error and let the user retry instead.
+      const raw = err instanceof Error ? err.message : 'Registration failed'
+      setError(formatAuthError(raw))
+      setIsLoading(false)
+      return
     }
   }
 

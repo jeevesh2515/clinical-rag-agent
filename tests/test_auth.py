@@ -1,3 +1,7 @@
+import os
+import subprocess
+import sys
+
 from app.auth.security import get_password_hash, verify_password, create_access_token
 
 
@@ -158,3 +162,22 @@ class TestUserRoles:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 403
+
+
+class TestJWTProductionFailFast:
+    def test_default_jwt_secret_raises_in_non_local_environment(self):
+        """The app must refuse to start in production with the default JWT secret."""
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        env = os.environ.copy()
+        env.pop("JWT_SECRET_KEY", None)
+        env["APP_ENV"] = "production"
+        env["PYTHONPATH"] = project_root
+        result = subprocess.run(
+            [sys.executable, "-c", "import app.auth.security"],
+            cwd=project_root,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode != 0, f"Expected import to fail, got stdout={result.stdout}"
+        assert "insecure default" in result.stderr

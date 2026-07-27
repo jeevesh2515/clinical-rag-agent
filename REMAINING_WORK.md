@@ -17,7 +17,7 @@
 | Frontend typecheck | ✅ Clean |
 | Frontend build | ✅ Successful (437KB bundle, down from 516KB) |
 | Ruff lint | ✅ Passing |
-| Production deployment | ✅ Vercel — `200 OK` on `/api/health`, `/api/models` |
+| Production deployment | ✅ Vercel — `200 OK` on `/api/health`, `/api/models` · 🟡 Render blueprint documented in `render.yaml`, service provisioning blocked on user-run dashboard clicks (see Day 32) |
 | Production secrets on Vercel | `OPENROUTER_API_KEY`, `COHERE_API_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL`, `APP_ENV`, `TAVILY_API_KEY`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT` |
 | Git status | ✅ Clean, up to date with `origin/main` |
 | Prometheus import | ✅ Optional fallback for serverless |
@@ -56,7 +56,7 @@ Days 25-31  — Prometheus metrics + observability, KEDA custom HPA,
 
 | Priority | Item | Day | Status |
 |---|---|---|---|
-| 🔴 High | Render deployment not configured | Day 32 | ⏳ Pending |
+| 🔴 High | Render deployment not configured | Day 32 | 🟡 **User-in-the-loop** (see below) |
 | 🟡 Medium | `.env` placeholders (`LANGSMITH_ENDPOINT`, `LANGCHAIN_ENDPOINT`, `LOG_LEVEL`, `LANGSMITH_TRACING`) | Day 33 | ⏳ Pending |
 | 🟡 Medium | Load test `_TBD_` values in `docs/LOAD_TEST_RESULTS.md` | Day 33 | 🟡 Needs Docker / K8s |
 | 🟡 Medium | Neon Auth flow end-to-end verification | Day 34 | ⏳ Pending |
@@ -97,28 +97,12 @@ Already showing 251 — no change needed.
 
 ### 2. Configure Render deployment
 
-- Go to https://dashboard.render.com
-- Create a new **Web Service** pointed at the same GitHub repo
-- Build command: `pip install -r requirements.txt`
-- Start command: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
-- Set environment variables (same as Vercel):
-
-```env
-OPENROUTER_API_KEY=<same value>
-COHERE_API_KEY=<same value>
-JWT_SECRET_KEY=<same value>
-DATABASE_URL=<same value>
-APP_ENV=production
-TAVILY_API_KEY=<same value>
-LANGSMITH_API_KEY=<same value>
-LANGSMITH_PROJECT=<same value>
-CORS_ORIGINS=https://clinical-workflows.vercel.app,https://clinical-workflows.onrender.com
-```
-
-- Verify: `curl https://clinical-workflows.onrender.com/api/health`
-- Update `render.yaml` if needed to match the production start command
-
-**Files**: `render.yaml`, Render dashboard
+The blueprint `render.yaml` at the repo root already declares every value
+the Web Service needs (Python 3.12, `pip install -r requirements.txt`,
+`bash bin/start.sh`, health check `/api/health`, env vars including
+`generate: true` for `JWT_SECRET_KEY` and `sync: false` for the
+account-scoped keys). **Manual steps required — see "AI Delegation
+Limits" section below.**
 
 ### 3. Corpus seeded
 
@@ -133,17 +117,114 @@ CORS_ORIGINS=https://clinical-workflows.vercel.app,https://clinical-workflows.on
 
 **Files**: `.env`
 
+## Verified deploy-state baseline (post-Day-32.ai-attempt)
+
+Probes recorded by the AI during the post-Day-32 audit against the canonical hosts:
+
+| URL | HTTP | Body / Notes |
+|---|---|---|
+| `https://clinical-workflows.vercel.app/api/health` | **200** | `{"status":"ok",...}` — production parity confirmed |
+| `https://clinical-workflows.onrender.com/api/health` | **404** | host resolves but no service is responding at the prefix |
+| `https://clinical-workflows.onrender.com/` | **404** | root path also 404 — no Render Web Service has been provisioned yet |
+| `https://clinical-workflows.onrender.com/api/ready` | **404** | same — confirms no app listening, not just a bad path |
+
+**Files reviewed for Day 32 readiness**: `render.yaml` ✅ (already valid
+Blueprint spec, `bin/start.sh` ✅ (proper port-bindability check + `exec
+uvicorn` against `$PORT`), `Dockerfile` ✅ (multi-stage, non-root UID 10001,
+uvicorn on `0.0.0.0:8000`), `.env.example` ✅ (documented env vars). No
+repo-side change required for Day 32 to ship — only the dashboard action.
+
+## AI Delegation Limits
+
+Provisioning the Render Web Service requires either:
+
+* **(A)** A `RENDER_API_KEY` env var scoped to the user's Render account,
+  or
+* **(B)** User-driven OAuth through Render Dashboard at
+  `https://dashboard.render.com` (Blueprint click-to-deploy creates a
+  resource but needs the user to consent to the GitHub repo read access).
+
+Neither was available when this audit was run. **Out of caution —
+provisioning cloud-side resources that create billing exposure and
+require account-scoped credentials — the AI verified state, documented
+config, and is asking the user to run the dashboard steps below.** Day 32
+is therefore **🟡 User-in-the-loop**, not ✅ Completed.
+
+If the user later grants a `RENDER_API_KEY` (plus the workspace `ownerId`,
+which the agent would fetch via a separate `GET /v1/owners` call — the
+create-service endpoint requires both, plus `repo` and `branch`), the
+agent can POST to `https://api.render.com/v1/services` and automate
+this. Until then, the manual path is the recommended one.
+
+## Manual Provisioning Steps (recommended)
+
+> If you prefer a **one-off Manual Web Service** (skip Blueprint), see
+> `DEPLOYMENT_GUIDE.md` §4 — that path mirrors the same values this
+> docs section walks through below but lets you set
+> `Environment: Python 3 / Build Command / Start Command / Health Check`
+> directly in the dashboard form without going through the GitHub OAuth
+> handshake that Blueprint requires.
+
+These are the exact render.com Blueprint clicks that will stand up the
+service using the existing `render.yaml`:
+
+1. Sign in to <https://dashboard.render.com>.
+2. Click **New +** → **Blueprint**.
+3. Connect the GitHub repo that contains `render.yaml` at its root
+   (e.g. `jeevesh2515/clinical-rag-agent`).
+4. Render will auto-detect the blueprint name `clinical-workflows-api`
+   and pre-fill: type `web`, env `Python 3`, region `Oregon`, plan
+   `Free`, build `pip install -r requirements.txt`, start `bash bin/start.sh`,
+   healthCheckPath `/api/health`.
+5. Render prompts for **Secret env vars** — provide the same values the
+   Vercel deployment uses:
+   - `JWT_SECRET_KEY` (Render will generate if `generate: true` in
+     `render.yaml` is honoured; otherwise paste the Vercel value)
+   - `DATABASE_URL` (paste the Neon connection string — the same one
+     used on Vercel)
+   - `OPENROUTER_API_KEY`
+   - `COHERE_API_KEY`
+6. Click **Apply**. Render kicks off the first build (`pip install -r
+   requirements.txt` — expect ~8–12 min on Free tier with the ML stack:
+   `sentence-transformers` + `langchain` + `langgraph` + `pgvector` +
+   `faiss-cpu`), then starts the Web Service via `bash bin/start.sh`
+   which execs `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+7. Once the dashboard shows **Live**, run `curl https://clinical-workflows.onrender.com/api/health`
+   and expect `{"status":"ok",...}`.
+8. The postStart `/api/ingest` lifecycle hook lives in
+   `k8s/deployment.yaml` (not in `Dockerfile`), so it does **not** run
+   on Render — Render re-builds but does not call `/api/ingest`
+   post-deploy. If the corpus isn't already seeded
+   in the Neon DB (it is, 159 chunks), call `POST /api/ingest` once
+   against the new Render URL.
+
+**Sanity check after deploy**:
+
+```bash
+# Should return {"status":"ok","db":"connected",...}
+curl -s https://clinical-workflows.onrender.com/api/health | jq .
+
+# Should return chunk count > 0
+curl -s https://clinical-workflows.onrender.com/api/ready | jq '{chunks}'
+
+# End-to-end query smoke (no API key → extractive fallback works)
+curl -s -X POST https://clinical-workflows.onrender.com/api/query \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What BP target for CKD stage 3?"}' | jq '.answer'
+```
+
 ## Acceptance criteria
 
 - [x] README badge shows 251 passing
-- [ ] Render deployment returns 200 on `/api/health`
-- [ ] Render has all required env vars
+- [ ] Render deployment returns 200 on `/api/health` — **blocked on user (manual dashboard click)**
+- [ ] Render has all required env vars — **blocked on user (during the dashboard click)**
 - [x] `POST /api/ingest` returns 200 and `chunks > 0` (159 chunks)
 - [ ] `.env` has `LOG_LEVEL=INFO` and no remaining placeholders
 
 ## Estimated effort
 
-30 minutes — Render dashboard setup only, everything else is done.
+~10 minutes for the user (Render dashboard clicks) — agent work
+documented in this section (state verification + docs update).
 
 ---
 
@@ -451,7 +532,7 @@ python3 -m pytest tests/ -q --tb=short
 
 ```text
 - [x] Production Vercel deployment: ✅ HEALTHY (200 on /api/health)
-- [ ] Render deployment: ✅ HEALTHY (200 on /api/health)
+- [ ] Render deployment: target ✅ HEALTHY (200 on /api/health) — see Day 32 → Manual Provisioning Steps.
 - [x] Backend tests: 251 passed, 9 skipped
 - [x] Frontend typecheck: ✅ CLEAN
 - [x] Frontend build: ✅ SUCCESSFUL (437KB bundle)

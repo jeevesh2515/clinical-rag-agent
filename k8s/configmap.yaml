@@ -14,4 +14,4 @@ data:
   EMBEDDING_DIM: "1536"
   RERANK_MODEL: "rerank-v3.5"
   GENERATION_MODEL: "command-a-03-2025"
-  CORS_ORIGINS: "https://clinical-workflows.vercel.app,http://localhost:5173"
+  CORS_ORIGINS: "https://clinical-workflows.vercel.app,https://clinical-workflows.onrender.com,https://clinical-workflows-api.onrender.com,https://api.clinical-workflows.org,http://localhost:5173"

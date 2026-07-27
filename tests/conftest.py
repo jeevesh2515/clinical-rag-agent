@@ -40,6 +40,25 @@ from app.retrieval.store import HybridStore
 limiter.enabled = False
 
 
+@pytest.fixture(autouse=True)
+def _disable_langsmith_in_tests():
+    """Disable LangSmith tracing in tests.
+
+    The repository's ``.env`` file may enable LangSmith tracing for local dev,
+    but tests should never send traces to LangSmith (it hits rate limits,
+    requires network, and makes logs noisy). We set the tracing flags to
+    ``false`` (rather than removing them) because ``pydantic-settings`` reads
+    env vars after the ``.env`` file, so these values override any tracing
+    settings loaded from ``.env``.
+    """
+    os.environ["LANGSMITH_TRACING"] = "false"
+    os.environ["LANGCHAIN_TRACING_V2"] = "false"
+    # Remove API keys as well so a test cannot accidentally send traces even
+    # if tracing is toggled on later.
+    os.environ.pop("LANGSMITH_API_KEY", None)
+    os.environ.pop("LANGCHAIN_API_KEY", None)
+    yield
+
 
 def _resolve_persistent_db_path() -> Path | None:
     """Find the persistent SQLite file path the project is configured to use."""

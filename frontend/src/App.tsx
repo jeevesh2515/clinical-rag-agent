@@ -17,7 +17,6 @@ const LoginPage = lazy(() => import('./components/LoginPage'))
 const SignupPage = lazy(() => import('./components/SignupPage'))
 const LandingPage = lazy(() => import('./components/LandingPage'))
 const BMICalculator = lazy(() => import('./components/BMICalculator'))
-import { decodeToken } from './utils/auth'
 import { generateFallbackResponse } from './utils/fallbackChat'
 
 // Permissive icon type — lucide props allow string | number for size, but we
@@ -191,30 +190,36 @@ class ApiClient {
   }
 
   async getCurrentUser(): Promise<UserProfile> {
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
-      if (res.ok) {
-        // Server response is the single source of truth — always use it directly
-        return await res.json()
-      }
-    } catch {
-      // Backend unreachable — fall back to token claims only
+    // The backend is the single source of truth for the user profile. Any
+    // failure here — network error, transient 5xx, 401/403 on a stale or
+    // revoked token — bubbles up so the caller can route the user back to
+    // the login screen (401/403 also drops the clearly-bad token from
+    // storage to prevent re-decoding on retry).
+    //
+    // SECURITY: do NOT synthesize a profile from the JWT payload as a
+    // fallback. The payload is just base64-decoded JSON — never
+    // signature-verified on the client — so any attacker can construct
+    // a fake token claiming any username/email and unlock a full chat
+    // session. Even checking the `exp` field is unsafe: parsed payload
+    // claims are not authenticated. Trust only what `/users/me` returns.
+    const res = await fetch(`${API_BASE}/api/auth/users/me`, { headers: this.headers() })
+    if (res.ok) {
+      return await res.json()
     }
-    if (this.token) {
-      const decoded = decodeToken(this.token)
-      if (decoded) {
-        const username = decoded.username || decoded.sub || 'user'
-        const role = decoded.role || decoded.roles?.[0] || 'patient'
-        return {
-          id: 'usr-' + username,
-          username,
-          email: decoded.email || `${username}@clinical.demo`,
-          roles: decoded.roles || [role],
-          is_active: true,
-        }
-      }
+    if (res.status === 401 || res.status === 403) {
+      // Token is verifiably bad — drop it from the in-memory api instance
+      // AND from storage so no other tab / future mount retries re-decode
+      // it. Doing the cleanup here shaves a full 1.5 s + redundant 401
+      // round-trip off the mount handler's retry path (the second retry
+      // becomes a no-op fetch with no Authorization, which is benign but
+      // wasted). The caller will still surface a "please sign in again"
+      // banner; the outer mount-handler cleanup is idempotent.
+      this.token = null
+      localStorage.removeItem('cw_token')
+      sessionStorage.removeItem('cw_token')
+      throw new Error('Authentication failed — please sign in again')
     }
-    throw new Error('Failed to get user')
+    throw new Error(`Failed to load profile (HTTP ${res.status})`)
   }
 
   async updateProfile(data: { full_name?: string; email?: string; date_of_birth?: string; notes?: string; health_vitals?: HealthVitals | any }): Promise<UserProfile> {
@@ -557,13 +562,23 @@ function ConvItem({ conv, isActive, hovered, onHover, onSelect, onDelete }: {
         </p>
       </div>
       {(hovered || isActive) && (
-        <button
+        <span
           onClick={e => { e.stopPropagation(); onDelete(conv.id) }}
-          className="p-1 text-white/50 hover:text-white hover:bg-white/10 transition-all shrink-0"
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              e.stopPropagation()
+              onDelete(conv.id)
+            }
+          }}
+          className="p-1 text-white/50 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all shrink-0 cursor-pointer"
+          role="button"
+          tabIndex={0}
+          aria-label="Delete conversation"
           title="Delete conversation"
         >
           <Trash2 size={12} />
-        </button>
+        </span>
       )}
     </button>
   )
@@ -1155,6 +1170,19 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
 
   // Clinical Notes Stack state
   const [notesStack, setNotesStack] = useState<NoteItem[]>(() => loadLocalNotesStack(user))
+
+  // Sync local form state whenever the modal opens or the server-side user
+  // object changes. This keeps the profile form accurate across devices and
+  // prevents stale data from a previous edit session from being shown.
+  useEffect(() => {
+    if (isOpen) {
+      setFullName(user.full_name || '')
+      setDateOfBirth(user.date_of_birth || '')
+      setNotes(user.notes || '')
+      setEmail(user.email || '')
+      setNotesStack(loadLocalNotesStack(user))
+    }
+  }, [isOpen, user.id, user.full_name, user.date_of_birth, user.notes, user.email])
   const [activeRightTab, setActiveRightTab] = useState<'notes' | 'documents'>('notes')
   const [stackNoteInput, setStackNoteInput] = useState('')
 
@@ -1254,17 +1282,19 @@ function ProfileModal({ isOpen, onClose, user, onUpdateUser, onChatAboutDoc, onO
       setProfileSuccess(true)
       setTimeout(() => setProfileSuccess(false), 3000)
     } catch (err) {
+      // Keep the UI optimistic so the user isn't blocked, but surface an error
+      // so they know the change may not have reached the server.
       const fallbackUser: UserProfile = {
         ...user,
         full_name: fullName,
         email,
         date_of_birth: dateOfBirth,
-        notes: notesPayload
+        notes: notesPayload,
+        health_vitals: user.health_vitals
       }
       onUpdateUser(fallbackUser)
       saveLocalUserProfile(fallbackUser)
-      setProfileSuccess(true)
-      setTimeout(() => setProfileSuccess(false), 3000)
+      setProfileError(err instanceof Error ? err.message : 'Failed to save profile')
     } finally {
       setIsSavingProfile(false)
     }

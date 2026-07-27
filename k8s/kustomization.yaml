@@ -38,18 +38,8 @@ resources:
 # immutable SHA or semver so rollouts are reproducible and rollbackable:
 #   kustomize edit set image \
 #     ghcr.io/jeevesh2515/clinical-rag-agent=ghcr.io/<your-org>/clinical-rag-agent:v1.0.0
-# The CI workflow .github/workflows/docker-deploy.yml also publishes
-# immutable :${{ github.sha }} tags; prefer those over :latest.
-images:
-  - name: ghcr.io/jeevesh2515/clinical-rag-agent
-    newName: ghcr.io/jeevesh2515/clinical-rag-agent
-    newTag: latest
-
-# Image override: Kustomize's `images[].name` matches the *registry/repo*
-# portion of the existing `image:` field in deployment.yaml (NOT the
-# container name). Override with `kustomize edit set image \
-# ghcr.io/jeevesh2515/clinical-rag-agent=ghcr.io/<your-org>/clinical-rag-agent:v1.2.3`
-# or edit this block.
+# The CI workflow also publishes immutable :${GITHUB_SHA} tags; prefer those
+# over :latest.
 images:
   - name: ghcr.io/jeevesh2515/clinical-rag-agent
     newName: ghcr.io/jeevesh2515/clinical-rag-agent

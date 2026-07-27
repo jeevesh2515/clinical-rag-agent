@@ -47,6 +47,6 @@
     }
   ],
   "env": {
-    "CORS_ORIGINS": "https://clinical-workflows.vercel.app,https://clinical-workflows-*.vercel.app"
+    "CORS_ORIGINS": "https://clinical-workflows.vercel.app"
   }
 }

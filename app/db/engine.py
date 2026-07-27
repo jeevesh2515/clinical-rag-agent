@@ -152,6 +152,17 @@ SessionLocal = _SessionLocalFactory()
 # ─── Bootstrap ────────────────────────────────────────────────────────────────
 
 
+def _add_column_if_missing(engine, table: str, column: str, col_type: str) -> None:
+    """Best-effort ALTER TABLE ... ADD COLUMN IF NOT EXISTS."""
+    try:
+        with engine.connect() as conn:
+            with conn.begin():
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type}"))
+    except Exception:
+        # Already exists, unsupported syntax, or no privileges — ignore safely.
+        pass
+
+
 def bootstrap() -> None:
     """Idempotent init: ensures tables exist and migration patches are applied.
 
@@ -161,18 +172,29 @@ def bootstrap() -> None:
     """
     init_db()
 
+    engine = _get_engine()
+
     # Idempotently add columns that may not exist on older databases.
     # Each column addition uses its own connection + transaction block so a PostgreSQL
     # column-exists exception won't abort the transaction for subsequent operations.
-    engine = _get_engine()
     for column, col_type in [("rephrased_question", "TEXT"), ("model_used", "VARCHAR(128)")]:
-        try:
-            with engine.connect() as conn:
-                with conn.begin():
-                    conn.execute(text(f"ALTER TABLE messages ADD COLUMN {column} {col_type}"))
-        except Exception:
-            # Column already exists or freshly created table — ignore safely.
-            pass
+        _add_column_if_missing(engine, "messages", column, col_type)
+
+    # Older deployments may have a users table from before the profile/vitals/roles
+    # expansions. Add missing columns so registration and profile updates don't fail.
+    users_columns = [
+        ("roles_json", "VARCHAR(255) DEFAULT '[]'"),
+        ("is_active", "BOOLEAN DEFAULT TRUE"),
+        ("full_name", "VARCHAR(255)"),
+        ("primary_role", "VARCHAR(32) DEFAULT 'patient'"),
+        ("date_of_birth", "VARCHAR(10)"),
+        ("notes", "TEXT"),
+        ("health_vitals_json", "TEXT"),
+        ("created_at", "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"),
+        ("updated_at", "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"),
+    ]
+    for column, col_type in users_columns:
+        _add_column_if_missing(engine, "users", column, col_type)
 
     upload_dir = os.environ.get("UPLOAD_DIR", "data/uploads")
     try:

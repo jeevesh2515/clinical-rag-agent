@@ -341,13 +341,74 @@ The repository features automated GitHub Actions workflows in `.github/workflows
 
 ---
 
-## 9. Uptime Monitoring (Recommended)
+## 9. Dual-Platform Uptime Monitoring
 
-Set up a free UptimeRobot monitor to ping every 5 minutes:
+The project ships **two production endpoints**:
 
-1. Create account at https://uptimerobot.com
-2. Add new monitor: **HTTP(s)** → `https://clinical-workflows.vercel.app/api/health`
-3. Interval: **5 minutes**
-4. Alert contacts: **Email** (free tier)
+- `https://clinical-workflows.vercel.app/api/health` — Vercel Python serverless (live today, returns `200` with 159 chunks + 27 OKF concepts)
+- `https://clinical-workflows.onrender.com/api/health` — Render Web Service (returns `404` today; goes `200` after Day 32's 8-step Blueprint click-through completes)
 
-This prevents excessive cold starts during working hours.
+Cold starts on either tier can spike the first request after idle — we want both monitors to fire when a real outage happens.
+
+The repo provides **two paths**. Pick the one that fits your operational
+shape:
+
+| Path | Setup | Granularity | Alerting surface | GitHub Actions minutes | Cost |
+|---|---|---|---|---|---|
+| **A. `.github/workflows/uptime-monitor.yml`** (in-repo, primary) | Zero — already wired on cron `*/5 * * * *` + `workflow_dispatch` | 5 min | Workflow-failure → email repo watchers (default GH behaviour) | ~850 min/month on free tier (well under 2,000 cap) | $0 |
+| **B. UptimeRobot / better-uptime.com** (SaaS, optional supplement) | User creates account, adds 2 HTTP(s) monitors | 1 min | Email / SMS / Slack / Discord / Telegram (per plan) | None (external) | Free tier, 50 monitors |
+
+### Path A — GitHub-Actions cron (primary, in-repo)
+
+The workflow at `.github/workflows/uptime-monitor.yml` runs every 5 minutes.
+For each platform it:
+
+1. `curl --max-time 60 https://<host>/api/health` (60 s timeout tolerates
+   both Vercel serverless 3-8 s cold-starts and Render Free's 15-min idle
+   spin-down 3-8 s cold-starts).
+2. Asserts HTTP 200 — fails the workflow otherwise.
+3. Pipes the body through `jq` and asserts `.status == "ok"` AND
+   `.chunks >= 1`. This catches **silent regressions** (e.g. `status:
+   degraded`, `chunks: 0` after a broken ingestion, `okf.unavailable:
+   true`) that a 200-only check would miss.
+4. Surfaces failures via the GitHub Actions workflow summary + the
+   default email-to-watchers alert.
+
+You can also trigger it manually:
+
+- **GitHub UI:** repo → Actions → "Uptime Monitor (Vercel + Render)" →
+  Run workflow. Optional `base_url` input lets you point both probes at
+  a temporary host (e.g. a PR preview deploy) for shape-validation.
+- **CLI:**
+  ```bash
+  gh workflow run uptime-monitor.yml
+  gh workflow run uptime-monitor.yml \
+    --field base_url=https://clinical-workflows-pr-42.vercel.app
+  ```
+
+**Before Render is Live (today):** the `monitor-render` job fails every
+cron tick and emails repo watchers (~288 emails/day) until Day 32 closes.
+Disable the workflow on the Actions tab, *or* edit
+`.github/workflows/uptime-monitor.yml` and comment out the
+`monitor-render` job block, if you'd rather suppress the noise during
+the provisioning window.
+
+### Path B — UptimeRobot or better-uptime.com (supplement, user-driven)
+
+If you want 1-minute granularity, an external SLA-grade dashboard, or
+SMS / Slack / Discord alerts that don't depend on GitHub Actions being
+on-time, supplement Path A with one of these SaaS monitors:
+
+1. Create account at https://uptimerobot.com (or https://better-uptime.com).
+2. Add a **HTTP(s)** monitor for each URL:
+   - `https://clinical-workflows.vercel.app/api/health`
+   - `https://clinical-workflows.onrender.com/api/health` (skip until
+     Render is Live)
+3. Interval: **1-5 minutes** (free tier caps at 5 min for UptimeRobot).
+4. Alert contacts: **Email** (free tier), optionally Slack/Discord/
+   Telegram/PagerDuty on paid tiers.
+
+This complements Path A rather than replaces it: GitHub-Actions-in-repo
+gives you a fail-fast alert + a `gh workflow run` knob for offline
+testing, while the SaaS monitor gives you a noisy-friendly dashboard
++ external SLA-grade alerting.

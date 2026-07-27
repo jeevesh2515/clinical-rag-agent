@@ -1,0 +1,170 @@
+name: Uptime Monitor (Vercel + Render)
+
+# Dual-platform health check against the production endpoints.
+#
+# Trigger: every 5 minutes via GitHub Actions cron + workflow_dispatch
+# (manual trigger) for ad-hoc validation.
+#
+# Why this exists:
+#   * Catches regressions Vercel deployments introduce (cold-start spikes
+#     after long idle, env-var typos breaking ingestion, Neon-side failures)
+#   * Once Render goes Live, also catches Render-specific regressions
+#     (port-binding race in bin/start.sh, env-var mismatches between
+#     render.yaml's `sync: false` keys and the dashboard paste, cold-start
+#     after Render Free's 15-min idle spin-down)
+#
+# Why GH Actions cron instead of external UptimeRobot:
+#   * Zero setup — no third-party account, no API key
+#   * Free-tier minutes: 28 min/day on this schedule = ~850 min/month,
+#     well under Private-Repo GH Actions 2,000 min/month cap
+#   * Failure surfaces as a workflow-fail → GitHub automatically emails
+#     repo watchers (default behaviour, no external webhook secret needed)
+#
+# Cold-start tolerance:
+#   * `curl --max-time 60` covers Vercel's 3-8s serverless and Render
+#     Free's 3-8s wake-from-spin-down cold-start window.
+#   * `curl --fail --fail-with-body` classifies 4xx/5xx with exit 22
+#     so the failure path is uniform regardless of body shape.
+#   * Single attempt (no retry) — retries would mask real outages.
+#   * No `continue-on-error`: monitoring must fail loud so the
+#     workflow-fail → repo-watchers email alert fires on real outages.
+#   * All jobs run in parallel; every job must succeed for the
+#     workflow to conclude "success". (The comment survives a third
+#     platform being added later — same shape, same rule.)
+
+on:
+  schedule:
+    # Every 5 minutes. Note: GitHub Actions cron can be delayed up to
+    # ~15 min during peak — that's acceptable for uptime purposes.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Override BOTH URLs with this host (for testing the workflow shape)'
+        required: false
+        type: string
+      vercel_url:
+        description: 'Override the Vercel URL (defaults to clinical-workflows.vercel.app)'
+        required: false
+        type: string
+      render_url:
+        description: 'Override the Render URL (defaults to clinical-workflows.onrender.com)'
+        required: false
+        type: string
+
+# Cancel any prior-in-flight run when a new one's enqueued — for cron
+# there is normally at most one running; this just guards against the
+# case where a cron tick + a workflow_dispatch trigger race.
+concurrency:
+  group: uptime-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor-vercel:
+    name: Vercel /api/health (${{ inputs.vercel_url || inputs.base_url || 'clinical-workflows.vercel.app' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        shell: bash
+    env:
+      TARGET_URL: ${{ inputs.vercel_url || inputs.base_url || 'https://clinical-workflows.vercel.app' }}
+    steps:
+      - name: Probe + validate body
+        run: |
+          set -eo pipefail
+          echo "::group::GET $TARGET_URL/api/health"
+          HTTP_CODE=$(curl --max-time 60 --silent --show-error \
+            --fail --fail-with-body \
+            --output /tmp/health.json --write-out '%{http_code}' \
+            "$TARGET_URL/api/health" || echo "curl-exit-$?")
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/health.json || true
+          echo "::endgroup::"
+
+          # Hard fail conditions — each surfaces as a step failure → job
+          # failure → workflow failure → repo-watcher email.
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "FAIL: expected HTTP 200, got $HTTP_CODE"
+            exit 1
+          fi
+          if ! command -v jq >/dev/null; then
+            echo "FAIL: jq is not installed in this runner"
+            exit 1
+          fi
+
+          # Body-shape validation (catches silent regressions like
+          # status:degraded, chunks:0 = broken ingestion, okf.unavailable).
+          if ! jq -e '.status == "ok"' /tmp/health.json >/dev/null; then
+            echo "FAIL: .status != 'ok' — body:"
+            cat /tmp/health.json
+            exit 1
+          fi
+          if ! jq -e '.chunks // 0 | (. >= 1)' /tmp/health.json >/dev/null; then
+            echo "FAIL: body has no chunks (corpus not seeded?) — body:"
+            cat /tmp/health.json
+            exit 1
+          fi
+          # okf.available guard is load-bearing on the /api/health body
+          # contract. If the backend ever intentionally drops the `okf`
+          # key (e.g. OKF is replaced by a newer structured knowledge
+          # layer), this guard will fire — that's the contract alarm.
+          if ! jq -e '.okf.available == true' /tmp/health.json >/dev/null; then
+            echo "FAIL: okf.available != true (OKF loader broken?) — body:"
+            cat /tmp/health.json
+            exit 1
+          fi
+          echo "OK: $TARGET_URL/api/health → status:ok chunks>=1 okf.available=true"
+
+  monitor-render:
+    name: Render /api/health (${{ inputs.render_url || inputs.base_url || 'clinical-workflows.onrender.com' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    # Until Render is provisioned (Day 32), this job will FAIL every
+    # 5 min and email repo watchers. That's an intentional pre-Live
+    # signal — once Render is Live the job succeeds and the cron
+    # goes quiet. To suppress the noise during the provisioning
+    # window, disable the workflow on the Actions tab or comment
+    # out the monitor-render job block.
+    defaults:
+      run:
+        shell: bash
+    env:
+      TARGET_URL: ${{ inputs.render_url || inputs.base_url || 'https://clinical-workflows.onrender.com' }}
+    steps:
+      - name: Probe + validate body
+        run: |
+          set -eo pipefail
+          echo "::group::GET $TARGET_URL/api/health"
+          HTTP_CODE=$(curl --max-time 60 --silent --show-error \
+            --fail --fail-with-body \
+            --output /tmp/health.json --write-out '%{http_code}' \
+            "$TARGET_URL/api/health" || echo "curl-exit-$?")
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/health.json || true
+          echo "::endgroup::"
+
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "FAIL: expected HTTP 200, got $HTTP_CODE — Render not yet provisioned or service is down?"
+            exit 1
+          fi
+          if ! jq -e '.status == "ok"' /tmp/health.json >/dev/null; then
+            echo "FAIL: .status != 'ok' — body:"
+            cat /tmp/health.json
+            exit 1
+          fi
+          if ! jq -e '.chunks // 0 | (. >= 1)' /tmp/health.json >/dev/null; then
+            echo "FAIL: body has no chunks — body:"
+            cat /tmp/health.json
+            exit 1
+          fi
+          # okf.available guard is load-bearing on the /api/health body
+          # contract. If the backend ever intentionally drops the `okf`
+          # key (e.g. OKF is replaced by a newer structured knowledge
+          # layer), this guard will fire — that's the contract alarm.
+          if ! jq -e '.okf.available == true' /tmp/health.json >/dev/null; then
+            echo "FAIL: okf.available != true (OKF loader broken?) — body:"
+            cat /tmp/health.json
+            exit 1
+          fi
+          echo "OK: $TARGET_URL/api/health → status:ok chunks>=1 okf.available=true"

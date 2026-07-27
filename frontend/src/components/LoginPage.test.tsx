@@ -73,9 +73,9 @@ describe('LoginPage — fake-token regression', () => {
     const usernameInput = screen.getByPlaceholderText(/enter your username/i)
     const passwordInput = screen.getByPlaceholderText(/enter your password/i)
 
-    // Fill in real-looking credentials then submit.
-    await user.type(usernameInput, 'dr_smith')
-    await user.type(passwordInput, 'hunter2')
+    // Fill in clearly-fictional fixture values and submit.
+    await user.type(usernameInput, 'test_user_fixture')
+    await user.type(passwordInput, 'not-a-real-password')
 
     const submitButton = screen.getByRole('button', { name: /sign in/i })
     expect(submitButton).not.toBeDisabled() // pre-submit sanity
@@ -100,8 +100,8 @@ describe('LoginPage — fake-token regression', () => {
 
     // (4) Form fields stay populated — the user can retry without
     //     re-typing.
-    expect(usernameInput).toHaveValue('dr_smith')
-    expect(passwordInput).toHaveValue('hunter2')
+    expect(usernameInput).toHaveValue('test_user_fixture')
+    expect(passwordInput).toHaveValue('not-a-real-password')
 
     // (5) Parent's onLogin never invoked (no fake-login success).
     expect(onLogin).not.toHaveBeenCalled()

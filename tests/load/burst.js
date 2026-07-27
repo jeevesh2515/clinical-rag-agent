@@ -78,7 +78,7 @@ export default function () {
       try {
         const body = JSON.parse(r.body || "{}");
         return typeof body.answer === "string";
-      } catch {
+      } catch (e) {
         return false;
       }
     },

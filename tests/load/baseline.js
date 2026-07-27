@@ -79,7 +79,7 @@ export default function () {
       try {
         const body = JSON.parse(r.body || "{}");
         return typeof body.answer === "string" && body.answer.length > 50;
-      } catch {
+      } catch (e) {
         return false;
       }
     },
@@ -87,7 +87,7 @@ export default function () {
       try {
         const body = JSON.parse(r.body || "{}");
         return Array.isArray(body.citations) && body.citations.length > 0;
-      } catch {
+      } catch (e) {
         return false;
       }
     },

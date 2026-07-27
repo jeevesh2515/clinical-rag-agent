@@ -7,6 +7,7 @@ rather than imported directly from this module.
 from __future__ import annotations
 
 import os
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
@@ -57,11 +58,12 @@ def reset_engine_for_tests(database_url: str | None = None) -> None:
     Used by ``tests/conftest.py`` so each test that overrides the
     ``database_url`` setting actually points at a fresh SQLite file.
     """
-    global _ENGINE, _SessionLocal
+    global _ENGINE, _SessionLocal, _TABLES_INITIALIZED
     if _ENGINE is not None:
         _ENGINE.dispose()
     _ENGINE = None
     _SessionLocal = None
+    _TABLES_INITIALIZED = False
     if database_url is not None:
         os.environ["DATABASE_URL"] = database_url
         from app.core.config import get_settings as _gs
@@ -74,8 +76,27 @@ def init_db() -> None:
     Base.metadata.create_all(_get_engine())
 
 
+# Process-level guard so ``init_db()`` is only executed once per worker. In
+# serverless environments (e.g. Vercel) FastAPI lifespan events may not run on
+# every cold start; this safety net prevents ``ProgrammingError`` for missing
+# tables on the first request without adding per-request overhead.
+_ensure_tables_lock = threading.Lock()
+_TABLES_INITIALIZED = False
+
+
+def _ensure_tables() -> None:
+    global _TABLES_INITIALIZED
+    if _TABLES_INITIALIZED:
+        return
+    with _ensure_tables_lock:
+        if not _TABLES_INITIALIZED:
+            init_db()
+            _TABLES_INITIALIZED = True
+
+
 def get_db() -> Iterator[Session]:
     """FastAPI dependency that yields a request-scoped session."""
+    _ensure_tables()
     db = _get_session_local()()
     try:
         yield db

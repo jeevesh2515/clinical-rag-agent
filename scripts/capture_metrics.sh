@@ -28,7 +28,11 @@ TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 
 
 mkdir -p "$OUTPUT_DIR"
-OUT_FILE="$OUTPUT_DIR/${STAGING_URL//\//_}-${TIMESTAMP}.metrics.json"
+# Sanitize URL into a safe filename component: strip protocol prefix, replace
+# all remaining non-alphanumeric chars (colons, slashes, dots) with underscores.
+SAFE_URL="$(echo "$STAGING_URL" | sed 's|https\?://||' | tr -cs 'A-Za-z0-9-' '_' | sed 's/_*$//')"
+OUT_FILE="$OUTPUT_DIR/${SAFE_URL}-${TIMESTAMP}.metrics.json"
+
 
 echo "Capturing metrics → $OUT_FILE"
 

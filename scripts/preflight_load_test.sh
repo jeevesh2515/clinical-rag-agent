@@ -16,7 +16,8 @@
 #   3. return 0 on success, 1 on failure
 set -uo pipefail
 
-STAGING_URL="${STAGING_URL:-}"
+STAGING_URL="${STAGING_URL:-https://clinical-rag-agent-b3aj.onrender.com}"
+
 KUBE_CONTEXT="${KUBE_CONTEXT:-}"
 KUBE_NAMESPACE="${KUBE_NAMESPACE:-default}"
 EXPECTED_MIN_CHUNKS="${EXPECTED_MIN_CHUNKS:-1}"
@@ -25,10 +26,8 @@ HTTP_TIMEOUT="${HTTP_TIMEOUT:-10}"
 PASS=0
 FAIL=0
 
-if [[ -z "$STAGING_URL" ]]; then
-  echo "ERROR: STAGING_URL env var is required (e.g. https://staging.clinical-workflows.org)" >&2
-  exit 2
-fi
+
+
 
 ok()   { echo "  ✓ $*"; PASS=$((PASS+1)); }
 bad()  { echo "  ✗ $*"; FAIL=$((FAIL+1)); }

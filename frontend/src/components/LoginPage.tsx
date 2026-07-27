@@ -4,7 +4,9 @@ import { useTheme } from '../context/ThemeContext'
 import ThemeToggle from './ThemeToggle'
 import { formatAuthError, safeReadErrorDetail } from '../utils/auth'
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || ''
+// Production builds must use relative paths so Vercel routes /api/* to the
+// Python serverless functions. Local dev may still override via Vite proxy.
+const API_BASE = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL as string) || ''
 
 const FEATURES = [
   { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600 dark:text-rose-400' },

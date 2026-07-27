@@ -1,7 +1,7 @@
 # Remaining Work — Days 32–36+ Completion Plan
 
 > Continuation of the 31-day learning plan. Days 1–31 are complete and the
-> project is live at https://clinical-workflows.vercel.app with 251 passing
+> project is live at https://clinical-workflows.vercel.app with 258 passing
 > tests, Prometheus observability, Redis caching, pgvector + S3 storage,
 > Kubernetes manifests, Docker CD pipeline, and a healthy production
 > deployment. The remaining work covers loose ends, deployment parity,
@@ -13,7 +13,7 @@
 
 | Metric | Value |
 |---|---|
-| Backend tests | **251 passed**, 9 skipped |
+| Backend tests | **258 passed**, 9 skipped |
 | Frontend typecheck | ✅ Clean |
 | Frontend build | ✅ Successful (437KB bundle, down from 516KB) |
 | Ruff lint | ✅ Passing |
@@ -67,7 +67,7 @@ Days 25-31  — Prometheus metrics + observability, KEDA custom HPA,
 
 | Item | What was done |
 |---|---|
-| README test badge | Already showed 251 — verified |
+| README test badge | Already showed 258 — verified |
 | ETHICS.md & GDPR.md | Created with 9 and 12 sections respectively |
 | Footer links | Updated LandingPage.tsx → links to GDPR.md & ETHICS.md |
 | Corpus seeded | 159 chunks from 3 guidelines in production Neon DB |
@@ -93,7 +93,7 @@ None — independent of other days.
 
 ### 1. README test badge
 
-Already showing 251 — no change needed.
+Already showing 258 — no change needed.
 
 ### 2. Configure Render deployment
 
@@ -215,7 +215,7 @@ curl -s -X POST https://clinical-workflows.onrender.com/api/query \
 
 ## Acceptance criteria
 
-- [x] README badge shows 251 passing
+- [x] README badge shows 258 passing
 - [ ] Render deployment returns 200 on `/api/health` — **blocked on user (manual dashboard click)**
 - [ ] Render has all required env vars — **blocked on user (during the dashboard click)**
 - [x] `POST /api/ingest` returns 200 and `chunks > 0` (159 chunks)
@@ -519,7 +519,7 @@ Open the live site at https://clinical-workflows.vercel.app and verify:
 
 ```bash
 python3 -m pytest tests/ -q --tb=short
-# Expected: 251 passed, 9 skipped
+# Expected: 258 passed, 9 skipped
 ```
 
 ### 4. Verify CI/CD pipeline
@@ -533,7 +533,7 @@ python3 -m pytest tests/ -q --tb=short
 ```text
 - [x] Production Vercel deployment: ✅ HEALTHY (200 on /api/health)
 - [ ] Render deployment: target ✅ HEALTHY (200 on /api/health) — see Day 32 → Manual Provisioning Steps.
-- [x] Backend tests: 251 passed, 9 skipped
+- [x] Backend tests: 258 passed, 9 skipped
 - [x] Frontend typecheck: ✅ CLEAN
 - [x] Frontend build: ✅ SUCCESSFUL (437KB bundle)
 - [x] Ruff lint: ✅ PASSING

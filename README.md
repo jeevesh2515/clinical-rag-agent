@@ -10,7 +10,7 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-clinical--workflows.vercel.app-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://clinical-workflows.vercel.app)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-clinical--rag--agent-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/jeevesh2515/clinical-rag-agent)
-[![Tests](https://img.shields.io/badge/tests-251%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/jeevesh2515/clinical-rag-agent)
+[![Tests](https://img.shields.io/badge/tests-258%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/jeevesh2515/clinical-rag-agent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://github.com/jeevesh2515/clinical-rag-agent/blob/main/LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -185,7 +185,7 @@ flowchart TD
     subgraph Evaluation["📊 Evaluation & Quality Harness"]
         P[55-Question Golden Eval Suite]
         Q[LangSmith LLM-as-Judge]
-        R[251 Pytest Automated Tests]
+        R[258 Pytest Automated Tests]
     end
 
     A <-->|REST / SSE Streaming| B
@@ -305,7 +305,7 @@ API & Core:      FastAPI | Uvicorn | Pydantic v2 | Python 3.12
 Agent Engine:    LangGraph Stateful DAG Orchestrator
 Knowledge Layer: Open Knowledge Format (OKF) | 27 Concept Files | YAML + Wikilinks
 Retrieval:       Cohere Embeddings v3.0 | BM25 Sparse | Cohere Rerank v3.5
-Quality Harness: Pytest (251 tests) | LangSmith LLM-as-Judge | Ruff | Pyright
+Quality Harness: Pytest (258 tests) | LangSmith LLM-as-Judge | Ruff | Pyright
 Persistence:     Multi-Session Hybrid Storage | Zero-Overwrite Guardrails | Backup Keys
 Deployment & Ops:Vercel (Frontend & Serverless) | Render | Neon PostgreSQL | Docker | Kubernetes (K8s) | GHCR
 ```
@@ -317,7 +317,7 @@ Deployment & Ops:Vercel (Frontend & Serverless) | Render | Neon PostgreSQL | Doc
 The codebase is protected by automated quality gates running in CI:
 
 ```bash
-# Run backend test suite (251 tests)
+# Run backend test suite (258 tests)
 make test
 
 # Run OKF concept validator (28 files, 0 errors)
@@ -369,7 +369,7 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Kuberne
 ├── frontend/            # React 18 + TypeScript + Tailwind v4 SPA
 ├── hypertension-okf/    # 28 Curated OKF concept files
 ├── k8s/                 # Kubernetes manifests (Deployment, Service, ConfigMap, Secrets, Ingress, HPA)
-├── tests/               # 251 automated pytest tests
+├── tests/               # 258 automated pytest tests
 ├── ETHICS.md            # Clinical disclaimer, intended use, responsible AI principles
 ├── GDPR.md              # Data controller info, legal basis, user rights, retention
 ├── Dockerfile           # Multi-stage production container build

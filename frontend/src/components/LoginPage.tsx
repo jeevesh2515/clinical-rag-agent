@@ -167,12 +167,16 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
               </div>
               <div className="space-y-3">
                 <button
+                  type="button"
                   onClick={onGoToDashboard}
                   className="w-full py-3 bg-clinical-black dark:bg-brand-accent text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_#ffffff] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none transition-all duration-150 flex items-center justify-center gap-2 font-bold uppercase tracking-wider"
                 >
                   Go to Dashboard
                 </button>
                 <button
+                  type="button"
+                  id="login-signout-button"
+                  name="logout"
                   onClick={onLogout}
                   className="w-full py-3 bg-white dark:bg-slate-900 text-clinical-black dark:text-white font-headline-md border-2 border-clinical-black dark:border-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none dark:hover:shadow-none transition-all duration-150 flex items-center justify-center gap-2 font-bold uppercase tracking-wider"
                 >
@@ -189,10 +193,11 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
+                  <label htmlFor="login-username" className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
                     Username
                   </label>
                   <input
+                    id="login-username"
                     type="text"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
@@ -204,11 +209,12 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
                 </div>
 
                 <div>
-                  <label className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
+                  <label htmlFor="login-password" className="block text-xs font-label-md font-bold uppercase tracking-wider text-clinical-black dark:text-white mb-1.5">
                     Password
                   </label>
                   <div className="relative">
                     <input
+                      id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
@@ -220,15 +226,18 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-clinical-black/60 dark:text-slate-400 hover:text-clinical-black dark:hover:text-white transition-colors"
+                      aria-pressed={showPassword}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                     </button>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <label htmlFor="login-rememberMe" className="flex items-center gap-2 cursor-pointer select-none">
                     <input
+                      id="login-rememberMe"
                       type="checkbox"
                       checked={rememberMe}
                       onChange={e => setRememberMe(e.target.checked)}

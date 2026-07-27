@@ -62,16 +62,10 @@ describe('LoginPage — fake-token regression', () => {
       />,
     )
 
-    // Selectors: LoginPage's labels are not `htmlFor`-linked to inputs,
-    // so RTL's getByLabelText can't find them. Anchor on the
-    // placeholders that DO uniquely identify each field instead.
-    // (RTL's getter is `getByPlaceholderText` despite the placeholder
-    // attribute name.) The durable fix is to add `id` attrs on each
-    // input and matching `htmlFor` attrs on each label in
-    // LoginPage.tsx — that flips THIS test back to `getByLabelText`
-    // and is also a free a11y win for screen-reader users.
-    const usernameInput = screen.getByPlaceholderText(/enter your username/i)
-    const passwordInput = screen.getByPlaceholderText(/enter your password/i)
+    // Selectors: labels are now `htmlFor`-linked to inputs, so use
+    // getByLabelText for an accessible and robust query.
+    const usernameInput = screen.getByLabelText(/^Username$/i)
+    const passwordInput = screen.getByLabelText(/^Password$/i)
 
     // Fill in clearly-fictional fixture values and submit.
     await user.type(usernameInput, 'test_user_fixture')

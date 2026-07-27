@@ -519,12 +519,16 @@ function Sidebar({ isOpen, onToggle, user, conversations, currentConvId, onNewCh
             </div>
           </div>
         </div>
-        <button 
-          onClick={onLogout} 
-          className="p-1.5 text-white/70 hover:text-white hover:bg-brand-accent transition-all border-2 border-white/40 hover:border-white shrink-0" 
+        <button
+          type="button"
+          id="sidebar-logout-button"
+          name="logout"
+          onClick={onLogout}
+          className="p-1.5 text-white/70 hover:text-white hover:bg-brand-accent transition-all border-2 border-white/40 hover:border-white shrink-0"
           title="Log out"
+          aria-label="Log out"
         >
-          <LogOut size={16} />
+          <LogOut size={16} aria-hidden="true" />
         </button>
       </div>
     </aside>

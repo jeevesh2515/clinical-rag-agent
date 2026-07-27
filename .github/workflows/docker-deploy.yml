@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ '**' ]
 
+permissions:
+  contents: read
+  packages: write   # required to push images to ghcr.io
+
 jobs:
   validate:
     name: Lint, Typecheck, OKF Audit & Pytest

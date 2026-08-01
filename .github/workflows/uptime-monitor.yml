@@ -33,10 +33,10 @@ name: Uptime Monitor (Vercel + Render)
 #     platform being added later — same shape, same rule.)
 
 on:
-  schedule:
-    # Every 5 minutes. Note: GitHub Actions cron can be delayed up to
-    # ~15 min during peak — that's acceptable for uptime purposes.
-    - cron: '*/5 * * * *'
+  # Cron schedule disabled to prevent recurring failure email notifications.
+  # Re-enable or adjust schedule once endpoints are fully provisioned and stable.
+  # schedule:
+  #   - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       base_url:

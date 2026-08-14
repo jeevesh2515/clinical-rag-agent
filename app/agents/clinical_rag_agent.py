@@ -362,21 +362,44 @@ class ClinicalRAGAgent:
         latency = dict(state.get("latency_ms") or {})
         spec = get_spec(state.get("model_id"))
         llm: LLM = get_llm(spec.id, self.settings)
-        system = (
-            "You are Clinical Workflows AI, a helpful, grounded, and friendly clinical assistant.\n"
-            "The user is asking a general or conversational question (greetings, small talk, or general query).\n"
-            "Respond in a warm, polite, and professional tone. Keep it concise, helpful, and natural.\n"
-            "If the user asks about a clinical topic you cannot answer from indexed guidelines, "
-            "politely explain and recommend consulting a licensed clinician.\n"
-            "Do not diagnose, prescribe, recommend medication doses, or handle emergency triage."
-        )
+        mode = state.get("mode", "patient")
+
+        if mode == "patient":
+            system = (
+                "You are Clinical Workflows AI, a warm, compassionate, and supportive hypertension health educator.\n"
+                "TARGET AUDIENCE: Patient or family member seeking clear, plain-language health guidance.\n"
+                "INSTRUCTIONS:\n"
+                "1. Use simple, caring language at a grade 6-8 reading level — speak like an encouraging health coach.\n"
+                "2. Avoid complex clinical jargon. If medical terms are necessary, explain them in plain everyday words immediately.\n"
+                "3. Organize the response with clear numbered bullet points and practical everyday examples.\n"
+                "4. Focus on self-care, warning signs to watch for at home, lifestyle habits, and what to monitor.\n"
+                "5. End with 2-3 specific questions the patient can ask their doctor at their next appointment.\n"
+                "6. Always include a warm reminder to consult a licensed clinician for personalized medical advice.\n"
+                "7. Do not diagnose conditions, prescribe medications, or replace emergency medical services."
+            )
+        else:
+            system = (
+                "You are Clinical Workflows AI, an advanced clinical decision support assistant for healthcare professionals.\n"
+                "TARGET AUDIENCE: Clinicians, physicians, nurse practitioners, and care coordinators.\n"
+                "INSTRUCTIONS:\n"
+                "1. Use formal, professional, and precise medical/clinical terminology.\n"
+                "2. Structure the response with clear clinical markdown subheadings:\n"
+                "   - '### Clinical Assessment & Triage Criteria'\n"
+                "   - '### Red Flags & Immediate Diagnostic Considerations'\n"
+                "   - '### Evidence-Based Protocol & Escalation Pathway'\n"
+                "3. Provide exact physiological thresholds, clinical diagnostic criteria, risk stratification factors, and guideline benchmarks.\n"
+                "4. Highlight end-organ damage risks (cardiac, renal, cerebrovascular, retinal) and acute vs urgent triage indicators.\n"
+                "5. Conclude with clinical escalation and monitoring considerations.\n"
+                "6. Do not prescribe specific patient dosages or replace bedside clinical judgment."
+            )
+
         messages = [
             LLMChatMessage(role="system", content=system),
             LLMChatMessage(role="user", content=state["question"]),
         ]
         with Timer() as t:
             try:
-                answer = llm.chat(messages, temperature=0.7, max_tokens=600)
+                answer = llm.chat(messages, temperature=0.2, max_tokens=900)
                 fallback_note = None
             except (ProviderNotConfiguredError, ProviderError):
                 answer = None
@@ -385,16 +408,22 @@ class ClinicalRAGAgent:
                     try:
                         fallback_llm = get_llm(DEFAULT_MODEL_ID, self.settings)
                         if fallback_llm.is_configured:
-                            answer = fallback_llm.chat(messages, temperature=0.7, max_tokens=600)
+                            answer = fallback_llm.chat(messages, temperature=0.2, max_tokens=900)
                     except Exception:
                         answer = None
                 if not answer:
-                    answer = (
-                        "Hello! I am your Clinical Workflows AI assistant. "
-                        "I am here to help you navigate evidence-based hypertension clinical guidelines, "
-                        "review blood pressure targets, calculate clinical parameters (BMI, eGFR, MAP), "
-                        "and explore care protocols. How can I assist you today?"
-                    )
+                    if mode == "patient":
+                        answer = (
+                            "Hello! I am your Clinical Workflows health assistant. "
+                            "I'm here to help you understand your blood pressure, learn about heart-healthy habits, "
+                            "and prepare questions for your next doctor visit. How can I help you today?"
+                        )
+                    else:
+                        answer = (
+                            "### Clinical Workflows Decision Support\n\n"
+                            "System active and ready to assist with evidence-based hypertension guideline retrieval, "
+                            "pharmacotherapy protocols, risk stratification, and clinical calculations (MAP, eGFR, BMI)."
+                        )
                 fallback_note = None
         latency["converse"] = t.elapsed_ms
         return {"answer": answer, "latency_ms": latency, "model_fallback_note": fallback_note}
@@ -698,22 +727,29 @@ class ClinicalRAGAgent:
         tool_notes = "\n".join(state.get("tool_notes", []))
         if state.get("mode") == "patient":
             mode_instruction = (
-                "RESPOND AS A WARM HYPERTENSION HEALTH EDUCATOR (Patient-Facing):\n"
-                "1. Use plain, caring language at a grade 6-8 reading level — speak like a health coach, not a textbook.\n"
-                "2. Avoid clinical jargon entirely. If a medical term is essential (like 'systolic'), explain it in plain terms immediately.\n"
-                "3. Use simple bullet points with numbers. Include a specific example so the patient can relate it to their own numbers.\n"
-                "4. Focus on lifestyle changes (diet, exercise, home monitoring), what to track, and what to discuss with their doctor.\n"
-                "5. End with 2-3 specific, practical questions the patient can ask their doctor at their next visit.\n"
-                "6. Always include a warm closing recommendation to consult a licensed clinician."
+                "RESPOND AS A WARM HYPERTENSION HEALTH EDUCATOR (Patient-Facing Mode):\n"
+                "1. Format with clear, patient-friendly markdown headings:\n"
+                "   - '### 🩺 What You Need to Know'\n"
+                "   - '### 🥗 Healthy Habits & Action Steps'\n"
+                "   - '### ❓ Questions to Ask Your Doctor'\n"
+                "2. Use simple, caring language at a grade 6-8 reading level — speak like an encouraging health coach.\n"
+                "3. Avoid confusing clinical jargon; define any medical terms (like systolic or diastolic) in simple everyday words immediately.\n"
+                "4. Use clear numbered bullet points and practical, everyday examples.\n"
+                "5. Focus on lifestyle actions (DASH diet, salt reduction <1500mg/day, regular exercise, home BP tracking).\n"
+                "6. Conclude with 2-3 specific questions to ask their doctor and a warm reminder to consult a licensed clinician."
             )
         else:
             mode_instruction = (
-                "RESPOND AS A CLINICAL DECISION SUPPORT ASSISTANT (Clinician-Facing):\n"
-                "1. Use precise medical terminology and professional language appropriate for a clinician or care coordinator.\n"
-                "2. Provide exact clinical targets (systolic/diastolic thresholds), drug classes (ACEi, ARB, CCB, thiazide), and evidence levels.\n"
-                "3. Organize with clear clinical subheadings (e.g. '### Target Blood Pressure', '### First-Line Pharmacotherapy', '### Follow-Up Interval').\n"
-                "4. Cite source references inline (e.g. [NICE NG136, Section 1.2]) — use official guideline names not internal chunk IDs.\n"
-                "5. Include specific treatment thresholds, escalation criteria, and monitoring intervals relevant to clinical decision-making."
+                "RESPOND AS A CLINICAL DECISION SUPPORT ASSISTANT (Clinician-Facing Mode):\n"
+                "1. Use formal, professional, and precise medical/clinical terminology.\n"
+                "2. Structure with standardized clinical subheadings:\n"
+                "   - '### 🎯 Clinical Targets & Diagnostic Thresholds'\n"
+                "   - '### 💊 Pharmacotherapy & Stepped Protocol'\n"
+                "   - '### ⚠️ Clinical Red Flags & End-Organ Considerations'\n"
+                "   - '### 📅 Monitoring Interval & Lab Follow-Up'\n"
+                "3. Provide exact physiological targets (systolic/diastolic thresholds), drug classes (ACEi, ARB, CCB, thiazide), and evidence levels.\n"
+                "4. Cite source references inline (e.g. [NICE NG136, Section 1.2], [ACC/AHA 2017, Section 4]) using official guideline names.\n"
+                "5. Include specific treatment thresholds, contraindications (e.g. no dual RAAS blockade), and escalation criteria."
             )
 
         has_okf = any(

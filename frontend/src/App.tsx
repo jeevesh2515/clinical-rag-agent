@@ -339,7 +339,7 @@ class ApiClient {
 
   async listModels(): Promise<{ default_model: string; models: ModelSpec[] }> {
     const res = await fetch(`${API_BASE}/api/models`, { headers: this.headers() })
-    if (!res.ok) return { default_model: 'openrouter-llama-3.1-8b', models: [] }
+    if (!res.ok) return { default_model: 'cohere-command-a', models: [] }
     return res.json()
   }
 }
@@ -1894,7 +1894,7 @@ export default function App() {
   const [isReliefMode, setIsReliefMode] = useState(false)
   const [models, setModels] = useState<ModelSpec[]>([])
   const [selectedModelId, setSelectedModelId] = useState<string>(
-    () => localStorage.getItem('cw_model_id') || 'openrouter-nemotron-ultra-550b'
+    () => localStorage.getItem('cw_model_id') || 'cohere-command-a'
   )
   const [evidenceTab, setEvidenceTab] = useState<EvidenceTab>('sources')
   const [highlightedCitationIndex, setHighlightedCitationIndex] = useState<number | null>(null)

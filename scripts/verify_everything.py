@@ -58,16 +58,11 @@ r = httpx.get(api("/models"), timeout=10)
 check("GET /api/models 200", r.status_code == 200)
 data = r.json()
 models = data.get("models", [])
-check("active model set", bool(data.get("active")))
+check("default model set", bool(data.get("default_model")))
 
-configured = {m["id"]: m["configured"] for m in models}
+configured = {m["id"]: m.get("is_configured", m.get("configured")) for m in models}
 
-for mid in ["openrouter-nemotron-nano-30b", "openrouter-nemotron-ultra-550b",
-            "openrouter-gemma-4-26b", "openrouter-llama-3.3-70b"]:
-    if mid in configured:
-        check(f"{mid} configured={configured[mid]}", configured[mid] is True)
-
-for mid in ["cohere-command-a", "cohere-command-r"]:
+for mid in ["cohere-command-a", "cohere-command-r", "cohere-command-r7b"]:
     if mid in configured:
         check(f"{mid} configured={configured[mid]}", configured[mid] is True)
 

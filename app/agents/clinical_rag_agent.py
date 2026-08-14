@@ -363,28 +363,38 @@ class ClinicalRAGAgent:
         spec = get_spec(state.get("model_id"))
         llm: LLM = get_llm(spec.id, self.settings)
         system = (
-            "You are Clinical Workflows AI, a helpful and friendly clinical assistant.\n"
-            "The user is asking a general or conversational question (greetings, small talk, or out-of-domain queries).\n"
-            "Respond in a warm, polite, and professional tone. Keep it concise and natural.\n"
+            "You are Clinical Workflows AI, a helpful, grounded, and friendly clinical assistant.\n"
+            "The user is asking a general or conversational question (greetings, small talk, or general query).\n"
+            "Respond in a warm, polite, and professional tone. Keep it concise, helpful, and natural.\n"
             "If the user asks about a clinical topic you cannot answer from indexed guidelines, "
             "politely explain and recommend consulting a licensed clinician.\n"
             "Do not diagnose, prescribe, recommend medication doses, or handle emergency triage."
         )
+        messages = [
+            LLMChatMessage(role="system", content=system),
+            LLMChatMessage(role="user", content=state["question"]),
+        ]
         with Timer() as t:
             try:
-                messages = [
-                    LLMChatMessage(role="system", content=system),
-                    LLMChatMessage(role="user", content=state["question"]),
-                ]
                 answer = llm.chat(messages, temperature=0.7, max_tokens=600)
                 fallback_note = None
-            except (ProviderNotConfiguredError, ProviderError) as exc:
-                answer = (
-                    f"Hello! I'm here to help with clinical workflow questions. "
-                    f"If you have questions about hypertension guidelines, blood pressure targets, "
-                    f"or treatment recommendations, feel free to ask!\n\n"
-                    f"_{exc}_"
-                )
+            except (ProviderNotConfiguredError, ProviderError):
+                answer = None
+                from app.llm import DEFAULT_MODEL_ID
+                if spec.id != DEFAULT_MODEL_ID:
+                    try:
+                        fallback_llm = get_llm(DEFAULT_MODEL_ID, self.settings)
+                        if fallback_llm.is_configured:
+                            answer = fallback_llm.chat(messages, temperature=0.7, max_tokens=600)
+                    except Exception:
+                        answer = None
+                if not answer:
+                    answer = (
+                        "Hello! I am your Clinical Workflows AI assistant. "
+                        "I am here to help you navigate evidence-based hypertension clinical guidelines, "
+                        "review blood pressure targets, calculate clinical parameters (BMI, eGFR, MAP), "
+                        "and explore care protocols. How can I assist you today?"
+                    )
                 fallback_note = None
         latency["converse"] = t.elapsed_ms
         return {"answer": answer, "latency_ms": latency, "model_fallback_note": fallback_note}
@@ -639,7 +649,7 @@ class ClinicalRAGAgent:
         import time
         t0 = time.perf_counter()
         try:
-            answer = llm.chat(messages, temperature=0.1, max_tokens=1200)
+            answer = llm.chat(messages, temperature=0.2, max_tokens=1200)
             duration = time.perf_counter() - t0
             # Day 25 — record LLM success metrics.
             prompt_tokens = getattr(answer, "prompt_tokens", 0) or 0
@@ -652,24 +662,24 @@ class ClinicalRAGAgent:
                 success=True,
             )
             return answer, None
-        except ProviderNotConfiguredError as exc:
+        except (ProviderNotConfiguredError, ProviderError) as exc:
             duration = time.perf_counter() - t0
-            record_llm_call(spec.id, duration_seconds=duration, success=False, failure_reason="not_configured")
-            logger.warning(
-                "provider_not_configured provider=%s model=%s err=%s — falling back to extractive",
-                spec.provider, spec.id, exc,
-            )
+            from app.llm import DEFAULT_MODEL_ID
+            if spec.id != DEFAULT_MODEL_ID:
+                try:
+                    fallback_llm = get_llm(DEFAULT_MODEL_ID, self.settings)
+                    if fallback_llm.is_configured:
+                        logger.info("falling_back_to_default_llm from=%s to=%s", spec.id, DEFAULT_MODEL_ID)
+                        answer = fallback_llm.chat(messages, temperature=0.2, max_tokens=1200)
+                        return answer, None
+                except Exception as fallback_exc:
+                    logger.warning("fallback_llm_failed err=%s", fallback_exc)
+
+            record_llm_call(spec.id, duration_seconds=duration, success=False, failure_reason=str(exc))
+            logger.warning("all_llm_attempts_failed err=%s — using extractive synthesis", exc)
             return (
                 self._generate_extractive(state),
-                f"_Note: '{spec.label}' is not configured on this deployment — showing an extractive summary instead._",
-            )
-        except ProviderError as exc:
-            duration = time.perf_counter() - t0
-            record_llm_call(spec.id, duration_seconds=duration, success=False, failure_reason="provider_error")
-            logger.warning("provider_error provider=%s err=%s — falling back to extractive", spec.provider, exc)
-            return (
-                self._generate_extractive(state),
-                f"_Note: '{spec.label}' was unavailable — showing an extractive summary instead._",
+                None,
             )
 
     def _build_prompt_messages(

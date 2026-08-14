@@ -42,28 +42,36 @@ MODELS: list[ModelSpec] = [
         id="cohere-command-a",
         label="Cohere Command A",
         provider="cohere",
-        description="Default · grounded, fast, long context",
+        description="Default · grounded clinical accuracy, fast, long context",
         model_param="command-a-03-2025",
+        badge="Recommended",
     ),
     ModelSpec(
         id="cohere-command-r",
         label="Cohere Command R+",
         provider="cohere",
-        description="Retrieval-augmented generation, optimized for RAG",
-        model_param="command-r-plus",
+        description="Retrieval-augmented generation, optimized for clinical RAG",
+        model_param="command-r-plus-08-2024",
+    ),
+    ModelSpec(
+        id="cohere-command-r7b",
+        label="Cohere Command R7B",
+        provider="cohere",
+        description="Fast & lightweight clinical reasoning",
+        model_param="command-r7b-12-2024",
     ),
     ModelSpec(
         id="openai-gpt-4o",
         label="OpenAI GPT-4o",
         provider="openai",
-        description="OpenAI flagship, multimodal",
+        description="OpenAI flagship, multimodal reasoning",
         model_param="gpt-4o",
     ),
     ModelSpec(
         id="openai-gpt-4o-mini",
         label="OpenAI GPT-4o mini",
         provider="openai",
-        description="Faster, cheaper, still strong",
+        description="Faster, cheaper, strong reasoning",
         model_param="gpt-4o-mini",
     ),
     ModelSpec(
@@ -91,44 +99,14 @@ MODELS: list[ModelSpec] = [
         id="google-gemini-1.5-flash",
         label="Gemini 1.5 Flash",
         provider="google",
-        description="Fast, cheap, very long context",
+        description="Fast, low-latency, long context",
         model_param="gemini-1.5-flash",
-    ),
-    # ── OpenRouter free-tier models (verified working Jul 2026) ───────────────
-    # These models are free (prompt=0, completion=0) via OpenRouter.
-    ModelSpec(
-        id="openrouter-nemotron-ultra-550b",
-        label="Nemotron Ultra 550B (Free)",
-        provider="openrouter",
-        description="Nvidia Nemotron-3 550B — best clinical accuracy, 1M context, free",
-        model_param="nvidia/nemotron-3-ultra-550b-a55b:free",
-    ),
-    ModelSpec(
-        id="openrouter-nemotron-nano-30b",
-        label="Nemotron Nano 30B (Free)",
-        provider="openrouter",
-        description="Nvidia Nemotron-3 Nano 30B — fast, accurate, great for RAG",
-        model_param="nvidia/nemotron-3-nano-30b-a3b:free",
-    ),
-    ModelSpec(
-        id="openrouter-gemma-4-26b",
-        label="Gemma 4 26B (Free)",
-        provider="openrouter",
-        description="Google Gemma 4 26B — latest Google model, excellent reasoning",
-        model_param="google/gemma-4-26b-a4b-it:free",
-    ),
-    ModelSpec(
-        id="openrouter-llama-3.3-70b",
-        label="Llama 3.3 70B (Free)",
-        provider="openrouter",
-        description="Meta Llama 3.3 70B — strong reasoning, 131K context",
-        model_param="meta-llama/llama-3.3-70b-instruct:free",
     ),
 ]
 
 
-# Default to the most capable verified free model — best clinical RAG at zero cost.
-DEFAULT_MODEL_ID = "openrouter-nemotron-ultra-550b"
+# Default to the most capable verified working model — grounded clinical RAG.
+DEFAULT_MODEL_ID = "cohere-command-a"
 
 
 def get_spec(model_id: str | None) -> ModelSpec:

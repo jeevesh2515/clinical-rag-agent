@@ -33,9 +33,36 @@ def _engine_kwargs(url: str) -> dict:
     return {"pool_pre_ping": True}
 
 
+def _get_fallback_sqlite_url() -> str:
+    if Path("/app/data").exists() and os.access("/app/data", os.W_OK):
+        return "sqlite:////app/data/clinical_app.db"
+    data_dir = Path("./data")
+    if data_dir.exists():
+        return "sqlite:///./data/clinical_app.db"
+    return "sqlite:///./clinical_demo.db"
+
+
 def _build_engine():
     settings = get_settings()
-    return create_engine(settings.database_url, **_engine_kwargs(settings.database_url))
+    url = settings.database_url
+    if url.startswith("sqlite"):
+        return create_engine(url, **_engine_kwargs(url))
+    try:
+        engine = create_engine(url, **_engine_kwargs(url))
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return engine
+    except Exception as exc:
+        fallback_url = _get_fallback_sqlite_url()
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Primary database (%s) unreachable (%s). Falling back to persistent local SQLite: %s",
+            url.split("@")[-1] if "@" in url else url,
+            exc,
+            fallback_url,
+        )
+        return create_engine(fallback_url, **_engine_kwargs(fallback_url))
 
 
 def _get_engine():

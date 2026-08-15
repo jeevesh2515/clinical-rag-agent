@@ -2,11 +2,24 @@
 .git
 .gitignore
 .DS_Store
+.agents
+.vscode
+.vercel
+.gstack
+.kilo
+.firecrawl
 
 # Environment and secrets
 .env
 .env.*
 !.env.example
+.neon
+
+# Node.js and frontend build caches
+node_modules
+frontend/node_modules
+frontend/dist
+frontend/.vite
 
 # Python/runtime artifacts
 .venv
@@ -22,11 +35,14 @@ coverage.xml
 htmlcov
 dist
 build
+test-results
 
 # Local/private project artifacts
 .planning
 PR.md
 PRIVATE_LEARNING_PLAN.md
+FINAL_REPORT.md
+TODAY.md
 clinical_demo.db
 *.db
 *.sqlite
@@ -35,3 +51,4 @@ clinical_demo.db
 # Large downloaded/generated data
 data/pdfs/*.pdf
 data/eval/results*.json
+

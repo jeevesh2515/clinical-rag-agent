@@ -24,11 +24,11 @@ services:
       # uploaded documents, manifests, and vectors persist across restarts and rebuilds:
       - ./data:/app/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/ready"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 15s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
 
   # Optional local PostgreSQL with pgvector (enable if using local Postgres instead of SQLite/Neon)
   # Run with: docker compose --profile postgres up -d

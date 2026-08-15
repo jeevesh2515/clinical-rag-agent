@@ -52,8 +52,8 @@ ENV HOME=/home/app \
 
 EXPOSE 8000
 
-# Health check using the readiness endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/ready || exit 1
+# Health check using the health endpoint
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

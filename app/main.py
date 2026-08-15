@@ -69,6 +69,23 @@ async def lifespan(app: FastAPI):
         _logging.getLogger(__name__).warning("llm_cache_init_failed err=%s", exc)
         app.state.llm_cache = None
 
+    # 4. Auto-seed default clinical guidelines on startup so the hybrid store
+    #    is immediately primed and /api/ready returns 200 OK on container boot.
+    try:
+        from app.api.dependencies import get_store as _get_store
+        from app.ingestion.pdf_loader import ingest_sources as _ingest_sources
+        from app.ingestion.sources import DEFAULT_SOURCES as _DEFAULT_SOURCES
+
+        _store = _get_store()
+        if getattr(_store, "chunk_count", 0) == 0:
+            _ingest_res = _ingest_sources(_DEFAULT_SOURCES)
+            _store.upsert_chunks(_ingest_res.chunks)
+            _logging.getLogger(__name__).info(
+                "default_guidelines_autoseeded chunks=%d", _store.chunk_count
+            )
+    except Exception as exc:
+        _logging.getLogger(__name__).warning("default_guidelines_autoseed_failed err=%s", exc)
+
     yield
 
 

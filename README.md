@@ -235,6 +235,16 @@ npm run dev
 # ➔ Workstation UI running at http://localhost:5173
 ```
 
+### 3. Or Run with Docker (1-Command & 100% Persistent Storage)
+
+```bash
+# Build and run the complete containerized stack (Frontend + Backend + DB)
+docker compose up -d --build
+
+# ➔ Workstation UI + API running at http://localhost:8000
+# ➔ All databases, chat history, vitals, and documents persist permanently in ./data
+```
+
 ---
 
 ## How to Use

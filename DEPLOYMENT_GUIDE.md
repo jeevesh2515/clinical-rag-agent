@@ -148,9 +148,54 @@ The application implements a dual-layer storage system:
 
 ---
 
+## 7. Docker Containerization & Permanent Persistent Storage
+
+The entire application (FastAPI backend + React frontend + Database + Document Store) is fully containerized. Docker volumes and host bind mounts provide **100% permanent data retention** so that no user data, chat history, or document versions are lost across container restarts, image updates, or host reboots.
+
+### What is Persisted Permanently?
+1. **User Accounts & Authentication**: All registered users, roles (Patient / Clinician), hashed credentials, and session tokens.
+2. **Clinical Profiles & Health Vitals**: Systolic/diastolic readings, pulse, weight, BMI history, and clinical notes stack.
+3. **Chat History & Messages**: Complete conversation threads, user questions, assistant responses, citations, and tool execution traces.
+4. **Source Guidelines & Uploaded Documents**: Raw PDFs in `data/source_documents/raw/`, extracted chunk texts in `processed/`, and versioned manifests in `manifests/`.
+5. **Vector Embeddings & Inverted Indexes**: Vector tables in PostgreSQL `pgvector` or persistent local embeddings index.
+
+### Quick Start with Docker Compose (Recommended)
+
+```bash
+# 1. Build and launch the containerized application
+docker compose up -d --build
+
+# 2. Check container status and health
+docker compose ps
+docker compose logs -f api
+
+# 3. Access the web application
+open http://localhost:8000
+```
+
+### Storage Configuration
+
+- **Default Standalone Storage (SQLite + Local Volume)**:
+  Mounts `./data:/app/data` on the host. The SQLite database is saved directly at `./data/clinical_app.db` and uploaded files in `./data/source_documents/`.
+- **Dedicated PostgreSQL + pgvector Storage**:
+  Run with the postgres profile to start a dedicated pgvector container:
+  ```bash
+  docker compose --profile postgres up -d --build
+  ```
+
+### Backup & Restore
+
+```bash
+# Backup all persistent data:
+tar -czvf clinical_workflows_backup_$(date +%Y%m%d).tar.gz ./data
+
+# Restore from backup:
+tar -xzvf clinical_workflows_backup_YYYYMMDD.tar.gz
+```
+
 ---
 
-## 7. Kubernetes (K8s) Deployment
+## 8. Kubernetes (K8s) Deployment
 
 The project provides production-grade Kubernetes manifests in the `k8s/` directory. Apply them all at once with `kubectl apply -k k8s/` (Kustomize), or individually with `kubectl apply -f`.
 

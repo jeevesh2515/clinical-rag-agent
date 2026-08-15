@@ -59,6 +59,7 @@ FINAL_REPORT.md
 TODAY.md
 .vercel
 .firecrawl/
+.kilo/
 .gstack/
 test-results
 node_modules/

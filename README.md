@@ -243,7 +243,13 @@ docker compose up -d --build
 
 # ➔ Workstation UI + API running at http://localhost:8000
 # ➔ All databases, chat history, vitals, and documents persist permanently in ./data
+# ➔ Default clinical guidelines auto-ingested on first boot (159 chunks)
+
+# (Optional) Run with dedicated local PostgreSQL + pgvector:
+docker compose --profile postgres up -d --build
 ```
+
+> **Resilience:** If your `.env` contains a remote PostgreSQL URL that is unreachable from Docker (e.g., Neon), the app automatically falls back to persistent local SQLite. See [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md) for full details.
 
 ---
 
@@ -383,6 +389,7 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Kuberne
 ├── ETHICS.md            # Clinical disclaimer, intended use, responsible AI principles
 ├── GDPR.md              # Data controller info, legal basis, user rights, retention
 ├── Dockerfile           # Multi-stage production container build
+├── docker-compose.yml   # Persistent Docker Compose with SQLite/pgvector profiles
 ├── docker-compose.prod.yml # Production Docker compose configuration
 ├── Makefile             # Development task commands
 └── README.md            # Master repository documentation

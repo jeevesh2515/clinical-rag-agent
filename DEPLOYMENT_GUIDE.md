@@ -159,6 +159,21 @@ The entire application (FastAPI backend + React frontend + Database + Document S
 4. **Source Guidelines & Uploaded Documents**: Raw PDFs in `data/source_documents/raw/`, extracted chunk texts in `processed/`, and versioned manifests in `manifests/`.
 5. **Vector Embeddings & Inverted Indexes**: Vector tables in PostgreSQL `pgvector` or persistent local embeddings index.
 
+### Resilience Architecture
+
+The Docker setup includes three layers of resilience so the app never fails to start:
+
+1. **Database Fallback (`app/db/engine.py`)**: If the configured `DATABASE_URL` points to an unreachable remote PostgreSQL host (e.g., DNS resolution failure, network outage), the engine automatically falls back to a persistent local SQLite database at `/app/data/clinical_app.db`. A warning is logged but the application starts normally.
+2. **Decoupled Docker Database (`DOCKER_DATABASE_URL`)**: The `docker-compose.yml` uses the dedicated `DOCKER_DATABASE_URL` env var (defaulting to SQLite) instead of inheriting `DATABASE_URL` from `.env`. This prevents local Docker runs from accidentally trying to connect to a cloud database (e.g., Neon) that cannot be reached from the container's network.
+3. **Automatic Guideline Priming (`app/main.py` lifespan)**: On startup, the FastAPI lifespan auto-ingests all default clinical guidelines into the HybridStore if the chunk count is 0. This ensures `/api/ready` returns `200 OK` immediately, and the Docker healthcheck passes on first boot without requiring a manual `/api/ingest` call.
+
+### Healthcheck Strategy
+
+| Endpoint | Purpose | Used By |
+|---|---|---|
+| `/api/health` | **Liveness probe** — confirms the application process is alive and can respond. Always 200 OK. | `Dockerfile HEALTHCHECK`, `docker-compose.yml` |
+| `/api/ready` | **Readiness probe** — confirms DB, OKF, and ingestion are all operational. Returns 503 if any subsystem is degraded. | Kubernetes `readinessProbe`, load balancers |
+
 ### Quick Start with Docker Compose (Recommended)
 
 ```bash
@@ -182,6 +197,15 @@ open http://localhost:8000
   ```bash
   docker compose --profile postgres up -d --build
   ```
+  Then set `DOCKER_DATABASE_URL=postgresql://clinical:dev@postgres:5432/clinical_rag` in your `.env`.
+
+### Environment Variables for Docker
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `DOCKER_DATABASE_URL` | `sqlite:////app/data/clinical_app.db` | Docker-specific database URL. Only set this if you want Docker to use something other than local SQLite. |
+| `VECTOR_STORE` | `auto` | `auto` picks pgvector for PostgreSQL URLs and HybridStore for SQLite URLs. |
+| All API keys (`COHERE_API_KEY`, `OPENROUTER_API_KEY`, etc.) | Read from `.env` | Passed through from your `.env` file automatically via `env_file`. |
 
 ### Backup & Restore
 

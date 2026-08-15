@@ -32,7 +32,8 @@ jobs:
       github.event_name == 'pull_request' && (
       github.event.action == 'synchronize'
       || github.event.action == 'opened'
-      || github.event.action == 'reopened')
+      || github.event.action == 'reopened') &&
+      secrets.NEON_API_KEY != ''
     runs-on: ubuntu-latest
     steps:
       - name: Get branch expiration date as an env variable (2 weeks from now)
@@ -86,7 +87,7 @@ jobs:
   delete_neon_branch:
     name: Delete Neon Branch
     needs: setup
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && secrets.NEON_API_KEY != ''
     runs-on: ubuntu-latest
     steps:
       - name: Delete Neon Branch

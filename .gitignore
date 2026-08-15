@@ -34,6 +34,9 @@ app/db/migrations/versions/__pycache__/
 # Local app/runtime outputs
 clinical_demo.db
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 data/pdfs/*.pdf

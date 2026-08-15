@@ -10,14 +10,12 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     env_file:
       - .env
     environment:
-      # Default to persistent SQLite on the mounted data volume if DATABASE_URL is not set in .env
-      - DATABASE_URL=${DATABASE_URL:-sqlite:////app/data/clinical_app.db}
+      # By default, Docker runs with persistent local SQLite at /app/data/clinical_app.db
+      # To use Postgres in Docker, set DOCKER_DATABASE_URL in your .env or run with --profile postgres
+      - DATABASE_URL=${DOCKER_DATABASE_URL:-sqlite:////app/data/clinical_app.db}
       - APP_ENV=production
       - LOG_LEVEL=INFO
       - VECTOR_STORE=${VECTOR_STORE:-auto}

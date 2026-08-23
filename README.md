@@ -42,49 +42,48 @@
 Clinical Workflows executes query handling, deterministic guardrails, and citation verification through a stateful **LangGraph Directed Acyclic Graph (DAG)**:
 
 ```mermaid
-flowchart LR
-    subgraph IN["1. Query Ingestion"]
-        Q([User Query]) --> SG{🛡️ Safety Guard}
+flowchart TD
+    Q([User Clinical Query]) --> SG{🛡️ Safety & Triage Guard}
+    
+    SG -->|❌ Unsafe Intent| REF[Deterministic Refusal]
+    SG -->|✅ Safe Query| R{Intent Router}
+    
+    subgraph KNOWLEDGE["Knowledge & Retrieval Layer"]
+        OKF[📖 OKF Fact Spine]
+        HYB[🔍 Hybrid Dense + BM25]
+        DOC[📂 Patient Note RAG]
     end
 
-    subgraph REF["Refusal"]
-        SG -->|❌ Unsafe| R[Deterministic Refusal]
+    R -->|Canonical Fact| OKF
+    R -->|Guideline Search| HYB
+    R -->|User Upload| DOC
+
+    OKF & HYB & DOC --> MERGE[Context Aggregator & Reranker]
+    
+    subgraph SYNTH["Reasoning & Validation Engine"]
+        CALC[🧮 Math Engine]
+        LLM[🤖 Grounded LLM]
+        CITE[📌 Citation Guard]
     end
 
-    subgraph RET["2. Knowledge Spine & Retrieval"]
-        SG -->|✅ Safe| ROUTE{Intent Router}
-        ROUTE -->|Canonical Fact| OKF[📖 OKF Concept Spine]
-        ROUTE -->|Guideline Search| HYB[🔍 Hybrid Vector + BM25]
-        ROUTE -->|Patient Upload| DOC[📂 Personal Note RAG]
-    end
+    MERGE --> CALC --> LLM --> CITE
+    MERGE --> LLM
 
-    subgraph SYNTH["3. Computation & Grounded Synthesis"]
-        OKF & HYB & DOC --> M[Context Reranker]
-        M --> C{Calculator?}
-        C -->|Yes| CALC[🧮 Math Engine]
-        C -->|No| LLM[🤖 Grounded LLM]
-        CALC --> LLM
-        LLM --> V[📌 Citation Guard]
-    end
+    CITE --> OUT([Audit-Ready Clinical Response])
 
-    V --> OUT([Audit-Ready Output])
-
-    style IN fill:#0F172A,stroke:#38BDF8,color:#F8FAFC
-    style REF fill:#450A0A,stroke:#EF4444,color:#FEF2F2
-    style RET fill:#022C22,stroke:#2DD4BF,color:#F0FDF4
-    style SYNTH fill:#1E1B4B,stroke:#818CF8,color:#F8FAFC
     style Q fill:#1E293B,stroke:#38BDF8,color:#FFFFFF
     style SG fill:#7F1D1D,stroke:#EF4444,color:#FFFFFF
-    style R fill:#991B1B,stroke:#F87171,color:#FFFFFF
-    style ROUTE fill:#1E1B4B,stroke:#818CF8,color:#FFFFFF
+    style REF fill:#991B1B,stroke:#F87171,color:#FFFFFF
+    style R fill:#1E1B4B,stroke:#818CF8,color:#FFFFFF
+    style KNOWLEDGE fill:#022C22,stroke:#2DD4BF,color:#F0FDF4
     style OKF fill:#064E3B,stroke:#34D399,color:#FFFFFF
     style HYB fill:#0F766E,stroke:#2DD4BF,color:#FFFFFF
     style DOC fill:#1E293B,stroke:#94A3B8,color:#FFFFFF
-    style M fill:#312E81,stroke:#A78BFA,color:#FFFFFF
-    style C fill:#713F12,stroke:#FACC15,color:#FFFFFF
+    style MERGE fill:#312E81,stroke:#A78BFA,color:#FFFFFF
+    style SYNTH fill:#1E1B4B,stroke:#818CF8,color:#F8FAFC
     style CALC fill:#854D0E,stroke:#FDE047,color:#FFFFFF
     style LLM fill:#134E4A,stroke:#2DD4BF,color:#FFFFFF
-    style V fill:#1E3A8A,stroke:#60A5FA,color:#FFFFFF
+    style CITE fill:#1E3A8A,stroke:#60A5FA,color:#FFFFFF
     style OUT fill:#065F46,stroke:#10B981,color:#FFFFFF
 ```
 

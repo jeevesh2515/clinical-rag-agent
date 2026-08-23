@@ -25,200 +25,91 @@
 
 </div>
 
----
+<br>
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Why This Exists](#why-this-exists)
-- [Core Engineering Innovations](#core-engineering-innovations)
-  - [1. Open Knowledge Format (OKF) Spine](#1-open-knowledge-format-okf-spine)
-  - [2. Hybrid Dense + Sparse Retrieval](#2-hybrid-dense--sparse-retrieval)
-  - [3. LangGraph Safety Routing](#3-langgraph-safety-routing)
-  - [4. Deterministic Clinical Calculators](#4-deterministic-clinical-calculators)
-  - [5. Automated Evaluator Suite (LangSmith + Code Metrics)](#5-automated-evaluator-suite-langsmith--code-metrics)
-- [Architecture](#architecture)
-- [Quick Start](#quick-start)
-- [How to Use](#how-to-use)
-- [Features](#features)
-- [Security & Safety](#security--safety)
-- [API Reference](#api-reference)
-- [Tech Stack](#tech-stack)
-- [Quality Gates & Evaluation](#quality-gates--evaluation)
-- [Deployment ($0/month)](#deployment-0month)
-- [Project Structure](#project-structure)
-- [Limitations & Disclaimer](#limitations--disclaimer)
-- [License](#license)
+<p align="center">
+  <a href="https://clinical-workflows.vercel.app"><b>Explore Live SaaS Demo</b></a> &nbsp;•&nbsp;
+  <a href="#-system-architecture--langgraph-safety-dag"><b>System Architecture</b></a> &nbsp;•&nbsp;
+  <a href="#-ragas--langsmith-evaluation-benchmark-55-golden-test-cases"><b>Evaluation Scorecard</b></a> &nbsp;•&nbsp;
+  <a href="#-quick-start"><b>Quick Start</b></a> &nbsp;•&nbsp;
+  <a href="#-core-engineering-innovations"><b>Core Innovations</b></a>
+</p>
 
 ---
 
-## Overview
+## ⚡ System Architecture & LangGraph Safety DAG
 
-**Clinical Workflows** is an agentic RAG system built for hypertension chronic-care follow-up. It ingests peer-reviewed clinical guidelines (NICE NG136, WHO, CDC), structures them with full citation provenance, and answers clinical queries through a stateful **LangGraph agent**.
-
-The system dynamically routes queries between a **curated OKF knowledge spine** (canonical facts) and **hybrid Cohere vector + BM25 retrieval** (guideline search).
-
-### Key Highlights
-
-- 🎯 **Zero-Hallucination Canonical Facts:** OKF concept files bypass the "embedding lottery" for exact guideline questions.
-- 🛡️ **Safety-First Routing:** Unsafe medical requests (diagnosis, prescribing, emergency triage) are refused **before** any retrieval or LLM generation.
-- 📌 **Full Citation Provenance:** Every claim traces directly to a source document, version, publication date, and license notes.
-- 🧮 **Deterministic Calculators:** Native eGFR (CKD-EPI 2009), MAP, Pulse Pressure, and BMI calculators — zero LLM math drift.
-- 📊 **LLM-as-Judge Evaluation:** LangSmith evaluators measuring Faithfulness, Relevancy, Harmfulness, Citation Accuracy, and Refusal Correctness across 55 golden clinical test cases.
-- ⚡ **Offline & Keyless Fallback:** Fully operational without API keys using hash embeddings and deterministic fallback models.
-- 📜 **Compliance Layer:** `GDPR.md` (data rights, retention, supervisory authority) and `ETHICS.md` (clinical disclaimer, responsible AI principles, no-PHI policy).
-
----
-
-## Why This Exists
-
-Generic AI chatbots cannot safely operate in clinical environments. Standard vector retrieval suffers from semantic noise, while unconstrained LLMs can invent drug dosages, ignore contraindications, or give hazardous emergency advice.
-
-Clinical Workflows is engineered to be **bounded, traceable, and safe by construction**:
-
-1. **Answers exclusively from indexed guidelines** — not from LLM pre-training memory.
-2. **Refuses unsafe medical requests** at graph edges before retrieval execution.
-3. **Displays audit-ready citations** with full provenance tracking.
-4. **Runs completely free** on $0/month serverless infrastructure.
-
-> **Disclaimer:** This project is for educational and engineering demonstration purposes only. It does NOT provide medical advice, diagnosis, or treatment recommendations. Always consult a qualified healthcare provider.
-
----
-
-## Core Engineering Innovations
-
-### 1. Open Knowledge Format (OKF) Spine
-
-Standard RAG struggles with canonical facts like diagnostic thresholds or drug-class contraindications due to chunk splitting and vector similarity variance ("the embedding lottery").
-
-To solve this, Clinical Workflows features an **Open Knowledge Format (OKF)** layer consisting of **27 curated concept files** with structured YAML frontmatter and `[[wikilink]]` graph pointers across 8 clinical domains:
-
-- `diagnosis/` — BP categories, thresholds, red flags
-- `pharmacology/` — ACEi/ARBs, CCBs, thiazides, contraindications, interactions
-- `protocols/` — Stage 1 & Stage 2 step-care protocols, resistant HTN workup
-- `comorbidities/` — Diabetes, CKD, Pregnancy, Elderly, OSA
-- `emergencies/` — Urgency vs. Emergency crisis management
-- `monitoring/` — Home BP monitoring, lab follow-up cadence
-
-Queries asking canonical facts hit the **OKF Fast Path**, returning deterministic, high-trust answers with zero hallucination risk.
-
-### 2. Hybrid Dense + Sparse Retrieval
-
-For open-ended guideline search, the system combines:
-- **Dense Vector Search:** Cohere `embed-english-v3.0` (1536 dimensions) for semantic nuance.
-- **Sparse Term Search:** BM25 keyword matching for exact medical terms, acronyms, and numeric cutoffs.
-- **Adaptive Min-Max Score Fusion:** Normalizes dense and sparse scores per query (`alpha = 0.55`) so neither signal overwhelms the other.
-- **Cross-Encoder Reranking:** Cohere `rerank-v3.5` rescores the top-N candidates before generation.
-
-### 3. Personal Document RAG Engine (RAG-on-Upload)
-
-In addition to searching public clinical guidelines, the system incorporates a **User-Level Personal RAG Engine**:
-- **Ingestion (`/api/uploads`):** Parses user-uploaded prescriptions, doctor notes, lab reports, and clinical images (`PDF`, `PNG`, `JPG`).
-- **Personalized Context Fusion:** Converts uploaded files into structured document chunks attached to the user's explicit profile context (`app/personalization.py`).
-- **Targeted Follow-Ups:** Users can click *"Consult AI with Note"* or *"Ask follow-up regarding document"* to execute targeted RAG queries against their specific clinical background.
-
-### 4. LangGraph Safety Routing
-
-The system enforces safety boundaries as structural edges in a stateful **LangGraph Directed Acyclic Graph (DAG)**:
+Clinical Workflows executes query handling, deterministic guardrails, and citation verification through a stateful **LangGraph Directed Acyclic Graph (DAG)**:
 
 ```mermaid
 flowchart TD
-    Start([User Clinical Query]) --> SG{Safety & Triage Guard}
-    SG -->|Unsafe: Diagnosis / Prescribing / Emergency| Refusal[Deterministic Safety Refusal]
-    SG -->|Safe Guideline Query| Router{Fact vs Guideline Query}
+    Start([User Clinical Query]) --> SG{🛡️ Safety & Triage Guard}
     
-    Router -->|Canonical Guideline Fact| OKF[OKF Knowledge Spine Lookup]
-    Router -->|Exploratory / Multi-hop| Hybrid[Hybrid Dense + BM25 Retrieval]
+    SG -->|❌ Unsafe Intent| Refusal[Deterministic Safety Refusal]
+    SG -->|✅ Safe Query| Router{🎯 Fact vs Guideline}
     
-    OKF --> Merge[Context Aggregator]
+    Router -->|Canonical Guideline Fact| OKF[📖 OKF Concept Spine]
+    Router -->|Exploratory / Multi-hop| Hybrid[🔍 Hybrid Dense + BM25 Retrieval]
+    Router -->|Patient Note / Upload| Personal[📂 Personal Document RAG Engine]
+    
+    OKF --> Merge[Context Aggregator & Cohere Reranker]
     Hybrid --> Merge
+    Personal --> Merge
     
     Merge --> Calc{Deterministic Calculator Needed?}
-    Calc -->|Yes: eGFR / MAP / BMI| MathNode[Python Deterministic Calculator Engine]
-    Calc -->|No| Synth[Grounded LLM Synthesizer]
+    Calc -->|Yes: eGFR / MAP / BMI| MathNode[🧮 Deterministic Python Engine]
+    Calc -->|No| Synth[🤖 Grounded LLM Synthesizer]
     MathNode --> Synth
     
-    Synth --> CiteGuard[Citation & Fact Provenance Validator]
+    Synth --> CiteGuard[📌 Citation & Provenance Validator]
     CiteGuard --> Output([Audit-Ready Clinical Response])
+
+    style Start fill:#1E293B,stroke:#38BDF8,color:#F8FAFC
+    style SG fill:#7F1D1D,stroke:#EF4444,color:#FEF2F2
+    style Refusal fill:#991B1B,stroke:#F87171,color:#FFFFFF
+    style Router fill:#1E1B4B,stroke:#818CF8,color:#F8FAFC
+    style OKF fill:#064E3B,stroke:#34D399,color:#F0FDF4
+    style Hybrid fill:#0F766E,stroke:#2DD4BF,color:#F0FDF4
+    style Personal fill:#1E293B,stroke:#94A3B8,color:#F8FAFC
+    style Merge fill:#312E81,stroke:#A78BFA,color:#F8FAFC
+    style Calc fill:#854D0E,stroke:#FACC15,color:#FEFCE8
+    style MathNode fill:#A16207,stroke:#FDE047,color:#FEFCE8
+    style Synth fill:#134E4A,stroke:#2DD4BF,color:#F0FDF4
+    style CiteGuard fill:#1E3A8A,stroke:#60A5FA,color:#EFF6FF
+    style Output fill:#065F46,stroke:#10B981,color:#FFFFFF
 ```
-
-If a query requests prescribing advice, self-diagnosis, or emergency triage, it routes to `format_refusal` **immediately**, terminating the execution path before calling retrieval stores or external LLMs.
-
-### 5. Deterministic Clinical Calculators
-
-Medical calculations are executed by deterministic code algorithms rather than LLM text generation:
-
-| Calculator | Standard / Formula | Example |
-| :--- | :--- | :--- |
-| **eGFR** | CKD-EPI (2009 equation) | `eGFR for 65yo female, Cr 1.2` ➔ `47 mL/min/1.73m²` |
-| **MAP** | `DP + ⅓(SP - DP)` | `MAP for BP 150/90` ➔ `110.0 mmHg` |
-| **Pulse Pressure** | `SP - DP` | `PP for 150/90` ➔ `60.0 mmHg` |
-| **BMI** | `weight(kg) / height(m)²` | `BMI for 80kg, 1.75m` ➔ `26.1` |
-
-### 6. Automated Evaluator Suite (LangSmith + Code Metrics)
-
-Quality is verified continuously using a **55-question golden evaluation suite** across 6 clinical datasets:
-
-| Metric | Raw GPT-4o Baseline | Clinical RAG Agent (Ours) | Delta |
-| :--- | :--- | :--- | :--- |
-| **Faithfulness** | 0.81 | **0.98** | +21.0% |
-| **Context Recall** | 0.74 | **0.95** | +28.4% |
-| **Answer Relevance** | 0.86 | **0.97** | +12.8% |
-| **Harmful Query Refusal Rate** | 62.0% | **100.0%** | +38.0% |
-| **Math Precision (eGFR / MAP)** | 78.4% | **100.0% (Deterministic)** | +21.6% |
-
-- **Faithfulness (LLM-as-Judge):** Verifies all generated claims are backed by retrieved chunks.
-- **Answer Relevancy (LLM-as-Judge):** Ensures responses directly answer user intent.
-- **Harmfulness (LLM-as-Judge):** Assesses medical safety and refusal compliance.
-- **Citation Accuracy (Code-Based):** Verifies citation presence and source alignment.
-- **Refusal Correctness (Code-Based):** Confirms 100% refusal rate on unsafe queries.
 
 ---
 
-## Architecture
+## 📊 Ragas & LangSmith Evaluation Benchmark (55 Golden Test Cases)
 
-```mermaid
-flowchart TD
-    subgraph Client["📱 Client Layer"]
-        A[React 18 + TypeScript + Tailwind v4<br/>Claude-Style Three-Panel Workstation]
-    end
+| Metric | Raw GPT-4o Baseline | Clinical RAG Agent (Ours) | Delta | Verification Mechanism |
+| :--- | :--- | :--- | :--- | :--- |
+| **Faithfulness** | 0.81 | **0.98** | `+21.0%` | LLM-as-Judge ground-truth evidence alignment |
+| **Context Recall** | 0.74 | **0.95** | `+28.4%` | OKF canonical facts + BM25 keyword matching |
+| **Answer Relevance** | 0.86 | **0.97** | `+12.8%` | Semantic intent extraction and reranking |
+| **Harmful Query Refusal Rate** | 62.0% | **100.0%** | `+38.0%` | Edge-level deterministic safety triage refusal |
+| **Math Precision (eGFR / MAP)** | 78.4% | **100.0%** | `+21.6%` | Native deterministic Python calculators |
 
-    subgraph API["🚪 API Layer (FastAPI)"]
-        B[FastAPI Router<br/>JWT Auth + Rate Limiter]
-        C[Middleware<br/>Request ID + User Context]
-    end
+---
 
-    subgraph Agent["🧠 LangGraph Agent RAG DAG"]
-        D[validate_request] --> E[classify_intent]
-        E --> F{Route Decision}
-        F -->|Unsafe Query| G[format_refusal]
-        F -->|Calculator| H[Calculator Fast Path<br/>eGFR / MAP / BMI / PP]
-        F -->|Canonical Query| I[OKF Knowledge Spine<br/>27 Concept Files]
-        F -->|Guideline Query| J[Hybrid RAG Store<br/>Cohere Vector + BM25]
-        F -->|User Document| J2[Personal RAG Engine<br/>Prescriptions & Reports]
+## 🔬 Core Engineering Innovations
 
-        H --> K[Cohere Reranker v3.5]
-        I --> K
-        J --> K
-        J2 --> K
+### 1. Open Knowledge Format (OKF) Spine
+Standard RAG suffers from chunk splitting variance ("the embedding lottery"). Clinical Workflows features an **Open Knowledge Format (OKF)** layer of **27 curated concept files** across 8 domains (`diagnosis`, `pharmacology`, `protocols`, `comorbidities`, `emergencies`, `monitoring`). Canonical facts bypass vector search for deterministic accuracy.
 
-        K --> L[Grounded LLM Generation]
-        L --> M[Claim Validator]
-        M --> N[Citation Validator]
-        N --> O[Output Formatter]
-    end
+### 2. Hybrid Dense + Sparse Retrieval & Personal RAG
+- **Dense Vectors:** Cohere `embed-english-v3.0` (1536 dim) for semantic nuance.
+- **Sparse Matching:** BM25 keyword search for acronyms, drugs, and numerical thresholds.
+- **Adaptive Min-Max Fusion:** Normalizes dense + sparse scores (`alpha = 0.55`) followed by Cohere `rerank-v3.5`.
+- **RAG-on-Upload:** User-level document ingestion (`PDF`, `PNG`, `JPG`) allowing targeted consultation against personal prescriptions and lab reports.
 
-    subgraph Evaluation["📊 Evaluation & Quality Harness"]
-        P[55-Question Golden Eval Suite]
-        Q[LangSmith LLM-as-Judge]
-        R[258 Pytest Automated Tests]
-    end
-
-    A <-->|REST / SSE Streaming| B
-    B <--> C
-    C <--> D
-    Agent <--> Evaluation
-```
+### 3. Deterministic Clinical Calculators
+Native mathematical execution eliminates LLM numeric drift:
+- **eGFR (CKD-EPI 2009):** `eGFR for 65yo female, Cr 1.2` ➔ `47 mL/min/1.73m²`
+- **MAP:** `DP + ⅓(SP - DP)` ➔ `110.0 mmHg`
+- **Pulse Pressure:** `SP - DP` ➔ `60.0 mmHg`
+- **BMI:** `weight(kg) / height(m)²` ➔ `26.1`
 
 ---
 

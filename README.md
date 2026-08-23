@@ -42,41 +42,50 @@
 Clinical Workflows executes query handling, deterministic guardrails, and citation verification through a stateful **LangGraph Directed Acyclic Graph (DAG)**:
 
 ```mermaid
-flowchart TD
-    Start([User Clinical Query]) --> SG{🛡️ Safety & Triage Guard}
-    
-    SG -->|❌ Unsafe Intent| Refusal[Deterministic Safety Refusal]
-    SG -->|✅ Safe Query| Router{🎯 Fact vs Guideline}
-    
-    Router -->|Canonical Guideline Fact| OKF[📖 OKF Concept Spine]
-    Router -->|Exploratory / Multi-hop| Hybrid[🔍 Hybrid Dense + BM25 Retrieval]
-    Router -->|Patient Note / Upload| Personal[📂 Personal Document RAG Engine]
-    
-    OKF --> Merge[Context Aggregator & Cohere Reranker]
-    Hybrid --> Merge
-    Personal --> Merge
-    
-    Merge --> Calc{Deterministic Calculator Needed?}
-    Calc -->|Yes: eGFR / MAP / BMI| MathNode[🧮 Deterministic Python Engine]
-    Calc -->|No| Synth[🤖 Grounded LLM Synthesizer]
-    MathNode --> Synth
-    
-    Synth --> CiteGuard[📌 Citation & Provenance Validator]
-    CiteGuard --> Output([Audit-Ready Clinical Response])
+flowchart LR
+    subgraph IN["1. Query Ingestion"]
+        Q([User Query]) --> SG{🛡️ Safety Guard}
+    end
 
-    style Start fill:#1E293B,stroke:#38BDF8,color:#F8FAFC
-    style SG fill:#7F1D1D,stroke:#EF4444,color:#FEF2F2
-    style Refusal fill:#991B1B,stroke:#F87171,color:#FFFFFF
-    style Router fill:#1E1B4B,stroke:#818CF8,color:#F8FAFC
-    style OKF fill:#064E3B,stroke:#34D399,color:#F0FDF4
-    style Hybrid fill:#0F766E,stroke:#2DD4BF,color:#F0FDF4
-    style Personal fill:#1E293B,stroke:#94A3B8,color:#F8FAFC
-    style Merge fill:#312E81,stroke:#A78BFA,color:#F8FAFC
-    style Calc fill:#854D0E,stroke:#FACC15,color:#FEFCE8
-    style MathNode fill:#A16207,stroke:#FDE047,color:#FEFCE8
-    style Synth fill:#134E4A,stroke:#2DD4BF,color:#F0FDF4
-    style CiteGuard fill:#1E3A8A,stroke:#60A5FA,color:#EFF6FF
-    style Output fill:#065F46,stroke:#10B981,color:#FFFFFF
+    subgraph REF["Refusal"]
+        SG -->|❌ Unsafe| R[Deterministic Refusal]
+    end
+
+    subgraph RET["2. Knowledge Spine & Retrieval"]
+        SG -->|✅ Safe| ROUTE{Intent Router}
+        ROUTE -->|Canonical Fact| OKF[📖 OKF Concept Spine]
+        ROUTE -->|Guideline Search| HYB[🔍 Hybrid Vector + BM25]
+        ROUTE -->|Patient Upload| DOC[📂 Personal Note RAG]
+    end
+
+    subgraph SYNTH["3. Computation & Grounded Synthesis"]
+        OKF & HYB & DOC --> M[Context Reranker]
+        M --> C{Calculator?}
+        C -->|Yes| CALC[🧮 Math Engine]
+        C -->|No| LLM[🤖 Grounded LLM]
+        CALC --> LLM
+        LLM --> V[📌 Citation Guard]
+    end
+
+    V --> OUT([Audit-Ready Output])
+
+    style IN fill:#0F172A,stroke:#38BDF8,color:#F8FAFC
+    style REF fill:#450A0A,stroke:#EF4444,color:#FEF2F2
+    style RET fill:#022C22,stroke:#2DD4BF,color:#F0FDF4
+    style SYNTH fill:#1E1B4B,stroke:#818CF8,color:#F8FAFC
+    style Q fill:#1E293B,stroke:#38BDF8,color:#FFFFFF
+    style SG fill:#7F1D1D,stroke:#EF4444,color:#FFFFFF
+    style R fill:#991B1B,stroke:#F87171,color:#FFFFFF
+    style ROUTE fill:#1E1B4B,stroke:#818CF8,color:#FFFFFF
+    style OKF fill:#064E3B,stroke:#34D399,color:#FFFFFF
+    style HYB fill:#0F766E,stroke:#2DD4BF,color:#FFFFFF
+    style DOC fill:#1E293B,stroke:#94A3B8,color:#FFFFFF
+    style M fill:#312E81,stroke:#A78BFA,color:#FFFFFF
+    style C fill:#713F12,stroke:#FACC15,color:#FFFFFF
+    style CALC fill:#854D0E,stroke:#FDE047,color:#FFFFFF
+    style LLM fill:#134E4A,stroke:#2DD4BF,color:#FFFFFF
+    style V fill:#1E3A8A,stroke:#60A5FA,color:#FFFFFF
+    style OUT fill:#065F46,stroke:#10B981,color:#FFFFFF
 ```
 
 ---

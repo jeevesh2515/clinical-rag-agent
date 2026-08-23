@@ -42,45 +42,30 @@
 Clinical Workflows executes query handling, deterministic guardrails, and citation verification through a stateful **LangGraph Directed Acyclic Graph (DAG)**:
 
 ```mermaid
-flowchart TD
-    Q([User Clinical Query]) --> SG{🛡️ Safety & Triage Guard}
+graph TD
+    Q([User Clinical Query]) --> SG[🛡️ Safety & Triage Guard]
+    SG -->|❌ Unsafe Intent| REF[Deterministic Safety Refusal]
+    SG -->|✅ Safe Query| R[🎯 Intent Router]
     
-    SG -->|❌ Unsafe Intent| REF[Deterministic Refusal]
-    SG -->|✅ Safe Query| R{Intent Router}
+    R -->|Canonical Fact| OKF[📖 OKF Fact Spine]
+    R -->|Guideline Search| HYB[🔍 Hybrid Dense + BM25]
+    R -->|Patient Upload| DOC[📂 Personal RAG Engine]
     
-    subgraph KNOWLEDGE["Knowledge & Retrieval Layer"]
-        OKF[📖 OKF Fact Spine]
-        HYB[🔍 Hybrid Dense + BM25]
-        DOC[📂 Patient Note RAG]
-    end
-
-    R -->|Canonical Fact| OKF
-    R -->|Guideline Search| HYB
-    R -->|User Upload| DOC
-
-    OKF & HYB & DOC --> MERGE[Context Aggregator & Reranker]
-    
-    subgraph SYNTH["Reasoning & Validation Engine"]
-        CALC[🧮 Math Engine]
-        LLM[🤖 Grounded LLM]
-        CITE[📌 Citation Guard]
-    end
-
-    MERGE --> CALC --> LLM --> CITE
-    MERGE --> LLM
-
+    OKF & HYB & DOC --> M[Context Aggregator & Reranker]
+    M --> CALC[🧮 Deterministic Math]
+    M --> LLM[🤖 Grounded LLM Synthesizer]
+    CALC --> LLM
+    LLM --> CITE[📌 Citation Validator]
     CITE --> OUT([Audit-Ready Clinical Response])
 
     style Q fill:#1E293B,stroke:#38BDF8,color:#FFFFFF
     style SG fill:#7F1D1D,stroke:#EF4444,color:#FFFFFF
     style REF fill:#991B1B,stroke:#F87171,color:#FFFFFF
     style R fill:#1E1B4B,stroke:#818CF8,color:#FFFFFF
-    style KNOWLEDGE fill:#022C22,stroke:#2DD4BF,color:#F0FDF4
     style OKF fill:#064E3B,stroke:#34D399,color:#FFFFFF
     style HYB fill:#0F766E,stroke:#2DD4BF,color:#FFFFFF
     style DOC fill:#1E293B,stroke:#94A3B8,color:#FFFFFF
-    style MERGE fill:#312E81,stroke:#A78BFA,color:#FFFFFF
-    style SYNTH fill:#1E1B4B,stroke:#818CF8,color:#F8FAFC
+    style M fill:#312E81,stroke:#A78BFA,color:#FFFFFF
     style CALC fill:#854D0E,stroke:#FDE047,color:#FFFFFF
     style LLM fill:#134E4A,stroke:#2DD4BF,color:#FFFFFF
     style CITE fill:#1E3A8A,stroke:#60A5FA,color:#FFFFFF

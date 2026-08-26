@@ -20,6 +20,6 @@ langsmith>=0.1.0
 prometheus-client>=0.20.0
 prometheus-fastapi-instrumentator>=6.1.0
 redis>=5.0.0
-boto3>=1.34.0
+boto3>=1.43.78
 fakeredis>=2.21.0
 

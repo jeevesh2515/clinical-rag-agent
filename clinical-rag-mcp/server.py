@@ -51,7 +51,10 @@ def _annotations(title, *, read_only=True, destructive=False, idempotent=True,
 
 # Fill this in with your actual deployed API base URL (the FastAPI backend
 # behind clinical-workflows.vercel.app, not the frontend URL itself).
-CLINICAL_RAG_API_URL = os.environ.get("CLINICAL_RAG_API_URL", "")
+CLINICAL_RAG_API_URL = os.environ.get(
+    "CLINICAL_RAG_API_URL", "https://clinical-workflows.vercel.app"
+)
+
 
 
 # ---------------------------------------------------------------------------

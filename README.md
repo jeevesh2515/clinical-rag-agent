@@ -204,23 +204,22 @@ flowchart LR
 | `clinical_calculate_pulse_pressure` | `systolic_mmhg: float`, `diastolic_mmhg: float` | Pulse Pressure (`SBP - DBP`). |
 | `clinical_query_evidence` | `question: str`, `mode: "patient" \| "clinician"` | Hybrid RAG retrieval over NICE NG136, JNC8, ACC/AHA, ESC/ESH with citation metadata. |
 
-### Quick Setup
+### Zero-Install Quick Setup (Direct from GitHub)
 
-```bash
-cd clinical-rag-mcp
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+Anyone can run and connect this MCP server without cloning the repo or manually configuring virtual environments.
 
-#### Claude Desktop Integration
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+#### Claude Desktop (Universal GitHub One-Liner)
+Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
     "clinical-rag": {
-      "command": "/absolute/path/to/clinical-rag-mcp/venv/bin/python3",
-      "args": ["/absolute/path/to/clinical-rag-mcp/server.py"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp",
+        "clinical-rag-mcp"
+      ],
       "env": {
         "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
       }
@@ -229,10 +228,14 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-#### Claude Code (Global Across All Workspaces)
+#### Claude Code (Global One-Command Install)
 ```bash
-claude mcp add --scope user clinical-rag -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app -- /absolute/path/to/clinical-rag-mcp/venv/bin/python3 /absolute/path/to/clinical-rag-mcp/server.py
+claude mcp add --scope user clinical-rag \
+  -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app \
+  -- uvx --from "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp" clinical-rag-mcp
 ```
+
+*(Optional: for local development from source, run `cd clinical-rag-mcp && python3 -m venv venv && pip install -r requirements.txt && python3 server.py`)*
 
 ---
 

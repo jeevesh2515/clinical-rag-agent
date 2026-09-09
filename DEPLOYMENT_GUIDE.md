@@ -488,22 +488,22 @@ testing, while the SaaS monitor gives you a noisy-friendly dashboard
 
 The repository includes a production MCP server in [`clinical-rag-mcp/`](clinical-rag-mcp/) that exposes the deterministic clinical calculators and live Clinical Evidence RAG Agent as tools to **Claude Desktop**, **Claude Code**, or any agent supporting the open standard.
 
-### 1. Local Setup
-```bash
-cd clinical-rag-mcp
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### 1. Zero-Install Remote Execution (Direct from GitHub)
 
-### 2. Configure for Claude Desktop
+Anyone can run this MCP server without cloning the repository:
+
+#### Claude Desktop
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
     "clinical-rag": {
-      "command": "/absolute/path/to/clinical-rag-mcp/venv/bin/python3",
-      "args": ["/absolute/path/to/clinical-rag-mcp/server.py"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp",
+        "clinical-rag-mcp"
+      ],
       "env": {
         "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
       }
@@ -512,11 +512,20 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-### 3. Configure Globally for Claude Code
+#### Claude Code (Global Across All Workspaces)
 ```bash
 claude mcp add --scope user clinical-rag \
   -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app \
-  -- /absolute/path/to/clinical-rag-mcp/venv/bin/python3 \
-     /absolute/path/to/clinical-rag-mcp/server.py
+  -- uvx --from "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp" clinical-rag-mcp
 ```
+
+### 2. Local Source Setup (Optional Development Mode)
+```bash
+cd clinical-rag-mcp
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 server.py
+```
+
 

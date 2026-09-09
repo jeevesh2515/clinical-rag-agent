@@ -52,16 +52,20 @@ Use the virtual environment created in `clinical-rag-mcp`:
 npx @modelcontextprotocol/inspector ./venv/bin/python3 server.py
 ```
 
-## Using with Claude Desktop
+## Using with Claude Desktop (Zero-Install from GitHub)
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Anyone can add this to their `claude_desktop_config.json` without cloning the repo:
 
 ```json
 {
   "mcpServers": {
     "clinical-rag": {
-      "command": "/Users/jeeveshsingale/Documents/Clinical Workflows/clinical-rag-mcp/venv/bin/python3",
-      "args": ["/Users/jeeveshsingale/Documents/Clinical Workflows/clinical-rag-mcp/server.py"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp",
+        "clinical-rag-mcp"
+      ],
       "env": {
         "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
       }
@@ -70,14 +74,16 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-Restart Claude Desktop and the four clinical tools will appear in the tool picker.
+Restart Claude Desktop and the four clinical tools will appear in your Connectors and chat tool picker.
 
-## Using with Claude Code
+## Using with Claude Code (One-Command Install)
 
-Run:
+Run anywhere:
 
 ```bash
-claude mcp add clinical-rag -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app -- /Users/jeeveshsingale/Documents/Clinical\ Workflows/clinical-rag-mcp/venv/bin/python3 /Users/jeeveshsingale/Documents/Clinical\ Workflows/clinical-rag-mcp/server.py
+claude mcp add --scope user clinical-rag \
+  -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app \
+  -- uvx --from "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp" clinical-rag-mcp
 ```
 
 ## Notes on the calculator implementations

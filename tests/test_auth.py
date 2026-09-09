@@ -165,7 +165,7 @@ class TestUserRoles:
 
 
 class TestJWTProductionFailFast:
-    def test_default_jwt_secret_raises_in_non_local_environment(self):
+    def test_default_jwt_secret_raises_in_non_local_environment(self, tmp_path):
         """The app must refuse to start in production with the default JWT secret."""
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         env = os.environ.copy()
@@ -174,7 +174,9 @@ class TestJWTProductionFailFast:
         env["PYTHONPATH"] = project_root
         result = subprocess.run(
             [sys.executable, "-c", "import app.auth.security"],
-            cwd=project_root,
+            # Isolated cwd: no local `.env` may satisfy the guard. The test
+            # proves "no key configured anywhere + production => refuse".
+            cwd=str(tmp_path),
             env=env,
             capture_output=True,
             text=True,

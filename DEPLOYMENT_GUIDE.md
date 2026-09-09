@@ -163,7 +163,7 @@ The entire application (FastAPI backend + React frontend + Database + Document S
 
 The Docker setup includes three layers of resilience so the app never fails to start:
 
-1. **Database Fallback (`app/db/engine.py`)**: If the configured `DATABASE_URL` points to an unreachable remote PostgreSQL host (e.g., DNS resolution failure, network outage), the engine automatically falls back to a persistent local SQLite database at `/app/data/clinical_app.db`. A warning is logged but the application starts normally.
+1. **Database persistence (`app/db/engine.py`)**: Local development can fall back to SQLite if a configured remote database is unavailable. Production fails startup when PostgreSQL is unavailable; serverless SQLite would be ephemeral and must never receive a successful authenticated write.
 2. **Decoupled Docker Database (`DOCKER_DATABASE_URL`)**: The `docker-compose.yml` uses the dedicated `DOCKER_DATABASE_URL` env var (defaulting to SQLite) instead of inheriting `DATABASE_URL` from `.env`. This prevents local Docker runs from accidentally trying to connect to a cloud database (e.g., Neon) that cannot be reached from the container's network.
 3. **Automatic Guideline Priming (`app/main.py` lifespan)**: On startup, the FastAPI lifespan auto-ingests all default clinical guidelines into the HybridStore if the chunk count is 0. This ensures `/api/ready` returns `200 OK` immediately, and the Docker healthcheck passes on first boot without requiring a manual `/api/ingest` call.
 
@@ -523,4 +523,22 @@ pip install -r requirements.txt
 python3 server.py
 ```
 
+### 3. Verification and data boundary
+
+Run `python3 test_tools.py` from `clinical-rag-mcp/` to verify calculator
+inputs and the configured evidence endpoint. The server uses stdio MCP and
+does not share a browser login session with the application; `clinical_query_evidence`
+is intentionally limited to public guideline questions. Do not send PHI or
+user profile data through an MCP client.
+
+Before a production deployment, run the schema migration against the target
+PostgreSQL database in a controlled release job:
+
+```bash
+DATABASE_URL="$DATABASE_URL" .venv/bin/alembic upgrade head
+```
+
+Then verify registration, profile update, conversation creation, message send,
+logout, and fresh login against the deployed app. A 200 health endpoint alone
+does not prove durable user-data persistence.
 

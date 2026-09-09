@@ -6,6 +6,7 @@
 # Accidental root-level Node files (backend is Python)
 package.json
 package-lock.json
+!frontend/package-lock.json
 
 # Python/runtime artifacts
 .venv/

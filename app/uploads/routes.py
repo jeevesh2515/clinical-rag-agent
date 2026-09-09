@@ -19,10 +19,11 @@ from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.auth.routes import get_current_active_user
+from app.core.rate_limiter import limiter
 from app.db import Upload as OrmUpload
 from app.db import User as OrmUser
 from app.db import get_db, utcnow
@@ -173,7 +174,9 @@ def _extract_pdf_text(body: bytes) -> str:
 
 
 @router.post("/uploads", status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def create_upload(
+    request: Request,
     file: UploadFile = File(...),
     category: UploadCategory = Form("other"),
     user_note: str | None = Form(None),

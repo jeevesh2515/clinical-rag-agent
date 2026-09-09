@@ -41,6 +41,8 @@ async def lifespan(app: FastAPI):
         _bootstrap_db()
     except Exception as exc:
         _logging.getLogger(__name__).warning("db_bootstrap_failed err=%s", exc)
+        if get_settings().app_env != "local":
+            raise
 
     # 2. Warm the personal-corpus retrieval index from persisted uploads so
     #    personalised RAG works after a restart.
@@ -107,7 +109,6 @@ _cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_origin_regex=r"https://clinical-workflows.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
@@ -128,6 +129,7 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
             else self.default_max_size
         )
         if content_length and int(content_length) > max_size:
+            request_id = getattr(request.state, "request_id", str(uuid4()))
             return JSONResponse(
                 status_code=413,
                 content={
@@ -135,9 +137,10 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
                         "code": "payload_too_large",
                         "message": f"Request body exceeds the maximum allowed size of {max_size} bytes.",
                         "details": [],
-                        "request_id": getattr(request.state, "request_id", str(uuid4())),
+                        "request_id": request_id,
                     }
                 },
+                headers={"X-Request-ID": request_id},
             )
         return await call_next(request)
 
@@ -203,7 +206,8 @@ async def attach_optional_user(request: Request, call_next):
                 uid = payload.get("uid")
                 if uid:
                     with _SessionLocal() as _db:
-                        if _db.query(_User).filter(_User.id == uid).one_or_none():
+                        _user = _db.query(_User).filter(_User.id == uid).one_or_none()
+                        if _user and _user.is_active:
                             request.state.user_id = uid
         except Exception:
             request.state.user_id = None

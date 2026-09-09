@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     app_env: str = "local"
     log_level: str = "INFO"
 
+    jwt_secret_key: str | None = Field(default=None, repr=False)
+
     cohere_api_key: str | None = Field(default=None, repr=False)
     tavily_api_key: str | None = Field(default=None, repr=False)
     openrouter_api_key: str | None = Field(default=None, repr=False)
@@ -41,7 +43,7 @@ class Settings(BaseSettings):
     default_rerank_top_n: int = Field(default=6, ge=1, le=20)
 
     cors_origins: str = Field(
-        default="http://localhost:5173,https://clinical-workflows.vercel.app,https://clinical-workflows-*.vercel.app",
+        default="http://localhost:5173,https://clinical-workflows.vercel.app",
         description="Comma-separated list of allowed CORS origins. Default includes local frontend dev server.",
     )
 

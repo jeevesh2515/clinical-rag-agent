@@ -14,7 +14,7 @@ Zero-install run directly from GitHub via uv:
 """
 
 import os
-from typing import Optional
+import json
 
 import httpx
 
@@ -29,6 +29,10 @@ from mcp.types import ToolAnnotations
 # ---------------------------------------------------------------------------
 
 mcp = MCPServer("clinical_rag_mcp")
+
+_MIN_KG, _MAX_KG = 1.0, 500.0
+_MIN_M, _MAX_M = 0.3, 2.5
+_MIN_BP, _MAX_BP = 30.0, 350.0
 
 
 def _annotations(title, *, read_only=True, destructive=False, idempotent=True,
@@ -76,8 +80,8 @@ async def clinical_calculate_bmi(weight_kg: float, height_m: float) -> str:
     Returns:
         str: JSON with 'bmi' (float, 1dp) and 'category' (str)
     """
-    if height_m <= 0 or weight_kg <= 0:
-        return '{"error": "weight_kg and height_m must be positive numbers"}'
+    if not (_MIN_KG <= weight_kg <= _MAX_KG and _MIN_M <= height_m <= _MAX_M):
+        return json.dumps({"error": "weight_kg must be 1-500 and height_m must be 0.3-2.5"})
     bmi = round(weight_kg / (height_m ** 2), 1)
     if bmi < 18.5:
         category = "Underweight"
@@ -88,6 +92,14 @@ async def clinical_calculate_bmi(weight_kg: float, height_m: float) -> str:
     else:
         category = "Obese"
     return f'{{"bmi": {bmi}, "category": "{category}"}}'
+
+
+def _valid_blood_pressure(systolic_mmhg: float, diastolic_mmhg: float) -> bool:
+    return (
+        _MIN_BP <= systolic_mmhg <= _MAX_BP
+        and _MIN_BP <= diastolic_mmhg <= _MAX_BP
+        and systolic_mmhg >= diastolic_mmhg
+    )
 
 
 @mcp.tool(
@@ -106,6 +118,8 @@ async def clinical_calculate_map(systolic_mmhg: float, diastolic_mmhg: float) ->
     Returns:
         str: JSON with 'map_mmhg' (float, 1dp)
     """
+    if not _valid_blood_pressure(systolic_mmhg, diastolic_mmhg):
+        return json.dumps({"error": "blood pressure values must be 30-350 mmHg and systolic >= diastolic"})
     map_value = round(
         diastolic_mmhg + (systolic_mmhg - diastolic_mmhg) / 3, 1
     )
@@ -126,6 +140,8 @@ async def clinical_calculate_pulse_pressure(systolic_mmhg: float, diastolic_mmhg
     Returns:
         str: JSON with 'pulse_pressure_mmhg' (float, 1dp)
     """
+    if not _valid_blood_pressure(systolic_mmhg, diastolic_mmhg):
+        return json.dumps({"error": "blood pressure values must be 30-350 mmHg and systolic >= diastolic"})
     pp = round(systolic_mmhg - diastolic_mmhg, 1)
     return f'{{"pulse_pressure_mmhg": {pp}}}'
 
@@ -166,7 +182,12 @@ async def clinical_query_evidence(
         )
 
     base_url = CLINICAL_RAG_API_URL.rstrip("/")
-    endpoint = f"{base_url}/query" if base_url.endswith("/api") else f"{base_url}/api/query"
+    if base_url.endswith("/query"):
+        endpoint = base_url
+    elif base_url.endswith("/api"):
+        endpoint = f"{base_url}/query"
+    else:
+        endpoint = f"{base_url}/api/query"
 
     try:
         async with httpx.AsyncClient(timeout=45.0) as client:
@@ -210,9 +231,11 @@ async def clinical_query_evidence(
             except Exception:
                 pass
             return f"Error: backend rejected the request (422 validation_error). {detail}".strip()
-        return f"Error: backend returned status {e.response.status_code}. Check that {endpoint} is reachable."
+        return f"Error: backend returned status {e.response.status_code} at {endpoint}. Check that the URL is reachable."
     except httpx.TimeoutException:
         return "Error: request to the Clinical RAG backend timed out."
+    except httpx.RequestError:
+        return f"Error: could not reach the Clinical RAG backend at {endpoint}. Check the URL and network."
     except Exception as e:
         return f"Error: unexpected failure calling the backend: {type(e).__name__}: {e}"
 

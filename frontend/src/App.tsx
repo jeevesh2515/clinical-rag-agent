@@ -17,7 +17,6 @@ const LoginPage = lazy(() => import('./components/LoginPage'))
 const SignupPage = lazy(() => import('./components/SignupPage'))
 const LandingPage = lazy(() => import('./components/LandingPage'))
 const BMICalculator = lazy(() => import('./components/BMICalculator'))
-import { generateFallbackResponse } from './utils/fallbackChat'
 
 // Permissive icon type — lucide props allow string | number for size, but we
 // only ever pass numbers.
@@ -275,50 +274,29 @@ class ApiClient {
   }
 
   async listConversations(): Promise<ConversationSummary[]> {
-    try {
-      const res = await fetch(`${API_BASE}/api/chat/conversations`, { headers: this.headers() })
-      if (res.ok) return await res.json()
-    } catch {}
-    return []
+    const res = await fetch(`${API_BASE}/api/chat/conversations`, { headers: this.headers() })
+    if (!res.ok) throw new Error(`Failed to load conversations (HTTP ${res.status})`)
+    return res.json()
   }
 
   async createConversation(title?: string): Promise<Conversation> {
-    try {
-      const res = await fetch(`${API_BASE}/api/chat/conversations`, {
-        method: 'POST', headers: this.headers(),
-        body: JSON.stringify({ title: title || 'New Chat' }),
-      })
-      if (res.ok) return await res.json()
-    } catch {}
-    const now = new Date().toISOString()
-    return {
-      id: `local-conv-${Date.now()}`,
-      title: title || 'New Chat',
-      created_at: now,
-      updated_at: now,
-      messages: [],
-    }
+    const res = await fetch(`${API_BASE}/api/chat/conversations`, {
+      method: 'POST', headers: this.headers(),
+      body: JSON.stringify({ title: title || 'New Chat' }),
+    })
+    if (!res.ok) throw new Error(`Failed to create conversation (HTTP ${res.status})`)
+    return res.json()
   }
 
   async getConversation(id: string): Promise<Conversation> {
-    try {
-      const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, { headers: this.headers() })
-      if (res.ok) return await res.json()
-    } catch {}
-    const now = new Date().toISOString()
-    return {
-      id,
-      title: 'Clinical Conversation',
-      created_at: now,
-      updated_at: now,
-      messages: [],
-    }
+    const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, { headers: this.headers() })
+    if (!res.ok) throw new Error(`Failed to load conversation (HTTP ${res.status})`)
+    return res.json()
   }
 
   async deleteConversation(id: string): Promise<void> {
-    try {
-      await fetch(`${API_BASE}/api/chat/conversations/${id}`, { method: 'DELETE', headers: this.headers() })
-    } catch {}
+    const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, { method: 'DELETE', headers: this.headers() })
+    if (!res.ok) throw new Error(`Failed to delete conversation (HTTP ${res.status})`)
   }
 
   async sendMessage(
@@ -327,14 +305,12 @@ class ApiClient {
     mode: string,
     modelId?: string,
   ): Promise<ChatMessage> {
-    try {
-      const res = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/message`, {
-        method: 'POST', headers: this.headers(),
-        body: JSON.stringify({ question, mode, model_id: modelId }),
-      })
-      if (res.ok) return await res.json()
-    } catch {}
-    return generateFallbackResponse(question, mode) as unknown as ChatMessage
+    const res = await fetch(`${API_BASE}/api/chat/conversations/${conversationId}/message`, {
+      method: 'POST', headers: this.headers(),
+      body: JSON.stringify({ question, mode, model_id: modelId }),
+    })
+    if (!res.ok) throw new Error(`Failed to save and answer message (HTTP ${res.status})`)
+    return res.json()
   }
 
   async listModels(): Promise<{ default_model: string; models: ModelSpec[] }> {
@@ -737,7 +713,7 @@ function CitationCard({ citation, index, isHighlighted }: { citation: Citation; 
 
           {/* Action Button — Direct Online Source Redirect (No Copy Button) */}
           <div className="pt-2 border-t-2 border-[#1a1a1a]/10 dark:border-white/10">
-            {resolved.url ? (
+            {/^https?:\/\//i.test(resolved.url) ? (
               <a
                 href={resolved.url}
                 target="_blank"
@@ -1882,6 +1858,7 @@ export default function App() {
   const [currentConvId, setCurrentConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
+  const [chatError, setChatError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetchingConvs, setIsFetchingConvs] = useState(false)
   const [mode, setMode] = useState<'patient' | 'clinician'>('patient')
@@ -1936,8 +1913,8 @@ export default function App() {
   useEffect(() => {
     const savedToken = localStorage.getItem('cw_token') || sessionStorage.getItem('cw_token')
     if (savedToken) {
-      localStorage.setItem('cw_token', savedToken)
-      sessionStorage.removeItem('cw_token')
+      // Respect the storage scope the login page chose: persistent
+      // (localStorage, remember-me) vs session-only (sessionStorage).
       api.setToken(savedToken)
       api.getCurrentUser()
         .then(u => {
@@ -2002,9 +1979,14 @@ export default function App() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, isLoading])
 
-  const handleLogin = async (token: string) => {
-    localStorage.setItem('cw_token', token)
-    sessionStorage.removeItem('cw_token')
+  const handleLogin = async (token: string, remember: boolean = true) => {
+    if (remember) {
+      localStorage.setItem('cw_token', token)
+      sessionStorage.removeItem('cw_token')
+    } else {
+      sessionStorage.setItem('cw_token', token)
+      localStorage.removeItem('cw_token')
+    }
     api.setToken(token)
     let lastError: Error | null = null
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -2121,7 +2103,10 @@ export default function App() {
   }
 
   const handleDeleteConv = async (id: string) => {
-    try { await api.deleteConversation(id) } catch {}
+    try { await api.deleteConversation(id) } catch (err) {
+      setChatError(err instanceof Error ? err.message : 'Failed to delete conversation')
+      return
+    }
     setConversations(prev => prev.filter(c => c.id !== id))
     if (currentConvId === id) { setCurrentConvId(null); setMessages([]) }
   }
@@ -2130,6 +2115,7 @@ export default function App() {
     if (!inputValue.trim() || isLoading) return
     const question = inputValue.trim()
     setInputValue('')
+    setChatError(null)
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
     setIsLoading(true)
     const userMsg: ChatMessage = {
@@ -2170,12 +2156,9 @@ export default function App() {
       setPanelSafety(assistantMsg.safety_flags || null)
       if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
     } catch (err) {
-      setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
-        role: 'assistant',
-        content: `**Something went wrong.** ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
-        timestamp: new Date().toISOString(),
-      }])
+      setMessages(messages)
+      setInputValue(question)
+      setChatError(err instanceof Error ? err.message : 'Unable to save the message. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -2186,6 +2169,15 @@ export default function App() {
     if (!question.trim() || isLoading) return
     setMode(newMode)
     setIsLoading(true)
+    setChatError(null)
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: question,
+      timestamp: new Date().toISOString(),
+    }
+    const updatedMsgs = [...messages, userMsg]
+    setMessages(updatedMsgs)
     try {
       let convId = currentConvId
       let convTitle = question.slice(0, 60)
@@ -2198,7 +2190,7 @@ export default function App() {
       const assistantMsg = await api.sendMessage(convId, question, newMode, selectedModelId)
       assistantMsg.mode = newMode
       assistantMsg.question = question
-      const finalMsgs = [...messages, assistantMsg]
+      const finalMsgs = [...updatedMsgs, assistantMsg]
       setMessages(finalMsgs)
 
       setConversations(prev => {
@@ -2215,12 +2207,8 @@ export default function App() {
       setPanelSafety(assistantMsg.safety_flags || null)
       if (assistantMsg.citations?.length || assistantMsg.tool_trace?.length) setEvidencePanelOpen(true)
     } catch (err) {
-      setMessages(prev => [...prev, {
-        id: `err-${Date.now()}`,
-        role: 'assistant',
-        content: `**Something went wrong.** ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
-        timestamp: new Date().toISOString(),
-      }])
+      setMessages(messages)
+      setChatError(err instanceof Error ? err.message : 'Unable to save the message. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -2666,6 +2654,11 @@ export default function App() {
         {/* Composer */}
         <div className="w-full bg-white dark:bg-slate-950 pt-1.5 sm:pt-2 pb-2 sm:pb-2.5 px-3 sm:px-6 z-30 border-t-2 border-[#1a1a1a] dark:border-white transition-all duration-1000 shrink-0">
           <div className="max-w-3xl mx-auto">
+            {chatError && (
+              <p role="alert" className="mb-2 border-2 border-red-700 bg-red-50 px-3 py-2 text-xs font-bold text-red-800 dark:border-red-400 dark:bg-red-950/50 dark:text-red-200">
+                {chatError}
+              </p>
+            )}
             <div className={cn(
               'bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-white p-1 pr-2 sm:pr-2.5 pl-1.5 sm:pl-2 flex items-end gap-1.5 sm:gap-2 clinical-shadow',
             )}>

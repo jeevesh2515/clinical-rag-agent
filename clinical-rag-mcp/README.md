@@ -22,7 +22,7 @@ and Claude calls the tool itself.
 | `clinical_calculate_bmi` | BMI + WHO category from weight/height | Working, standalone |
 | `clinical_calculate_map` | Mean Arterial Pressure from BP | Working, standalone |
 | `clinical_calculate_pulse_pressure` | Pulse pressure from BP | Working, standalone |
-| `clinical_query_evidence` | Routes a question through the live RAG backend | Requires `CLINICAL_RAG_API_URL` env var - see below |
+| `clinical_query_evidence` | Routes a question through the live RAG backend | Uses the deployed Clinical Workflows URL by default; override with `CLINICAL_RAG_API_URL` |
 
 ## Setup
 
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 
 For the calculators, no configuration is needed - they run standalone.
 
-For `clinical_query_evidence`, set the backend URL as an environment variable:
+To point `clinical_query_evidence` at another deployment, set the backend URL:
 
 ```bash
 export CLINICAL_RAG_API_URL="https://clinical-workflows.vercel.app"
@@ -45,8 +45,8 @@ The live Clinical Evidence RAG backend is hosted via Vercel serverless functions
 Use the virtual environment created in `clinical-rag-mcp`:
 
 ```bash
-# Test in terminal
-./venv/bin/python3 -c "import asyncio, os; os.environ['CLINICAL_RAG_API_URL']='https://clinical-workflows.vercel.app'; from server import clinical_calculate_bmi, BMIInput; print(asyncio.run(clinical_calculate_bmi(BMIInput(weight_kg=70, height_m=1.75))))"
+# Calculator contract and live evidence-query smoke test
+./venv/bin/python3 test_tools.py
 
 # Or test with the official MCP Inspector
 npx @modelcontextprotocol/inspector ./venv/bin/python3 server.py
@@ -81,12 +81,13 @@ claude mcp add --scope user clinical-rag -- uv run https://raw.githubusercontent
 ```
 
 
-## Notes on the calculator implementations
+## Data boundary and calculator contract
 
-The three calculators in `server.py` use standard, publicly documented
-clinical formulas, included so this server runs end to end without any
-external dependency. The parent Clinical Evidence RAG Agent project has its
-own tested versions of these same calculators. Before treating this as
-production-parity with that project, swap these for the real implementation
-(import or vendor the module) so there is one tested source of truth rather
-than two versions that can drift apart.
+The three calculators are deliberately standalone so the zero-install MCP
+server has no dependency on the web application's Python environment. Their
+accepted ranges and expected outputs are asserted by `test_tools.py`; update
+that contract alongside any formula change in the web application.
+
+The MCP process does not receive a browser JWT and does not access account,
+conversation, upload, or profile data. Use it for public educational guideline
+questions only. Do not send PHI to the public evidence endpoint.

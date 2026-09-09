@@ -19,6 +19,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth.models import (
@@ -41,7 +42,7 @@ from app.core.rate_limiter import limiter
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
@@ -87,7 +88,7 @@ def get_user_by_id(db: Session, user_id: str) -> OrmUser | None:
 
 def authenticate_user(db: Session, username: str, password: str) -> OrmUser | None:
     user = get_user_by_username(db, username)
-    if not user or not verify_password(password, user.hashed_password):
+    if not user or not user.is_active or not verify_password(password, user.hashed_password):
         return None
     return user
 
@@ -112,12 +113,8 @@ async def get_current_user(
         user = get_user_by_id(db, user_id)
         if user:
             return user
-    # Backward-compat: legacy tokens used "sub" = username.
-    username = payload.get("sub")
-    if username:
-        user = get_user_by_username(db, username)
-        if user:
-            return user
+    # Fail closed: a uid that resolves to no account (deleted user, recycled
+    # username) must not fall through to a different account.
     raise credentials_exception
 
 
@@ -152,6 +149,11 @@ async def register_user(request: Request, payload: RegisterUser, db: Session = D
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
 
+    if payload.role not in (UserRole.patient, UserRole.clinician):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role must be patient or clinician",
+        )
     primary_role = payload.role.value if payload.role else UserRole.patient.value
     new_user = OrmUser(
         id=str(uuid4()),
@@ -166,7 +168,14 @@ async def register_user(request: Request, payload: RegisterUser, db: Session = D
     new_user.roles = [primary_role]
 
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Concurrent duplicate registration raced the checks above.
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Username or email already registered"
+        )
     db.refresh(new_user)
     return _to_user_public(new_user)
 
@@ -238,7 +247,15 @@ async def update_profile(
                 detail="Email already registered",
             )
         current_user.email = payload.email
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Concurrent profile update raced the email check above.
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
     db.refresh(current_user)
     return _to_user_public(current_user)
 

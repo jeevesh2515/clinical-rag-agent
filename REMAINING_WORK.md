@@ -1,5 +1,10 @@
 # Remaining Work — Days 32–36+ Completion Plan
 
+> **Current release note (2026-09-09):** Historic test/deployment counts below
+> are not current certification. The post-MCP persistence gate requires an
+> Alembic migration, credential rotation, and deployed logout/login UAT before
+> release approval.
+
 > Continuation of the 31-day learning plan. Days 1–31 are complete and the
 > project is live at https://clinical-workflows.vercel.app with 258 passing
 > tests, Prometheus observability, Redis caching, pgvector + S3 storage,
@@ -13,7 +18,7 @@
 
 | Metric | Value |
 |---|---|
-| Backend tests | **258 passed**, 9 skipped |
+| Backend tests | **252 passed**, 10 skipped (2026-09-09 local run) |
 | Frontend typecheck | ✅ Clean |
 | Frontend build | ✅ Successful (437KB bundle, down from 516KB) |
 | Ruff lint | ✅ Passing |
@@ -519,7 +524,7 @@ Open the live site at https://clinical-workflows.vercel.app and verify:
 
 ```bash
 python3 -m pytest tests/ -q --tb=short
-# Expected: 258 passed, 9 skipped
+# Expected: 252 passed, 10 skipped (2026-09-09 local run)
 ```
 
 ### 4. Verify CI/CD pipeline
@@ -533,7 +538,7 @@ python3 -m pytest tests/ -q --tb=short
 ```text
 - [x] Production Vercel deployment: ✅ HEALTHY (200 on /api/health)
 - [ ] Render deployment: target ✅ HEALTHY (200 on /api/health) — see Day 32 → Manual Provisioning Steps.
-- [x] Backend tests: 258 passed, 9 skipped
+- [x] Backend tests: 252 passed, 10 skipped (2026-09-09 local run)
 - [x] Frontend typecheck: ✅ CLEAN
 - [x] Frontend build: ✅ SUCCESSFUL (437KB bundle)
 - [x] Ruff lint: ✅ PASSING
@@ -595,6 +600,20 @@ working in parallel could finish in 3 days.
 - [x] Day 35 — Final Compliance, Legal Pages & Documentation
 - [ ] Day 36 — End-to-End Smoke Test & Final Sign-Off
 ```
+
+### Deferred hardening (P1 — 2026-09-09 sweep, not release-blocking)
+
+Fixed in this pass: JWT `.env` invisibility, bcrypt >72-char 500, login
+`is_active` enforcement, fail-closed `uid` lookup, registration/email
+`IntegrityError` races, self-serve `admin` role, Swagger `tokenUrl`, chat
+`alpha=0.0` override, lost-write 200, 413 request-id, CORS regex tightening,
+uploads rate limit, SSE error leakage, citation `javascript:` URLs,
+remember-me session scope, MCP `ConnectError`/subpath handling.
+
+Consciously deferred: short-lived access tokens + refresh rotation (needs a
+refresh flow), `jti` denylist on logout, `python-jose` → PyJWT migration,
+password complexity/breach checks, actual-bytes body cap, pgvector bind-param
+cleanup. Each is independent and safe to schedule post-certification.
 
 > **Note**: After completing each day, update `PRIVATE_LEARNING_PLAN.md`
 > with the implementation notes following the existing day-entry format.

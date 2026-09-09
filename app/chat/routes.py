@@ -98,16 +98,14 @@ async def add_message_to_conversation(
         safety_flags=None,
         knowledge_path=None,
     )
-    chat_repository.add_message(db, conversation_id, current_user.id, user_message)
-
     # Invoke the RAG agent with the user's query — and, when present, the user's
     # uploaded personal corpus so the answer can be personalised.
     settings = agent.settings
     agent_response: QueryResponse = agent.invoke(
         query_request.question,
-        alpha=query_request.alpha or settings.default_alpha,
-        top_k=query_request.top_k or settings.default_top_k,
-        rerank_top_n=query_request.rerank_top_n or settings.default_rerank_top_n,
+        alpha=query_request.alpha if query_request.alpha is not None else settings.default_alpha,
+        top_k=query_request.top_k if query_request.top_k is not None else settings.default_top_k,
+        rerank_top_n=query_request.rerank_top_n if query_request.rerank_top_n is not None else settings.default_rerank_top_n,
         mode=query_request.mode,
         case_id=query_request.case_id,
         include_patient_education=query_request.include_patient_education,
@@ -146,6 +144,10 @@ async def add_message_to_conversation(
         rephrased_question=agent_response.rephrased_question,
         model_used=agent_response.model_used,
     )
-    chat_repository.add_message(db, conversation_id, current_user.id, agent_message)
+    # Store both sides only after generation succeeds. This keeps re-login
+    # history truthful: a failed request cannot masquerade as a completed turn.
+    stored = chat_repository.add_messages(db, conversation_id, current_user.id, [user_message, agent_message])
+    if stored is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
     return agent_message

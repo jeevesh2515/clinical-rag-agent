@@ -39,6 +39,8 @@ We do **not** sell, rent, or share your data with third parties, except:
 - With the LLM / embedding providers you configure (OpenRouter, Cohere, OpenAI, Anthropic, Google) when you provide your own API keys.
 - As required by law.
 
+**Model Context Protocol (MCP) boundary:** the optional `clinical-rag-mcp/` server runs on your own machine inside your AI assistant and never receives your browser login session. It cannot read your account, conversations, uploads, or profile, and its evidence tool answers public guideline questions only. Do not paste personal health information into an MCP client.
+
 ## 6. Security
 
 - Passwords are hashed with bcrypt.

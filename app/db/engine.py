@@ -33,15 +33,6 @@ def _engine_kwargs(url: str) -> dict:
     return {"pool_pre_ping": True}
 
 
-def _get_fallback_sqlite_url() -> str:
-    if Path("/app/data").exists() and os.access("/app/data", os.W_OK):
-        return "sqlite:////app/data/clinical_app.db"
-    data_dir = Path("./data")
-    if data_dir.exists():
-        return "sqlite:///./data/clinical_app.db"
-    return "sqlite:///./clinical_demo.db"
-
-
 def _build_engine():
     settings = get_settings()
     url = settings.database_url
@@ -53,16 +44,20 @@ def _build_engine():
             conn.execute(text("SELECT 1"))
         return engine
     except Exception as exc:
-        fallback_url = _get_fallback_sqlite_url()
         import logging
 
+        # A serverless filesystem is ephemeral. Quietly substituting SQLite
+        # here would make a production login appear to succeed while losing
+        # its profile and history on the next cold start.
+        if str(settings.app_env or "local").strip().lower() != "local":
+            raise RuntimeError("Configured production database is unreachable") from exc
+
         logging.getLogger(__name__).warning(
-            "Primary database (%s) unreachable (%s). Falling back to persistent local SQLite: %s",
+            "Primary database (%s) unreachable (%s). Falling back to local SQLite for development.",
             url.split("@")[-1] if "@" in url else url,
             exc,
-            fallback_url,
         )
-        return create_engine(fallback_url, **_engine_kwargs(fallback_url))
+        return create_engine("sqlite:///./clinical_demo.db", **_engine_kwargs("sqlite:///./clinical_demo.db"))
 
 
 def _get_engine():

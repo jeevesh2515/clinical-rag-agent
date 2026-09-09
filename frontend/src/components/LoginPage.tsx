@@ -6,7 +6,7 @@ import { formatAuthError, safeReadErrorDetail } from '../utils/auth'
 
 // Production builds must use relative paths so Vercel routes /api/* to the
 // Python serverless functions. Local dev may still override via Vite proxy.
-const API_BASE = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL as string) || ''
+const API_BASE = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL as string) || (import.meta.env.VITE_API_BASE_URL as string) || ''
 
 const FEATURES = [
   { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600 dark:text-rose-400' },
@@ -16,7 +16,7 @@ const FEATURES = [
 ]
 
 interface LoginPageProps {
-  onLogin: (token: string) => Promise<void>
+  onLogin: (token: string, remember: boolean) => Promise<void>
   onSwitchToSignup: () => void
   onBackToHome?: () => void
   currentUser?: any
@@ -67,22 +67,32 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
     }
 
     if (tokenToUse) {
-      localStorage.setItem('cw_token', tokenToUse)
-      if (rememberMe) localStorage.setItem('cw_remember', 'true')
-      else localStorage.removeItem('cw_remember')
+      if (rememberMe) {
+        localStorage.setItem('cw_token', tokenToUse)
+        localStorage.setItem('cw_remember', 'true')
+        sessionStorage.removeItem('cw_token')
+      } else {
+        // Session-only login: token dies with the tab.
+        sessionStorage.setItem('cw_token', tokenToUse)
+        localStorage.removeItem('cw_token')
+        localStorage.removeItem('cw_remember')
+      }
       try {
-        await onLogin(tokenToUse)
+        await onLogin(tokenToUse, rememberMe)
       } catch (profileErr) {
         // The JWT was real but the post-login profile load failed (server
         // died between issuing the JWT and returning /users/me, etc.).
         // Clear the orphaned token so the next mount of App.tsx does not
         // silently re-attempt auth with it, then ask the user to retry.
         localStorage.removeItem('cw_token')
+        sessionStorage.removeItem('cw_token')
         const detail = profileErr instanceof Error ? profileErr.message : 'Failed to load profile'
         setError(`Logged you in, but the profile didn't finish loading: ${detail}. Please retry.`)
         setIsLoading(false)
         return
       }
+      setIsLoading(false)
+    } else {
       setIsLoading(false)
     }
   }
@@ -162,7 +172,7 @@ export default function LoginPage({ onLogin, onSwitchToSignup, onBackToHome, cur
               <div>
                 <h3 className="text-lg font-bold font-headline-md uppercase text-clinical-black dark:text-white">Already Signed In</h3>
                 <p className="text-xs text-on-surface-variant dark:text-slate-400 font-bold font-code-sm uppercase mt-1">
-                  Logged in as <span className="text-brand-accent">{currentUser.username}</span> ({currentUser.role})
+                  Logged in as <span className="text-brand-accent">{currentUser.username}</span> ({currentUser.roles?.[0] || currentUser.primary_role || 'patient'})
                 </p>
               </div>
               <div className="space-y-3">

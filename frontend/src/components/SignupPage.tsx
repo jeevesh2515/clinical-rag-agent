@@ -6,7 +6,7 @@ import { formatAuthError, safeReadErrorDetail } from '../utils/auth'
 
 // Production builds must use relative paths so Vercel routes /api/* to the
 // Python serverless functions. Local dev may still override via Vite proxy.
-const API_BASE = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL as string) || ''
+const API_BASE = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL as string) || (import.meta.env.VITE_API_BASE_URL as string) || ''
 
 const FEATURES = [
   { icon: Heart, text: 'Evidence-based guidelines', color: 'text-rose-600 dark:text-rose-400' },
@@ -35,7 +35,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [role, setRole] = useState<'patient' | 'clinician' | 'admin' | 'care_coordinator'>('patient')
+  const [role, setRole] = useState<'patient' | 'clinician'>('patient')
 
   const passwordChecks = {
     length: password.length >= 8,
@@ -179,7 +179,7 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
               <div>
                 <h3 className="text-lg font-bold font-headline-md uppercase text-clinical-black dark:text-white">Already Signed In</h3>
                 <p className="text-xs text-on-surface-variant dark:text-slate-400 font-bold font-code-sm uppercase mt-1">
-                  Logged in as <span className="text-brand-accent">{currentUser.username}</span> ({currentUser.role})
+                  Logged in as <span className="text-brand-accent">{currentUser.username}</span> ({currentUser.roles?.[0] || currentUser.primary_role || 'patient'})
                 </p>
               </div>
               <div className="space-y-3">
@@ -221,8 +221,6 @@ export default function SignupPage({ onSignup, onSwitchToLogin, onBackToHome, cu
                   >
                     <option value="patient">Patient (Normal User)</option>
                     <option value="clinician">Clinician (Medical Staff)</option>
-                    <option value="admin">Administrator (System Control)</option>
-                    <option value="care_coordinator">Care Coordinator (Operations)</option>
                   </select>
                 </div>
 

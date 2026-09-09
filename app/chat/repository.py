@@ -126,6 +126,48 @@ class ChatRepository:
         db.refresh(conv)
         return self.get_conversation(db, conversation_id, user_id)
 
+    def add_messages(
+        self, db: Session, conversation_id: str, user_id: str, messages: list[ChatMessage]
+    ) -> Optional[Conversation]:
+        """Persist one complete chat turn atomically.
+
+        A failed model invocation must not leave an orphan user message that
+        looks like a completed conversation after the user next signs in.
+        """
+        conv = (
+            db.query(OrmConversation)
+            .filter(OrmConversation.id == conversation_id)
+            .one_or_none()
+        )
+        if not conv or conv.user_id != user_id:
+            return None
+
+        rows = [
+            OrmMessage(
+                id=message.id or str(uuid4()),
+                conversation_id=conversation_id,
+                user_id=user_id,
+                role=message.role,
+                content=message.content,
+                citations_json=json.dumps(message.citations) if message.citations else None,
+                tool_trace_json=json.dumps(message.tool_trace) if message.tool_trace else None,
+                safety_flags_json=json.dumps(message.safety_flags) if message.safety_flags else None,
+                knowledge_path_json=json.dumps(message.knowledge_path) if message.knowledge_path else None,
+                rephrased_question=message.rephrased_question,
+                model_used=message.model_used,
+                created_at=message.timestamp or utcnow(),
+            )
+            for message in messages
+        ]
+        try:
+            db.add_all(rows)
+            conv.updated_at = utcnow()
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        return self.get_conversation(db, conversation_id, user_id)
+
     def update_conversation_title(
         self, db: Session, conversation_id: str, user_id: str, new_title: str
     ) -> Optional[Conversation]:

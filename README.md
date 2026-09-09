@@ -10,7 +10,7 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-clinical--workflows.vercel.app-0ea5e9?style=for-the-badge&logo=vercel&logoColor=white)](https://clinical-workflows.vercel.app)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-clinical--rag--agent-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/jeevesh2515/clinical-rag-agent)
-[![Tests](https://img.shields.io/badge/tests-258%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/jeevesh2515/clinical-rag-agent)
+[![Tests](https://img.shields.io/badge/tests-252%20passing-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/jeevesh2515/clinical-rag-agent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://github.com/jeevesh2515/clinical-rag-agent/blob/main/LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -160,7 +160,7 @@ docker compose up -d --build
 docker compose --profile postgres up -d --build
 ```
 
-> **Resilience:** If your `.env` contains a remote PostgreSQL URL that is unreachable from Docker (e.g., Neon), the app automatically falls back to persistent local SQLite. See [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md) for full details.
+> **Persistence invariant:** local development may fall back to SQLite when a configured remote database is unavailable. Production fails closed instead: it requires a reachable PostgreSQL `DATABASE_URL`, so a successful login never silently writes to ephemeral serverless storage.
 
 ---
 
@@ -195,7 +195,7 @@ flowchart LR
     style RES fill:#1E3A8A,stroke:#60A5FA,color:#FFFFFF
 ```
 
-### Exposed MCP Tools (OpenAPI / MCP Spec)
+### Exposed MCP Tools
 
 | Tool | Parameters | Description |
 | :--- | :--- | :--- |
@@ -230,7 +230,7 @@ claude mcp add --scope user clinical-rag -- uv run https://raw.githubusercontent
 ```
 
 
-*(Optional: for local development from source, run `cd clinical-rag-mcp && python3 -m venv venv && pip install -r requirements.txt && python3 server.py`)*
+For local development, run `cd clinical-rag-mcp && python3 -m venv venv && pip install -r requirements.txt && python3 test_tools.py`. The smoke test checks the calculator contract and performs a live evidence-query request when the default deployed URL is reachable. MCP tools are educational only; do not send patient-identifiable information to the public endpoint.
 
 ---
 
@@ -242,7 +242,7 @@ claude mcp add --scope user clinical-rag -- uv run https://raw.githubusercontent
 - 📋 **Clinical Notes Stack & History:** Dedicated chronological notes stack in user profile with timestamps, single-click "Consult AI with Note" integration, and individual note management.
 - 🧘 **Pressure Relief / Calmness Mode:** One-click toggle transforming workstation UI into a calm, glassmorphic teal layout with 100% smooth curved pill edges on all buttons, toggle segments, and controls.
 - ⚖️ **Clinical BMI Assessor & Profile Vitals:** High-converting landing page teaser + in-app BMI calculator saving height, weight, BMI classification, and SBP impact to persistent user profile.
-- 🔄 **Multi-Session Hybrid Data Persistence:** Instant local restoration with background cloud database sync, protected by zero-overwrite guardrails and global safety backups across logins and cold starts.
+- 🔄 **Server-Authoritative Data Persistence:** Profiles, vitals, conversations, and messages are written to PostgreSQL and reloaded after login; the UI never creates synthetic local chats or fallback answers when the backend fails.
 - 📱 **Mobile Safari & Cross-Device Optimization:** Full mobile responsive navigation and Safari `Load failed` network error handling for 100% sign-up and login reliability on mobile devices.
 - 📊 **Tabbed Evidence Panel:** View citations with full provenance, executed tools, safety classification details, and raw knowledge paths.
 - 👥 **Clinician vs. Patient Modes:** Toggle response persona between clinical detail (medical jargon, lab units) and plain-language patient education.
@@ -284,14 +284,14 @@ claude mcp add --scope user clinical-rag -- uv run https://raw.githubusercontent
 ## Tech Stack
 
 ```
-Client Layer:    React 18 | TypeScript 5 | Vite 6 | Tailwind CSS v4 | Lucide Icons
+Client Layer:    React 18 | TypeScript 5 | Vite 8 | Tailwind CSS v3 | Lucide Icons
 API & Core:      FastAPI | Uvicorn | Pydantic v2 | Python 3.12 | OpenAPI
 MCP Server:      Model Context Protocol (MCP SDK 2.x) | Stdio JSON-RPC | Claude Desktop & Code
 Agent Engine:    LangGraph Stateful DAG Orchestrator
-Knowledge Layer: Open Knowledge Format (OKF) | 27 Concept Files | YAML + Wikilinks
+Knowledge Layer: Open Knowledge Format (OKF) | 28 Concept Files | YAML + Wikilinks
 Retrieval:       Cohere Embeddings v3.0 | BM25 Sparse | Cohere Rerank v3.5
-Quality Harness: Pytest (258 tests) | LangSmith LLM-as-Judge | Ruff | Pyright
-Persistence:     Multi-Session Hybrid Storage | Zero-Overwrite Guardrails | Backup Keys
+Quality Harness: Pytest (252 passed, 10 skipped in the 2026-09-09 local run) | Vitest | Ruff | Pyright
+ Persistence:     Server-Authoritative PostgreSQL (fail-closed prod) + SQLite (local dev) | Atomic Chat Turns
 Deployment & Ops:Vercel (Frontend & Serverless) | Render | Neon PostgreSQL | Docker | Kubernetes (K8s) | GHCR
 ```
 
@@ -302,7 +302,7 @@ Deployment & Ops:Vercel (Frontend & Serverless) | Render | Neon PostgreSQL | Doc
 The codebase is protected by automated quality gates running in CI:
 
 ```bash
-# Run backend test suite (258 tests)
+# Run backend test suite
 make test
 
 # Run OKF concept validator (28 files, 0 errors)
@@ -352,10 +352,10 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Kuberne
 │   ├── safety/          # Intent classifier & refusal engine
 │   └── tools/           # eGFR, MAP, Pulse Pressure, BMI calculators
 ├── clinical-rag-mcp/    # Model Context Protocol (MCP) server for Claude Desktop & Claude Code
-├── frontend/            # React 18 + TypeScript + Tailwind v4 SPA
+├── frontend/            # React 18 + TypeScript + Tailwind v3 SPA
 ├── hypertension-okf/    # 28 Curated OKF concept files
 ├── k8s/                 # Kubernetes manifests (Deployment, Service, ConfigMap, Secrets, Ingress, HPA)
-├── tests/               # 258 automated pytest tests
+├── tests/               # automated pytest suite (including persistence regression coverage)
 ├── ETHICS.md            # Clinical disclaimer, intended use, responsible AI principles
 ├── GDPR.md              # Data controller info, legal basis, user rights, retention
 ├── Dockerfile           # Multi-stage production container build

@@ -290,9 +290,9 @@ def query_stream(
                     "confidence": response.confidence,
                 },
             )
-        except Exception as exc:
+        except Exception:
             _log.exception("stream_error request_id=%s", request_id)
-            yield _event("error", {"message": str(exc), "request_id": request_id})
+            yield _event("error", {"message": "internal_error", "request_id": request_id})
 
     return StreamingResponse(
         generate(),

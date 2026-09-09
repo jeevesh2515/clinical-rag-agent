@@ -63,7 +63,7 @@ class TokenData(BaseModel):
 class RegisterUser(BaseModel):
     username: str = Field(..., min_length=3, max_length=64, description="Desired username")
     email: EmailStr = Field(..., description="User's email address")
-    password: str = Field(..., min_length=8, max_length=128, description="Desired password (min 8 chars)")
+    password: str = Field(..., min_length=8, max_length=72, description="Desired password (8-72 chars; bcrypt limit)")
     full_name: Optional[str] = Field(None, max_length=255)
     role: UserRole = Field(
         UserRole.patient,

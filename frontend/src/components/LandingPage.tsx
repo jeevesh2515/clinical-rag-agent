@@ -503,68 +503,142 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                 Wire deterministic clinical calculators (BMI, MAP, Pulse Pressure) and live guideline RAG directly into your daily AI environment via the open Model Context Protocol. No git clone or virtual environments required.
               </p>
 
-              {/* 4 Exposed Tools Pills */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-8">
-                <div className="p-2.5 bg-surface-container-highest dark:bg-slate-900 border border-clinical-black dark:border-slate-700">
-                  <span className="font-code-sm text-[10px] sm:text-xs font-bold block text-clinical-black dark:text-white">clinical_calculate_bmi</span>
-                  <span className="text-[9px] sm:text-[10px] text-on-surface-variant dark:text-slate-400">WHO BMI tiers</span>
+              {/* 4 Exposed Tools Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-8">
+                {/* Tool 1: BMI */}
+                <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.15)] flex flex-col justify-between hover:-translate-y-0.5 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                        <span className="material-symbols-outlined text-[12px]">calculate</span>
+                        Calculator
+                      </span>
+                      <span className="text-[9px] font-code-sm text-slate-400">WHO Tiers</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm text-clinical-black dark:text-white uppercase font-headline-md mb-1.5">
+                      BMI Calculator
+                    </div>
+                    <div className="font-mono text-[10px] sm:text-[11px] text-brand-accent dark:text-amber-400 bg-stone-100 dark:bg-slate-950 px-2 py-1 border border-stone-200 dark:border-slate-800 break-all mb-2 leading-relaxed">
+                      clinical_calculate_bmi
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant dark:text-slate-400 leading-snug mt-1">
+                    Deterministic BMI computation and WHO classification from weight & height.
+                  </p>
                 </div>
-                <div className="p-2.5 bg-surface-container-highest dark:bg-slate-900 border border-clinical-black dark:border-slate-700">
-                  <span className="font-code-sm text-[10px] sm:text-xs font-bold block text-clinical-black dark:text-white">clinical_calculate_map</span>
-                  <span className="text-[9px] sm:text-[10px] text-on-surface-variant dark:text-slate-400">Mean Arterial Pressure</span>
+
+                {/* Tool 2: MAP */}
+                <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.15)] flex flex-col justify-between hover:-translate-y-0.5 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                        <span className="material-symbols-outlined text-[12px]">speed</span>
+                        Calculator
+                      </span>
+                      <span className="text-[9px] font-code-sm text-slate-400">Cardio</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm text-clinical-black dark:text-white uppercase font-headline-md mb-1.5">
+                      MAP Calculator
+                    </div>
+                    <div className="font-mono text-[10px] sm:text-[11px] text-brand-accent dark:text-amber-400 bg-stone-100 dark:bg-slate-950 px-2 py-1 border border-stone-200 dark:border-slate-800 break-all mb-2 leading-relaxed">
+                      clinical_calculate_map
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant dark:text-slate-400 leading-snug mt-1">
+                    Mean Arterial Pressure derived from systolic and diastolic blood pressure.
+                  </p>
                 </div>
-                <div className="p-2.5 bg-surface-container-highest dark:bg-slate-900 border border-clinical-black dark:border-slate-700">
-                  <span className="font-code-sm text-[10px] sm:text-xs font-bold block text-clinical-black dark:text-white">clinical_calculate_pulse_pressure</span>
-                  <span className="text-[9px] sm:text-[10px] text-on-surface-variant dark:text-slate-400">SBP - DBP diff</span>
+
+                {/* Tool 3: Pulse Pressure */}
+                <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.15)] flex flex-col justify-between hover:-translate-y-0.5 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                        <span className="material-symbols-outlined text-[12px]">monitor_heart</span>
+                        Calculator
+                      </span>
+                      <span className="text-[9px] font-code-sm text-slate-400">Vascular</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm text-clinical-black dark:text-white uppercase font-headline-md mb-1.5">
+                      Pulse Pressure
+                    </div>
+                    <div className="font-mono text-[10px] sm:text-[11px] text-brand-accent dark:text-amber-400 bg-stone-100 dark:bg-slate-950 px-2 py-1 border border-stone-200 dark:border-slate-800 break-all mb-2 leading-relaxed">
+                      clinical_calculate_pulse_pressure
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant dark:text-slate-400 leading-snug mt-1">
+                    Systolic-diastolic differential indicating arterial stiffness and risk.
+                  </p>
                 </div>
-                <div className="p-2.5 bg-surface-container-highest dark:bg-slate-900 border border-clinical-black dark:border-slate-700">
-                  <span className="font-code-sm text-[10px] sm:text-xs font-bold block text-clinical-black dark:text-white">clinical_query_evidence</span>
-                  <span className="text-[9px] sm:text-[10px] text-on-surface-variant dark:text-slate-400">NICE / ACC / JNC8</span>
+
+                {/* Tool 4: Evidence RAG */}
+                <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-700 shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.15)] flex flex-col justify-between hover:-translate-y-0.5 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300 dark:border-purple-700">
+                        <span className="material-symbols-outlined text-[12px]">neurology</span>
+                        RAG Agent
+                      </span>
+                      <span className="text-[9px] font-code-sm text-slate-400">Live Agent</span>
+                    </div>
+                    <div className="font-bold text-xs sm:text-sm text-clinical-black dark:text-white uppercase font-headline-md mb-1.5">
+                      Evidence Retrieval
+                    </div>
+                    <div className="font-mono text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-300 bg-stone-100 dark:bg-slate-950 px-2 py-1 border border-stone-200 dark:border-slate-800 break-all mb-2 leading-relaxed">
+                      clinical_query_evidence
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant dark:text-slate-400 leading-snug mt-1">
+                    Routes clinical questions into live guideline synthesis with verified citations.
+                  </p>
                 </div>
               </div>
 
               {/* Interactive Tabs */}
-              <div className="flex border-b-2 border-clinical-black dark:border-slate-700 mb-0">
+              <div className="flex flex-wrap border-b-2 border-clinical-black dark:border-slate-700 mb-0">
                 <button
                   onClick={() => setMcpTab('desktop')}
-                  className={`px-3 sm:px-5 py-2 font-headline-md text-xs sm:text-sm font-bold uppercase transition-all border-t-2 border-l-2 border-r-2 -mb-[2px] ${
+                  className={`px-3.5 sm:px-5 py-2.5 font-headline-md text-xs sm:text-sm font-bold uppercase transition-all border-t-2 border-l-2 border-r-2 -mb-[2px] flex items-center gap-1.5 ${
                     mcpTab === 'desktop'
                       ? 'bg-clinical-black text-white dark:bg-white dark:text-slate-950 border-clinical-black dark:border-white shadow-[2px_0px_0px_0px_rgba(26,26,26,1)]'
-                      : 'bg-transparent text-on-surface-variant dark:text-slate-400 border-transparent hover:text-clinical-black dark:hover:text-white'
+                      : 'bg-stone-100 dark:bg-slate-900 text-on-surface-variant dark:text-slate-400 border-stone-300 dark:border-slate-800 hover:text-clinical-black dark:hover:text-white'
                   }`}
                 >
+                  <span className="material-symbols-outlined text-sm">desktop_windows</span>
                   Claude Desktop
                 </button>
                 <button
                   onClick={() => setMcpTab('code')}
-                  className={`px-3 sm:px-5 py-2 font-headline-md text-xs sm:text-sm font-bold uppercase transition-all border-t-2 border-l-2 border-r-2 -mb-[2px] ${
+                  className={`px-3.5 sm:px-5 py-2.5 font-headline-md text-xs sm:text-sm font-bold uppercase transition-all border-t-2 border-l-2 border-r-2 -mb-[2px] flex items-center gap-1.5 ${
                     mcpTab === 'code'
                       ? 'bg-clinical-black text-white dark:bg-white dark:text-slate-950 border-clinical-black dark:border-white shadow-[2px_0px_0px_0px_rgba(26,26,26,1)]'
-                      : 'bg-transparent text-on-surface-variant dark:text-slate-400 border-transparent hover:text-clinical-black dark:hover:text-white'
+                      : 'bg-stone-100 dark:bg-slate-900 text-on-surface-variant dark:text-slate-400 border-stone-300 dark:border-slate-800 hover:text-clinical-black dark:hover:text-white'
                   }`}
                 >
+                  <span className="material-symbols-outlined text-sm">terminal</span>
                   Claude Code (CLI)
                 </button>
                 <button
                   onClick={() => setMcpTab('cursor')}
-                  className={`px-3 sm:px-5 py-2 font-headline-md text-xs sm:text-sm font-bold uppercase transition-all border-t-2 border-l-2 border-r-2 -mb-[2px] ${
+                  className={`px-3.5 sm:px-5 py-2.5 font-headline-md text-xs sm:text-sm font-bold uppercase transition-all border-t-2 border-l-2 border-r-2 -mb-[2px] flex items-center gap-1.5 ${
                     mcpTab === 'cursor'
                       ? 'bg-clinical-black text-white dark:bg-white dark:text-slate-950 border-clinical-black dark:border-white shadow-[2px_0px_0px_0px_rgba(26,26,26,1)]'
-                      : 'bg-transparent text-on-surface-variant dark:text-slate-400 border-transparent hover:text-clinical-black dark:hover:text-white'
+                      : 'bg-stone-100 dark:bg-slate-900 text-on-surface-variant dark:text-slate-400 border-stone-300 dark:border-slate-800 hover:text-clinical-black dark:hover:text-white'
                   }`}
                 >
+                  <span className="material-symbols-outlined text-sm">code</span>
                   Cursor / Windsurf
                 </button>
               </div>
 
               {/* Code Box Container */}
-              <div className="bg-clinical-black dark:bg-slate-900 text-white border-2 border-clinical-black dark:border-slate-700 p-4 sm:p-5 relative font-mono text-xs sm:text-sm overflow-hidden mb-6">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-700 text-slate-400 text-[11px] sm:text-xs">
+              <div className="bg-slate-950 text-white border-2 border-clinical-black dark:border-slate-700 p-4 sm:p-5 relative font-mono text-xs sm:text-sm overflow-hidden mb-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.15)]">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-slate-400 text-[11px] sm:text-xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block"></span>
                     <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block"></span>
                     <span className="w-2.5 h-2.5 rounded-full bg-green-500/80 inline-block"></span>
-                    <span className="ml-2 font-code-sm text-slate-300">
+                    <span className="ml-2 font-code-sm text-slate-300 font-semibold">
                       {mcpTab === 'desktop' && 'claude_desktop_config.json'}
                       {mcpTab === 'code' && 'terminal command'}
                       {mcpTab === 'cursor' && 'custom MCP settings'}
@@ -572,7 +646,7 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                   </div>
                   <button
                     onClick={() => copyMcpSnippet(mcpSnippets[mcpTab])}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-[11px] uppercase font-bold tracking-wider transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-white text-[11px] uppercase font-bold tracking-wider transition-all shadow-sm"
                     title="Copy snippet"
                   >
                     {mcpCopied ? (
@@ -583,49 +657,127 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-sm">content_copy</span>
-                        <span>Copy</span>
+                        <span>Copy Snippet</span>
                       </>
                     )}
                   </button>
                 </div>
 
-                <pre className="overflow-x-auto text-slate-200 font-code-sm text-xs sm:text-[13px] leading-relaxed py-1">
-                  <code>{mcpSnippets[mcpTab]}</code>
-                </pre>
+                {/* Syntax-Colored Content with Clean Text Wrapping (No Horizontal Shifting) */}
+                <div className="text-slate-200 font-code-sm text-xs sm:text-[13px] leading-relaxed py-1 whitespace-pre-wrap break-all select-text font-mono">
+                  {mcpTab === 'desktop' && (
+                    <div className="space-y-0.5">
+                      <div><span className="text-slate-500">{'{'}</span></div>
+                      <div className="pl-4">
+                        <span className="text-slate-500">&quot;</span><span className="text-sky-400 font-bold">mcpServers</span><span className="text-slate-500">&quot;: {'{'}</span>
+                      </div>
+                      <div className="pl-8">
+                        <span className="text-slate-500">&quot;</span><span className="text-amber-300 font-bold">clinical-rag</span><span className="text-slate-500">&quot;: {'{'}</span>
+                      </div>
+                      <div className="pl-12">
+                        <span className="text-slate-500">&quot;</span><span className="text-sky-300">command</span><span className="text-slate-500">&quot;: &quot;</span><span className="text-emerald-300 font-bold">uv</span><span className="text-slate-500">&quot;,</span>
+                      </div>
+                      <div className="pl-12">
+                        <span className="text-slate-500">&quot;</span><span className="text-sky-300">args</span><span className="text-slate-500">&quot;: [</span>
+                      </div>
+                      <div className="pl-16">
+                        <span className="text-slate-500">&quot;</span><span className="text-emerald-300 font-medium">run</span><span className="text-slate-500">&quot;,</span>
+                      </div>
+                      <div className="pl-16">
+                        <span className="text-slate-500">&quot;</span><span className="text-emerald-400 font-mono underline decoration-emerald-600/50 underline-offset-2 break-all">https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py</span><span className="text-slate-500">&quot;</span>
+                      </div>
+                      <div className="pl-12"><span className="text-slate-500">]</span></div>
+                      <div className="pl-8"><span className="text-slate-500">{'}'}</span></div>
+                      <div className="pl-4"><span className="text-slate-500">{'}'}</span></div>
+                      <div><span className="text-slate-500">{'}'}</span></div>
+                    </div>
+                  )}
+
+                  {mcpTab === 'code' && (
+                    <div className="p-2 bg-slate-900/90 border border-slate-800">
+                      <span className="text-slate-500 mr-2 select-none">$</span>
+                      <span className="text-purple-400 font-bold">claude mcp add</span>{' '}
+                      <span className="text-sky-300">--scope user</span>{' '}
+                      <span className="text-amber-300 font-semibold">clinical-rag</span>{' '}
+                      <span className="text-slate-400">--</span>{' '}
+                      <span className="text-emerald-300 font-semibold">uv run</span>{' '}
+                      <span className="text-emerald-400 font-mono underline decoration-emerald-600/50 underline-offset-2 break-all">https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py</span>
+                    </div>
+                  )}
+
+                  {mcpTab === 'cursor' && (
+                    <div className="space-y-0.5">
+                      <div><span className="text-slate-500">{'{'}</span></div>
+                      <div className="pl-4">
+                        <span className="text-slate-500">&quot;</span><span className="text-sky-300">name</span><span className="text-slate-500">&quot;: &quot;</span><span className="text-amber-300 font-bold">clinical-rag</span><span className="text-slate-500">&quot;,</span>
+                      </div>
+                      <div className="pl-4">
+                        <span className="text-slate-500">&quot;</span><span className="text-sky-300">command</span><span className="text-slate-500">&quot;: &quot;</span><span className="text-emerald-300 font-bold">uv</span><span className="text-slate-500">&quot;,</span>
+                      </div>
+                      <div className="pl-4">
+                        <span className="text-slate-500">&quot;</span><span className="text-sky-300">args</span><span className="text-slate-500">&quot;: [</span>
+                      </div>
+                      <div className="pl-8">
+                        <span className="text-slate-500">&quot;</span><span className="text-emerald-300 font-medium">run</span><span className="text-slate-500">&quot;,</span>
+                      </div>
+                      <div className="pl-8">
+                        <span className="text-slate-500">&quot;</span><span className="text-emerald-400 font-mono underline decoration-emerald-600/50 underline-offset-2 break-all">https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py</span><span className="text-slate-500">&quot;</span>
+                      </div>
+                      <div className="pl-4"><span className="text-slate-500">]</span></div>
+                      <div><span className="text-slate-500">{'}'}</span></div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Step-by-Step Instructions */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-left">
-                <div className="p-3 sm:p-4 bg-surface-container dark:bg-slate-900 border border-clinical-black dark:border-slate-800">
-                  <span className="text-[10px] font-bold uppercase text-brand-accent font-code-sm block mb-1">Step 1</span>
-                  <h4 className="font-headline-md text-xs sm:text-sm font-bold uppercase text-clinical-black dark:text-white mb-1">
-                    {mcpTab === 'desktop' ? 'Add Config File' : mcpTab === 'code' ? 'Run in Terminal' : 'Add MCP Tool'}
+                <div className="p-3.5 sm:p-4 bg-surface-container dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-800 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.08)]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-5 h-5 bg-brand-accent text-white font-bold text-xs flex items-center justify-center font-code-sm">1</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand-accent font-code-sm">Setup</span>
+                  </div>
+                  <h4 className="font-headline-md text-xs sm:text-sm font-bold uppercase text-clinical-black dark:text-white mb-1.5">
+                    {mcpTab === 'desktop' ? 'Paste in Config' : mcpTab === 'code' ? 'Execute Command' : 'Add in Settings'}
                   </h4>
-                  <p className="text-[11px] sm:text-xs text-on-surface-variant dark:text-slate-400">
-                    {mcpTab === 'desktop' && 'Open your Claude Desktop config JSON and paste the server block above.'}
-                    {mcpTab === 'code' && 'Run the command in any terminal with Claude Code installed.'}
-                    {mcpTab === 'cursor' && 'In Settings > Features > MCP, add command uv and the URL argument.'}
+                  <p className="text-[11px] sm:text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
+                    {mcpTab === 'desktop' && 'Open claude_desktop_config.json, paste the server block above, and restart Claude Desktop.'}
+                    {mcpTab === 'code' && 'Run the command in any terminal. Claude Code registers the tools immediately for your user scope.'}
+                    {mcpTab === 'cursor' && 'In Settings > Features > MCP, add command uv and pass the raw server.py URL argument.'}
                   </p>
                 </div>
-                <div className="p-3 sm:p-4 bg-surface-container dark:bg-slate-900 border border-clinical-black dark:border-slate-800">
-                  <span className="text-[10px] font-bold uppercase text-brand-accent font-code-sm block mb-1">Step 2</span>
-                  <h4 className="font-headline-md text-xs sm:text-sm font-bold uppercase text-clinical-black dark:text-white mb-1">Auto-Connect</h4>
-                  <p className="text-[11px] sm:text-xs text-on-surface-variant dark:text-slate-400">
-                    uv automatically fetches dependencies in 30ms and bridges all 4 clinical tools via JSON-RPC.
+
+                <div className="p-3.5 sm:p-4 bg-surface-container dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-800 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.08)]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-5 h-5 bg-emerald-500 text-white font-bold text-xs flex items-center justify-center font-code-sm">2</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-code-sm">Zero Install</span>
+                  </div>
+                  <h4 className="font-headline-md text-xs sm:text-sm font-bold uppercase text-clinical-black dark:text-white mb-1.5">
+                    Instant Auto-Fetch
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
+                    uv reads PEP 723 metadata, spins up an isolated sandbox in 30ms, and bridges 4 clinical tools via standard JSON-RPC stdio.
                   </p>
                 </div>
-                <div className="p-3 sm:p-4 bg-surface-container dark:bg-slate-900 border border-clinical-black dark:border-slate-800">
-                  <span className="text-[10px] font-bold uppercase text-brand-accent font-code-sm block mb-1">Step 3</span>
-                  <h4 className="font-headline-md text-xs sm:text-sm font-bold uppercase text-clinical-black dark:text-white mb-1">Ask Any Query</h4>
-                  <p className="text-[11px] sm:text-xs text-on-surface-variant dark:text-slate-400">
-                    Try: &quot;Compute BMI for 82kg and 1.78m&quot; or &quot;Query NICE NG136 hypertension guidelines&quot;.
+
+                <div className="p-3.5 sm:p-4 bg-surface-container dark:bg-slate-900 border-2 border-clinical-black dark:border-slate-800 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.08)]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-5 h-5 bg-purple-500 text-white font-bold text-xs flex items-center justify-center font-code-sm">3</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 font-code-sm">Prompting</span>
+                  </div>
+                  <h4 className="font-headline-md text-xs sm:text-sm font-bold uppercase text-clinical-black dark:text-white mb-1.5">
+                    Ask Directly in Chat
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed">
+                    Ask Claude: &quot;Compute MAP & pulse pressure for 140/90&quot; or &quot;Retrieve NICE stage 2 hypertension guideline&quot;.
                   </p>
                 </div>
               </div>
 
               {/* GitHub Link Footer Banner */}
               <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <span className="text-on-surface-variant dark:text-slate-400 font-body-sm text-[11px] sm:text-xs">
+                <span className="text-on-surface-variant dark:text-slate-400 font-body-sm text-[11px] sm:text-xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
                   Open-source protocol implementation powered by FastMCP and Astral uv.
                 </span>
                 <a

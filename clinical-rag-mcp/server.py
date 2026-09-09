@@ -1,18 +1,16 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "mcp>=2.0",
+#     "httpx>=0.27",
+# ]
+# ///
 """
-clinical_rag_mcp - MCP server exposing clinical calculators and (optionally)
-your live Clinical Evidence RAG Agent as tools callable from Claude Desktop
-or Claude Code.
+clinical_rag_mcp - Model Context Protocol (MCP) server exposing clinical
+calculators and the live Clinical Evidence RAG Agent to Claude Desktop & Claude Code.
 
-Weekend build plan:
-  Day 1 (calculators): works immediately, no external dependencies.
-  Day 2 (evidence query): fill in CLINICAL_RAG_API_URL and the request/response
-                           shape to match your actual deployed backend.
-
-Run locally:
-    python3 server.py
-
-Test with the MCP Inspector before wiring it into Claude Desktop:
-    npx @modelcontextprotocol/inspector python3 server.py
+Zero-install run directly from GitHub via uv:
+    uv run https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py
 """
 
 import os
@@ -216,5 +214,9 @@ async def clinical_query_evidence(
         return f"Error: unexpected failure calling the backend: {type(e).__name__}: {e}"
 
 
-if __name__ == "__main__":
+def main() -> None:
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

@@ -498,15 +498,11 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "clinical-rag": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
-        "--from",
-        "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp",
-        "clinical-rag-mcp"
-      ],
-      "env": {
-        "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
-      }
+        "run",
+        "https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py"
+      ]
     }
   }
 }
@@ -514,10 +510,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 #### Claude Code (Global Across All Workspaces)
 ```bash
-claude mcp add --scope user clinical-rag \
-  -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app \
-  -- uvx --from "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp" clinical-rag-mcp
+claude mcp add --scope user clinical-rag -- uv run https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py
 ```
+
 
 ### 2. Local Source Setup (Optional Development Mode)
 ```bash

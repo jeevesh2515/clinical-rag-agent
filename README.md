@@ -214,15 +214,11 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "clinical-rag": {
-      "command": "uvx",
+      "command": "uv",
       "args": [
-        "--from",
-        "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp",
-        "clinical-rag-mcp"
-      ],
-      "env": {
-        "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
-      }
+        "run",
+        "https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py"
+      ]
     }
   }
 }
@@ -230,10 +226,9 @@ Add to your `claude_desktop_config.json`:
 
 #### Claude Code (Global One-Command Install)
 ```bash
-claude mcp add --scope user clinical-rag \
-  -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app \
-  -- uvx --from "git+https://github.com/jeevesh2515/clinical-rag-agent.git#subdirectory=clinical-rag-mcp" clinical-rag-mcp
+claude mcp add --scope user clinical-rag -- uv run https://raw.githubusercontent.com/jeevesh2515/clinical-rag-agent/main/clinical-rag-mcp/server.py
 ```
+
 
 *(Optional: for local development from source, run `cd clinical-rag-mcp && python3 -m venv venv && pip install -r requirements.txt && python3 server.py`)*
 

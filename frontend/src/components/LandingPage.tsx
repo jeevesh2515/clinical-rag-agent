@@ -479,7 +479,8 @@ export default function LandingPage({ onLogin, onRegister, currentUser, onGoToDa
         {/* Model Context Protocol (MCP) Integration Section */}
         <section 
           id="mcp-server" 
-          className="min-h-[calc(100vh-4rem)] flex flex-col justify-center py-6 sm:py-8 lg:py-10 bg-stone-50 dark:bg-slate-900/50 border-t-2 sm:border-t-4 border-clinical-black dark:border-slate-800 px-4 sm:px-gutter transition-colors duration-300 scroll-mt-16"
+          className="mcp-viewport-section flex flex-col justify-center py-6 sm:py-8 lg:py-8 bg-stone-50 dark:bg-slate-900/50 border-t-2 sm:border-t-4 border-clinical-black dark:border-slate-800 px-4 sm:px-gutter transition-colors duration-300 scroll-mt-16"
+          style={{ minHeight: 'calc(100vh - 4rem)' }}
         >
           <div className="max-w-7xl w-full mx-auto">
             <div className="bg-white dark:bg-slate-950 border-2 sm:border-4 border-clinical-black dark:border-white p-5 sm:p-6 lg:p-7 clinical-shadow relative overflow-hidden flex flex-col justify-between">

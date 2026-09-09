@@ -84,6 +84,16 @@
   animation: slideUp 0.3s ease-out forwards;
 }
 
+.mcp-viewport-section {
+  min-height: calc(100vh - 4rem);
+}
+@media (min-height: 700px) and (min-width: 1024px) {
+  .mcp-viewport-section {
+    min-height: calc(100vh - 4rem);
+    height: calc(100vh - 4rem);
+  }
+}
+
 /* Neo Brutalist Styles */
 .neo-brutal-shadow {
   box-shadow: 4px 4px 0px 0px #1a1a1a;

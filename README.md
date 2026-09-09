@@ -19,6 +19,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![MCP Server](https://img.shields.io/badge/MCP-Protocol%20v2-8B5CF6?style=for-the-badge&logo=anthropic&logoColor=white)](clinical-rag-mcp/)
 [![LangSmith](https://img.shields.io/badge/LangSmith-Evaluator-F5C300?style=for-the-badge&logo=langchain&logoColor=white)](https://smith.langchain.com/)
 
 <br>
@@ -176,6 +177,65 @@ docker compose --profile postgres up -d --build
 
 ---
 
+## 🔌 Model Context Protocol (MCP) Server
+
+Clinical Workflows includes a first-class **Model Context Protocol (MCP)** server in [`clinical-rag-mcp/`](clinical-rag-mcp/) to wire clinical calculators and live guideline retrieval directly into **Claude Desktop**, **Claude Code**, or any agent supporting the open standard.
+
+```mermaid
+flowchart LR
+    CD["🤖 Claude Desktop / Claude Code"] -- "stdio / JSON-RPC" --> MCP["🔌 clinical-rag-mcp"]
+    MCP -- "Direct Math" --> CALC["🧮 Native Calculators\n(BMI, MAP, Pulse Pressure)"]
+    MCP -- "POST /api/query" --> API["⚡ Live Clinical RAG Agent\n(https://clinical-workflows.vercel.app)"]
+    API --> RES["📚 Guideline Citations & Safety Reports"]
+
+    style CD fill:#1E293B,stroke:#38BDF8,color:#FFFFFF
+    style MCP fill:#312E81,stroke:#818CF8,color:#FFFFFF
+    style CALC fill:#064E3B,stroke:#34D399,color:#FFFFFF
+    style API fill:#0F766E,stroke:#2DD4BF,color:#FFFFFF
+    style RES fill:#1E3A8A,stroke:#60A5FA,color:#FFFFFF
+```
+
+### Exposed MCP Tools (OpenAPI / MCP Spec)
+
+| Tool | Parameters | Description |
+| :--- | :--- | :--- |
+| `clinical_calculate_bmi` | `weight_kg: float`, `height_m: float` | Deterministic Body Mass Index & WHO weight categorization. |
+| `clinical_calculate_map` | `systolic_mmhg: float`, `diastolic_mmhg: float` | Mean Arterial Pressure (`DBP + ⅓(SBP - DBP)`). |
+| `clinical_calculate_pulse_pressure` | `systolic_mmhg: float`, `diastolic_mmhg: float` | Pulse Pressure (`SBP - DBP`). |
+| `clinical_query_evidence` | `question: str`, `mode: "patient" \| "clinician"` | Hybrid RAG retrieval over NICE NG136, JNC8, ACC/AHA, ESC/ESH with citation metadata. |
+
+### Quick Setup
+
+```bash
+cd clinical-rag-mcp
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### Claude Desktop Integration
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "clinical-rag": {
+      "command": "/absolute/path/to/clinical-rag-mcp/venv/bin/python3",
+      "args": ["/absolute/path/to/clinical-rag-mcp/server.py"],
+      "env": {
+        "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
+      }
+    }
+  }
+}
+```
+
+#### Claude Code (Global Across All Workspaces)
+```bash
+claude mcp add --scope user clinical-rag -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app -- /absolute/path/to/clinical-rag-mcp/venv/bin/python3 /absolute/path/to/clinical-rag-mcp/server.py
+```
+
+---
+
 ## Features
 
 - 💻 **Claude-Style Workstation Interface:** Sliding conversation drawer, dark/light theme, suggested queries grid, and real-time evidence drawer.
@@ -227,7 +287,8 @@ docker compose --profile postgres up -d --build
 
 ```
 Client Layer:    React 18 | TypeScript 5 | Vite 6 | Tailwind CSS v4 | Lucide Icons
-API & Core:      FastAPI | Uvicorn | Pydantic v2 | Python 3.12
+API & Core:      FastAPI | Uvicorn | Pydantic v2 | Python 3.12 | OpenAPI
+MCP Server:      Model Context Protocol (MCP SDK 2.x) | Stdio JSON-RPC | Claude Desktop & Code
 Agent Engine:    LangGraph Stateful DAG Orchestrator
 Knowledge Layer: Open Knowledge Format (OKF) | 27 Concept Files | YAML + Wikilinks
 Retrieval:       Cohere Embeddings v3.0 | BM25 Sparse | Cohere Rerank v3.5
@@ -292,6 +353,7 @@ For step-by-step deployment instructions for Vercel, Render, Docker, and Kuberne
 │   ├── retrieval/       # Hybrid BM25 + Cohere vector store
 │   ├── safety/          # Intent classifier & refusal engine
 │   └── tools/           # eGFR, MAP, Pulse Pressure, BMI calculators
+├── clinical-rag-mcp/    # Model Context Protocol (MCP) server for Claude Desktop & Claude Code
 ├── frontend/            # React 18 + TypeScript + Tailwind v4 SPA
 ├── hypertension-okf/    # 28 Curated OKF concept files
 ├── k8s/                 # Kubernetes manifests (Deployment, Service, ConfigMap, Secrets, Ingress, HPA)

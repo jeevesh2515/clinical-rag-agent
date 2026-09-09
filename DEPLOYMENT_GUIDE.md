@@ -481,3 +481,42 @@ This complements Path A rather than replaces it: GitHub-Actions-in-repo
 gives you a fail-fast alert + a `gh workflow run` knob for offline
 testing, while the SaaS monitor gives you a noisy-friendly dashboard
 + external SLA-grade alerting.
+
+---
+
+## 8. Model Context Protocol (MCP) Server Integration
+
+The repository includes a production MCP server in [`clinical-rag-mcp/`](clinical-rag-mcp/) that exposes the deterministic clinical calculators and live Clinical Evidence RAG Agent as tools to **Claude Desktop**, **Claude Code**, or any agent supporting the open standard.
+
+### 1. Local Setup
+```bash
+cd clinical-rag-mcp
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Configure for Claude Desktop
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "clinical-rag": {
+      "command": "/absolute/path/to/clinical-rag-mcp/venv/bin/python3",
+      "args": ["/absolute/path/to/clinical-rag-mcp/server.py"],
+      "env": {
+        "CLINICAL_RAG_API_URL": "https://clinical-workflows.vercel.app"
+      }
+    }
+  }
+}
+```
+
+### 3. Configure Globally for Claude Code
+```bash
+claude mcp add --scope user clinical-rag \
+  -e CLINICAL_RAG_API_URL=https://clinical-workflows.vercel.app \
+  -- /absolute/path/to/clinical-rag-mcp/venv/bin/python3 \
+     /absolute/path/to/clinical-rag-mcp/server.py
+```
+

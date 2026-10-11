@@ -36,7 +36,7 @@ FORBIDDEN_PATTERNS: tuple[tuple[str, str], ...] = (
     (r"REPLACE_ME_WITH_LANGSMITH_API_KEY", "LangSmith key placeholder"),
     (r"REPLACE_ME_WITH_SENTRY_DSN", "Sentry DSN placeholder"),
     (r"change-me-in-production", "Old change-me placeholder"),
-    (r"TODO_REPLACE_ME", "TODO replace-me placeholder"),
+    (r"EXAMPLE_SECRET_KEY", "Example secret key placeholder"),
     # AWS access key ID pattern (always 20 uppercase chars).
     (r"AKIA[0-9A-Z]{16}", "Possible AWS access key id"),
     # Generic-looking private keys

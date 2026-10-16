@@ -2,9 +2,9 @@
 
 # 🏥 Clinical Workflows
 
-### Production-Grade Agentic RAG for Chronic Hypertension Care
+### Evaluated agentic RAG prototype for evidence-grounded hypertension guidance
 
-**An evidence-based, zero-hallucination clinical workflow assistant** combining hybrid retrieval, curated Open Knowledge Format (OKF) concepts, LangGraph stateful orchestration, and safety-first guardrails — delivered via a modern Claude-style AI workstation. Ready to deploy at **$0/month**.
+**An educational clinical-AI prototype** combining a curated Open Knowledge Format (OKF) spine, hybrid retrieval, deterministic calculators, citation validation, and LangGraph safety orchestration. It is designed to reduce unsupported answers in synthetic scenarios; it is **not clinically validated** and must not be used for patient-care decisions.
 
 <br>
 
@@ -26,7 +26,23 @@
 
 </div>
 
-<br>
+## Recruiter summary
+
+**Role demonstrated:** Applied AI / Retrieval Engineer
+
+I designed the retrieval, safety, evaluation, and deployment workflow for this educational clinical-AI prototype. The system separates canonical facts from open-ended retrieval, runs deterministic calculations outside the language model, validates citations before response delivery, and exposes an MCP server for agent clients.
+
+**Evidence:** 27 curated OKF concept files, 55 golden evaluation cases, deterministic math checks, CI quality gates, Docker/Kubernetes manifests, and a live demo.
+
+> **Responsible-use boundary:** This is an educational portfolio project using synthetic scenarios. It is not clinically validated, is not a medical device, and must not be used for diagnosis, prescribing, or patient-care decisions.
+
+## What I built
+
+- Designed the LangGraph routing and safety DAG.
+- Implemented the OKF canonical-fact spine and hybrid dense/BM25 retrieval path.
+- Added deterministic eGFR, MAP, pulse-pressure, and BMI calculators.
+- Built citation validation and evidence display for response provenance.
+- Added the evaluation harness, CI gates, container deployment, and MCP interface.
 
 <p align="center">
   <a href="https://clinical-workflows.vercel.app"><b>Explore Live SaaS Demo</b></a> &nbsp;•&nbsp;

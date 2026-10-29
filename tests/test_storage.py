@@ -47,7 +47,7 @@ def test_factory_returns_s3_when_configured(monkeypatch: pytest.MonkeyPatch) -> 
         def __init__(self, *args: object, **kwargs: object) -> None:
             pass
 
-        def put_object(self, **kwargs: object) -> None:  # noqa: D401
+        def put_object(self, **kwargs: object) -> None:
             return None
 
         def get_object(self, **kwargs: object) -> dict[str, object]:

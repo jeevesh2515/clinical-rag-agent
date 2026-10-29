@@ -15,7 +15,6 @@ import time
 from app.core.latency import Timer
 from app.core.logging import configure_logging
 
-
 # ─── Timer utility tests ──────────────────────────────────────────────────────
 
 

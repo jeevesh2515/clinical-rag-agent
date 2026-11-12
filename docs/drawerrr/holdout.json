@@ -1,0 +1,33 @@
+[
+  {
+    "id": "H1",
+    "scenario": "Approve a draft whose body contains composed Unicode. Submit the visually identical decomposed body first, then retry the exact approved body.",
+    "expected_receipt_effects": [
+      "No receipt for the normalized substitute.",
+      "One receipt for the exact approved bytes after the legitimate retry."
+    ]
+  },
+  {
+    "id": "H2",
+    "scenario": "Assign a reviewer to the clinic-a record. Provision another clinic with the same case identifier and recipient label. Attempt to use the valid clinic-a reviewer credential to approve the clinic-b proposal.",
+    "expected_receipt_effects": [
+      "The foreign clinic receives no receipt.",
+      "The valid clinic-a workflow still delivers once."
+    ]
+  },
+  {
+    "id": "H3",
+    "scenario": "Approve a draft. Remove the reviewer's live patient assignment without editing the proposal or approval record, then attempt the original exact send.",
+    "expected_receipt_effects": [
+      "The portal records no delivery."
+    ]
+  },
+  {
+    "id": "H4",
+    "scenario": "Approve a draft. Attempt to create a second draft using the same proposal ID, with a different message body. Try the substituted body against the original approval before sending the original body.",
+    "expected_receipt_effects": [
+      "No receipt for the substituted body.",
+      "One receipt whose digest matches the original approved body."
+    ]
+  }
+]

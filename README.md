@@ -1,3 +1,38 @@
+## Drawerrr · Preventing wrong-recipient portal delivery
+
+A reviewer approves a synthetic hypertension follow-up for Patient A. After approval, the tool call substitutes Patient B. The generic approval baseline delivers to B. The protected executor rejects the swap, and the approved original delivers to A exactly once.
+
+| Checkpoint | Generic approval baseline | Protected executor |
+| --- | --- | --- |
+| Recipient swap | One receipt for Patient B with A’s approved body | Zero receipts |
+| Body-only change | One receipt for Patient A with the altered body | Zero receipts |
+| Approved original | One correct receipt for Patient A | One correct receipt for Patient A |
+
+The draft uses the existing htn-002 LangGraph follow-up plan. The sandbox binds an approval to the stored proposal and checks reviewer assignment, expiry and revocation at delivery. The mock portal records the recipient and a digest of the delivered body. Its unique operation ID prevents duplicate delivery.
+
+| Receipt-based evaluation | Generic approval baseline | Protected executor |
+| --- | ---: | ---: |
+| Unauthorized deliveries / unsafe cases | 3 / 12 | 0 / 12 |
+| Correct single deliveries / approved send cases | 4 / 4 | 4 / 4 |
+| Duplicate deliveries | 0 | 0 |
+| Valid drafts with zero deliveries | 1 / 1 | 1 / 1 |
+
+### Reproduce
+
+With Git and [uv](https://docs.astral.sh/uv/) available, run this from a clean repository checkout. The first run may download Python and dependencies. Evaluation uses synthetic data and requires no model credentials.
+
+```sh
+uv run --isolated --no-project --python 3.12 --with-requirements requirements.txt python -m drawerrr
+```
+
+Append `--demo` to show the draft and paired receipt traces in the terminal. The full command emits JSON and returns a failure status if the checkpoint, protected cases, or grader controls fail. The three baseline violations were the recipient swap, the body-only edit, and a replayed tool request after the graph retrieved the synthetic injection.
+
+[Measured results and traces](docs/drawerrr/results.json) · [Proposal and receipt contract](docs/drawerrr/CONTRACT.md) · [Independent holdout](docs/drawerrr/HOLDOUT.md) · [75-second demo script](docs/drawerrr/DEMO.md) · [Work log](docs/drawerrr/WORKLOG.md)
+
+The mock portal uses one SQLite database under a trusted sandbox host. Authorization and the durable receipt share a transaction. The cases measure this local tool-call boundary. The graph runs without model credentials, and the retrieved injection case replays a tool request after verifying the attack text was retrieved. Clinical correctness, live-model resistance, and production EHR integration are outside the evaluation.
+
+---
+
 <div align="center">
 
 # 🏥 Clinical Workflows

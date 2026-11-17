@@ -46,10 +46,10 @@ class TestTimer:
     def test_timer_accumulates_correctly_in_dict(self):
         durations = {}
         with Timer() as t:
-            time.sleep(0.005)
+            time.sleep(0.05)  # 50ms — larger margin to avoid flakiness
         durations["step_a"] = t.elapsed_ms
         with Timer() as t:
-            time.sleep(0.01)
+            time.sleep(0.15)  # 150ms — 3x margin
         durations["step_b"] = t.elapsed_ms
         assert durations["step_a"] > 0
         assert durations["step_b"] > durations["step_a"]

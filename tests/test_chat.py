@@ -1,4 +1,5 @@
 import pytest
+
 from app.chat.repository import chat_repository
 from app.db import SessionLocal
 

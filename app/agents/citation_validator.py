@@ -1,6 +1,6 @@
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.models import Citation
 
@@ -64,7 +64,7 @@ RECOMMENDATION_MARKERS = (
 
 
 def build_citations(candidates: list[dict], max_quotes: int = 4) -> list[Citation]:
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     citations: list[Citation] = []
     for candidate in candidates[:max_quotes]:
         metadata = candidate.get("metadata", {})

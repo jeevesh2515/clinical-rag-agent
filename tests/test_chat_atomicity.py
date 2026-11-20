@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from types import SimpleNamespace
+
+import pytest
 
 from app.api.dependencies import get_agent
 from app.main import app

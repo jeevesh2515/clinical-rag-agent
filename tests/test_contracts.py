@@ -76,7 +76,7 @@ def test_query_response_matches_public_contract(client):
     )
     citation_dict = citation.model_dump()
     for field in CITATION_PROVENANCE_FIELDS:
-        assert field in citation_dict and citation_dict[field], f"Citation provenance field not set: {field}"
+        assert citation_dict.get(field), f"Citation provenance field not set: {field}"
 
 
 def test_query_accepts_caller_request_id(client):

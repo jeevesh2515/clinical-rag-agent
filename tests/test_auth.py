@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 
-from app.auth.security import get_password_hash, verify_password, create_access_token
+from app.auth.security import create_access_token, get_password_hash, verify_password
 
 
 class TestPasswordHashing:
